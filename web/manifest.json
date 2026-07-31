@@ -1,12 +1,11 @@
 {
-    "name": "mio_ani",
-    "short_name": "mio_ani",
+    "name": "MioAni",
+    "short_name": "MioAni",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#090C0A",
+    "theme_color": "#B8FF3D",
+    "description": "MioAni cross-platform anime discovery and library application.",
     "prefer_related_applications": false,
     "icons": [
         {

@@ -15,7 +15,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+        // Preview ID only; the production application ID needs release approval.
         applicationId = "com.example.mio_ani"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
@@ -27,8 +27,8 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // Preview builds use the debug key. Production signing is configured
+            // only after the release identity receives separate approval.
             signingConfig = signingConfigs.getByName("debug")
         }
     }
