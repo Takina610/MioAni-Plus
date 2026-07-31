@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mio_ani/src/app/bootstrap/mio_ani_app.dart';
 import 'package:mio_ani/src/app/routing/app_router.dart';
@@ -9,9 +10,14 @@ Duration? disableProviderRetry(int retryCount, Object error) {
 }
 
 class MioAniRoot extends StatefulWidget {
-  const MioAniRoot({this.router, super.key});
+  const MioAniRoot({
+    this.router,
+    this.providerOverrides = const <Override>[],
+    super.key,
+  });
 
   final GoRouter? router;
+  final List<Override> providerOverrides;
 
   @override
   State<MioAniRoot> createState() => _MioAniRootState();
@@ -54,6 +60,7 @@ class _MioAniRootState extends State<MioAniRoot> {
   @override
   Widget build(BuildContext context) {
     return ProviderScope(
+      overrides: widget.providerOverrides,
       retry: disableProviderRetry,
       child: MioAniApp(router: _router),
     );

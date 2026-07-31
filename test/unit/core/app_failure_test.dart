@@ -10,6 +10,7 @@ void main() {
       RateLimitedFailure(),
       NotFoundFailure(),
       ForbiddenFailure(),
+      RequestRejectedFailure(),
       UpstreamFailure(),
       InvalidPayloadFailure(),
       BrowserPolicyFailure(),

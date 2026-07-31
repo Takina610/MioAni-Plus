@@ -79,6 +79,7 @@ class MioStateView extends StatelessWidget {
       AppFailureKind.rateLimited => '等待一段时间后再试',
       AppFailureKind.notFound => '该内容可能已移动或删除',
       AppFailureKind.forbidden => '内容来源拒绝了当前请求',
+      AppFailureKind.requestRejected => '请求不符合内容来源的接收条件',
       AppFailureKind.upstream => 'MioAni 仍可使用本地功能',
       AppFailureKind.invalidPayload => '为避免显示错误信息，本次内容已被拒绝',
       AppFailureKind.browserPolicy => '可以尝试受支持的浏览器或原生应用',

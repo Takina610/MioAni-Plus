@@ -1,24 +1,61 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mio_ani/src/app/bootstrap/mio_ani_root.dart';
 import 'package:mio_ani/src/app/routing/app_router.dart';
 import 'package:mio_ani/src/app/routing/app_routes.dart';
+import 'package:mio_ani/src/app/routing/mio_back_shortcuts.dart';
+import 'package:mio_ani/src/features/catalog/application/catalog_providers.dart';
 
+import '../../support/fake_catalog_repository.dart';
 import '../../support/test_viewport.dart';
 
 void main() {
+  testWidgets('back shortcuts defer root focus until after layout', (
+    tester,
+  ) async {
+    final router = createMioAniRouter(initialLocation: '/discover');
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MioBackShortcuts(router: router, child: const SizedBox.expand()),
+      ),
+    );
+
+    final shortcutFocus = find.descendant(
+      of: find.byType(MioBackShortcuts),
+      matching: find.byType(Focus),
+    );
+    expect(
+      tester.widgetList<Focus>(shortcutFocus).where((focus) => focus.autofocus),
+      isEmpty,
+    );
+  });
+
   testWidgets('four typed branches share a single router stack', (
     tester,
   ) async {
     await configureTestViewport(tester, size: const Size(390, 844));
-    final router = createMioAniRouter();
+    final router = createMioAniRouter(initialLocation: '/discover');
     addTearDown(router.dispose);
+    final repository = FakeCatalogRepository();
 
-    await tester.pumpWidget(MioAniRoot(router: router));
+    await tester.pumpWidget(
+      MioAniRoot(
+        router: router,
+        providerOverrides: [
+          catalogRepositoryProvider.overrideWithValue(repository),
+        ],
+      ),
+    );
     await tester.pumpAndSettle();
 
+    expect(router.routeInformationProvider.value.uri.path, '/discover');
+    await tester.tap(find.text('首页'));
+    await tester.pumpAndSettle();
     expect(router.routeInformationProvider.value.uri.path, '/');
     await tester.tap(find.text('发现'));
     await tester.pumpAndSettle();
@@ -39,8 +76,16 @@ void main() {
     await configureTestViewport(tester, size: const Size(390, 844));
     final router = createMioAniRouter(initialLocation: '/discover');
     addTearDown(router.dispose);
+    final repository = FakeCatalogRepository();
 
-    await tester.pumpWidget(MioAniRoot(router: router));
+    await tester.pumpWidget(
+      MioAniRoot(
+        router: router,
+        providerOverrides: [
+          catalogRepositoryProvider.overrideWithValue(repository),
+        ],
+      ),
+    );
     await tester.pumpAndSettle();
 
     unawaited(
@@ -51,7 +96,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('动画详情'), findsOneWidget);
-    expect(find.text('bgm-1'), findsOneWidget);
+    expect(find.text('测试动画'), findsOneWidget);
     expect(router.routeInformationProvider.value.uri.path, '/anime/bgm-1');
 
     await tester.binding.handlePopRoute();

@@ -14,7 +14,7 @@ void main() {
       size: const Size(390, 844),
       textScaleFactor: 2,
     );
-    final router = createMioAniRouter();
+    final router = createMioAniRouter(initialLocation: '/discover');
     addTearDown(router.dispose);
 
     await tester.pumpWidget(MioAniRoot(router: router));
@@ -27,7 +27,7 @@ void main() {
 
   testWidgets('medium layout uses a compact navigation rail', (tester) async {
     await configureTestViewport(tester, size: const Size(800, 600));
-    final router = createMioAniRouter();
+    final router = createMioAniRouter(initialLocation: '/discover');
     addTearDown(router.dispose);
 
     await tester.pumpWidget(MioAniRoot(router: router));
@@ -42,7 +42,7 @@ void main() {
     tester,
   ) async {
     await configureTestViewport(tester, size: const Size(1440, 900));
-    final router = createMioAniRouter();
+    final router = createMioAniRouter(initialLocation: '/discover');
     addTearDown(router.dispose);
 
     await tester.pumpWidget(MioAniRoot(router: router));

@@ -45,3 +45,8 @@ app.*.map.json
 /android/app/release
 
 .open-project
+.trellis
+.codex
+.agents
+docs
+AGENTS.md

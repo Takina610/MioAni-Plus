@@ -1,0 +1,20 @@
+{
+  "id": 2,
+  "type": 2,
+  "name": "D.C.S.S. ～ダ・カーポ セカンドシーズン～",
+  "name_cn": "初音岛 S.S.",
+  "summary": "<p>梦幻的初音岛上，<br>新的故事开始了。</p>",
+  "date": "2005-07-02",
+  "platform": "TV",
+  "eps": 26,
+  "total_episodes": 26,
+  "images": {
+    "large": "http://lain.bgm.tv/pic/cover/l/example.jpg"
+  },
+  "rating": {"rank": 4567, "total": 1380, "score": 6.5},
+  "tags": [
+    {"name": "恋爱", "count": 120},
+    {"name": "校园", "count": 90}
+  ],
+  "meta_tags": ["TV", "日本"]
+}

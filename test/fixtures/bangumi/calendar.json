@@ -1,0 +1,24 @@
+[
+  {
+    "weekday": {"en": "Mon", "cn": "星期一", "ja": "月耀日", "id": 1},
+    "items": [
+      {
+        "id": 2,
+        "url": "https://bgm.tv/subject/2",
+        "type": 2,
+        "name": "D.C.S.S. ～ダ・カーポ セカンドシーズン～",
+        "name_cn": "初音岛 S.S.",
+        "summary": "梦幻的初音岛上，新的故事开始了。",
+        "air_date": "2005-07-02",
+        "air_weekday": 6,
+        "images": {
+          "large": "http://lain.bgm.tv/pic/cover/l/example.jpg",
+          "common": "http://lain.bgm.tv/pic/cover/c/example.jpg"
+        },
+        "rating": {"total": 1380, "score": 6.5},
+        "rank": 4567,
+        "collection": {"doing": 86}
+      }
+    ]
+  }
+]

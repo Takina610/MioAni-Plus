@@ -6,7 +6,7 @@ final class MioBackIntent extends Intent {
   const MioBackIntent();
 }
 
-class MioBackShortcuts extends StatelessWidget {
+class MioBackShortcuts extends StatefulWidget {
   const MioBackShortcuts({
     required this.router,
     required this.child,
@@ -15,6 +15,32 @@ class MioBackShortcuts extends StatelessWidget {
 
   final GoRouter router;
   final Widget child;
+
+  @override
+  State<MioBackShortcuts> createState() => _MioBackShortcutsState();
+}
+
+class _MioBackShortcutsState extends State<MioBackShortcuts> {
+  final FocusNode _focusNode = FocusNode(
+    debugLabel: 'MioBackShortcuts',
+    skipTraversal: true,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _focusNode.canRequestFocus) {
+        _focusNode.requestFocus();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,14 +54,14 @@ class MioBackShortcuts extends StatelessWidget {
         actions: <Type, Action<Intent>>{
           MioBackIntent: CallbackAction<MioBackIntent>(
             onInvoke: (intent) {
-              if (router.canPop()) {
-                router.pop();
+              if (widget.router.canPop()) {
+                widget.router.pop();
               }
               return null;
             },
           ),
         },
-        child: Focus(autofocus: true, child: child),
+        child: Focus(focusNode: _focusNode, child: widget.child),
       ),
     );
   }

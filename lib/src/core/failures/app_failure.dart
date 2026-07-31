@@ -5,6 +5,7 @@ enum AppFailureKind {
   rateLimited,
   notFound,
   forbidden,
+  requestRejected,
   upstream,
   invalidPayload,
   browserPolicy,
@@ -34,8 +35,10 @@ final class TimeoutFailure extends AppFailure {
 }
 
 final class RateLimitedFailure extends AppFailure {
-  const RateLimitedFailure()
+  const RateLimitedFailure({this.retryAfter})
     : super(kind: AppFailureKind.rateLimited, userMessage: '请求过于频繁，请稍后再试');
+
+  final Duration? retryAfter;
 }
 
 final class NotFoundFailure extends AppFailure {
@@ -46,6 +49,11 @@ final class NotFoundFailure extends AppFailure {
 final class ForbiddenFailure extends AppFailure {
   const ForbiddenFailure()
     : super(kind: AppFailureKind.forbidden, userMessage: '当前无法访问此内容');
+}
+
+final class RequestRejectedFailure extends AppFailure {
+  const RequestRejectedFailure()
+    : super(kind: AppFailureKind.requestRejected, userMessage: '内容来源拒绝了此请求');
 }
 
 final class UpstreamFailure extends AppFailure {

@@ -5,6 +5,8 @@ import 'package:mio_ani/src/app/routing/mio_route_page.dart';
 import 'package:mio_ani/src/app/shell/foundation_pages.dart';
 import 'package:mio_ani/src/app/shell/mio_ani_shell.dart';
 import 'package:mio_ani/src/app/shell/mio_destination.dart';
+import 'package:mio_ani/src/features/anime_detail/presentation/anime_detail_page.dart';
+import 'package:mio_ani/src/features/catalog/presentation/catalog_tracer_page.dart';
 
 part 'app_routes.g.dart';
 
@@ -66,7 +68,7 @@ class HomeRouteData extends GoRouteData with $HomeRouteData {
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return const FoundationDestinationPage(destination: MioDestination.home);
+    return const CatalogTracerPage();
   }
 }
 
@@ -112,7 +114,7 @@ class AnimeDetailRouteData extends GoRouteData with $AnimeDetailRouteData {
     return buildMioDetailPage(
       context: context,
       state: state,
-      child: FoundationDetailPage(title: '动画详情', sourceId: id),
+      child: AnimeDetailPage(sourceId: id),
     );
   }
 }
