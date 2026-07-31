@@ -18,8 +18,8 @@
 
 - 当前分支：`main`。
 - `main` 已与 `origin/main` 对齐。
-- 最新工作提交：`f750c30bd61fc6eb7842fdee5286dd60a10a3461`。
-- 提交标题：`feat(catalog): add Bangumi catalog-to-detail vertical slice`。
+- 最新已推送的 C3 检查点：`e8feff4316ca5e670ad3834d873b6ad3d9bb90cb`。
+- 提交标题：`feat(persistence): add bounded cross-platform cache foundation`。
 - C1 提交：`4566700 feat: add Flutter foundation shell`。
 - C2 已在本地 Trellis 中归档；父任务 `07-30-vue-to-flutter-rewrite` 当前为 `2/9 done`。
 - 当前活动功能任务为 C3 `07-31-persistence-cache-web-migration`。
@@ -45,11 +45,11 @@
 - C3 第十一个 ≤10 分钟窗口已实现图片容量选择契约：Android 固定 256 MiB、Windows 固定 512 MiB；Web 使用 `(quota - usage) ~/ 5`，上限 256 MiB，估算缺失或无效时使用 128 MiB，已明确耗尽的有效配额返回 0。条件平台工厂公开 `loadPlatformImageCacheCapacityBytes()`，Native 只在 `dart:io` 分支判断系统，Web 只在 Web 分支调用 `navigator.storage.estimate()`，公共接口不泄漏浏览器对象。
 - 真实 Playwright Origin 返回 `usage=51096`、`quota=3221276568`、可用 `3221225472` 字节，最终应用容量公式结果受上限约束为 `268435456` 字节。该证据只确认浏览器 API 与公式输入可用；由于 Flutter 3.44.6/Chrome 150 Test Manager 仍在套件加载前超时，不能把它描述为 Dart Web 单测通过。
 - C3 第十二个 ≤10 分钟窗口完成成功 `200` 响应的第一段字节/元数据协调。`ImageByteStore.write()` 只有在 Native 原子发布或 Web Cache Storage `put` 成功后才返回 `ImageByteWriteResult(storageKey, backend)`；内存 Store 和持久化失败返回 `null`，Pipeline 因而不会为未落盘字节制造孤立 Drift 行。
-- `DioImagePipeline` 新增平台无关 `ImageCacheMetadataStore` 注入；成功写入后记录 URL、32 位脱敏存储键、`native_file`/`web_cache` backend、精确字节数、ETag、Last-Modified、获取/访问时间和默认 30 天新鲜边界。`CatalogDatabase` 直接实现该领域接口并使用现有 `ImageCacheEntriesCompanion.insertOnConflictUpdate`；Provider 将同一数据库注入既有唯一图片 Pipeline，Widget/Feature 不接触 Drift Row。
+- `DioImagePipeline` 新增平台无关 `ImageCacheMetadataStore` 注入；成功写入后记录 URL、32 位脱敏存储键、`native_file`/`web_cache` backend、精确字节数、ETag、Last-Modified、获取/访问时间和默认 30 天新鲜边界。`MioAniDatabase` 直接实现该领域接口并使用现有 `ImageCacheEntriesCompanion.insertOnConflictUpdate`；Provider 将同一数据库注入既有唯一图片 Pipeline，Widget/Feature 不接触 Drift Row。
 - 本最小 slice 将 `staleAt` 与 `expiresAt` 都设置为获取后 30 天，没有擅自发明更长的过期保留期。
 - C3 第十三个 ≤10 分钟窗口已实现新鲜元数据读取和单条不一致修复。Pipeline 在任何缓存访问前先执行 HTTPS/Host 白名单校验；注入 Metadata Store 时先读领域元数据，仅 `now < staleAt` 才视为新鲜，再要求字节非空且 `cached.length == metadata.byteSize`。命中时最佳努力更新 `lastAccessedAt` 并避免 Dio；未注入 Metadata Store 时仍保留既有内存 Store 直接命中语义。
 - 元数据存在但字节缺失、为空或长度不一致时，只调用目标 URI 的 `ImageByteStore.delete` 和 `removeImageMetadata`，随后走正常网络路径；其他图片的元数据和字节不受影响。过期元数据不会在本窗口被删除，以便下一窗口读取其 ETag/Last-Modified 和旧字节执行条件重验证。
-- `CatalogDatabase` 已实现领域接口的 `readImageMetadata`、`touchImageMetadata`、`removeImageMetadata`，并通过真实内存 Drift 往返验证。图片与持久化定向测试合计 23/23，持久化测试补充往返后单独 9/9，`flutter analyze --fatal-infos` 零问题，`flutter build web --debug` 和 Wasm dry run 成功。尚未完成条件请求/304、新鲜度推进、图片 90%→75% LRU、Android 真机证据和 Vue Web 迁移。
+- `MioAniDatabase` 已实现领域接口的 `readImageMetadata`、`touchImageMetadata`、`removeImageMetadata`，并通过真实内存 Drift 往返验证。图片与持久化定向测试合计 23/23，持久化测试补充往返后单独 9/9，`flutter analyze --fatal-infos` 零问题，`flutter build web --debug` 和 Wasm dry run 成功。尚未完成条件请求/304、新鲜度推进、图片 90%→75% LRU、Android 真机证据和 Vue Web 迁移。
 - C4–C9 仍为 `planning`；C3 完成归档后也不得自动开始下一任务。
 - `00-bootstrap-guidelines` 仍为 `in_progress`，它拥有 `.trellis/spec/**` 的初始化工作；其他 agent 不应并行覆盖这些规范文件。
 
@@ -256,6 +256,9 @@ $env:GRADLE_OPTS = '-Dorg.gradle.workers.max=2 -Dorg.gradle.parallel=false'
 
 ## 8. 最近一次验证证据
 
+- C3 第十九窗口：把图片模块原有四个种子的 32 位 Jenkins 稳定键算法提升为 Core 共享函数 `createStableHash128`，种子、32 位小写十六进制输出和 `createImageStorageKey` 的结果保持不变，且没有新增外部依赖。`LegacyMigrationPlan.fingerprint` 使用 `mioani-vue-v1:<32 lowercase hex>` 命名空间格式，只服务于迁移幂等，不是密码学签名、安全令牌或密码散列。规范投影只包含 `id`、`source`、`title`、`originalTitle`、`year`、`episodes`、`watched`、`status`、`linkedIds`、`profile.name` 和 `profile.sources`，不含原始 JSON 或不迁移的展示字段；`linkedIds`、Profile 来源和 Library 条目在散列前采用确定性排序，因此数组顺序、对象 Key 顺序、JSON 空白和已去重的重复关联不改变指纹，而 `watched` 等批准字段变化会改变指纹。测试先因计划没有 `fingerprint` 而 Red，Green 后确认同逻辑数据同指纹、观看进度变化产生不同指纹，且标题和用户名不会以明文出现在结果中。Legacy Parser 与图片管线定向测试 20/20、静态分析、Web Debug、Wasm dry run 和 `git diff --check` 均通过。重复主来源/交叉关联冲突计划、Web `localStorage` Reader、单事务幂等写入和旧键不变证据仍待实现。
+- C3 第十八窗口：从 Vue `stores/library.ts` 与 `types/anime.ts` 核对 `mioani-library-v1`/`mioani-profile-v1` 的真实形状，新增平台无关 `LegacyMigrationParser`、不可变计划记录和路径化 `LegacyMigrationParseFailure`。解析器严格校验顶层结构、来源一致 ID、五种状态、非负整型年份/集数/进度、显式 `linkedIds` 和公开资料来源，忽略不迁移的展示字段；任意非法条目会使整个解析失败，不返回部分计划或原始正文。缺少模块的首轮 Red 后，解析测试 2/2、解析加 Drift 测试 13/13、Web Debug 和 Wasm dry run 通过；首次 fatal-info 检查发现字符串拼接 lint，修复后解析测试 2/2、静态分析零问题及 `git diff --check` 通过。稳定指纹已在第十九窗口完成；重复来源冲突、Web `localStorage`、单事务幂等写入和旧键不变证据仍待实现。
+- C3 第十七窗口：正式 Drift API 从目录功能名 `CatalogDatabase` 重命名为 `MioAniDatabase`，Provider、Drift Cache Store、持久化测试和生成的 `_$MioAniDatabase`/Manager 均已同步；`typedef CatalogDatabase = MioAniDatabase` 暂时保留 C2 源码兼容。物理数据库名 `mio_ani`、Schema v2、表列、迁移、WASM/Worker 路径均未变化。兼容测试先因新类型不存在而 Red，生成后 Green；数据库/图片定向测试 28/28、静态分析零问题、Web Debug、Wasm dry run 和 `git diff --check` 通过。剩余用户/系统 DAO 与 Vue 迁移事务命令仍未实现。
 - C3 第十六窗口：公开 Pipeline 测试先证明连接重试耗尽后即使存在完整过期字节也会抛出 `OfflineFailure`；实现后，仅这一具体失败类型可返回已通过非空和精确长度校验的过期字节，不重写字节、不续期元数据，因此仍会优先参与后续淘汰/重验证。反向断言确认 `503` 仍抛出 `UpstreamFailure`；超时、取消、HTTP 拒绝、无效负载、浏览器策略和未知失败也不会被该具体 catch 隐藏。图片与持久化定向测试 27/27、静态分析零问题、Web Debug、Wasm dry run 和 `git diff --check` 通过。本窗口按用户要求创建并推送 C3 进度检查点，但不把任务误标为完成。
 - C3 第十五窗口：数据库预算测试先因缺少图片预算领域操作失败，Pipeline 协调测试再因缺少容量加载 seam 失败。实现后，图片元数据不足 90% 不处理，达到水位时按“过期优先、最久未访问、URL 稳定排序”回收到不高于 75%；成功 200 写入和 304 续期都会使用会话内平台预算并删除对应 Byte Store 对象，零容量 Web 预算会清空可控图片缓存，维护异常不影响图片显示。图片与持久化定向测试 26/26、静态分析零问题、Web Debug、Wasm dry run 和 `git diff --check` 通过。
 - C3 第十四窗口：304 测试先证明旧实现将响应映射为 `BrowserPolicyFailure`；实现后，过期且完整的持久字节会发送 `If-None-Match`/`If-Modified-Since`，304 复用旧字节、不调用 Byte Store 写入，并将元数据新鲜度推进 30 天。图片与持久化定向测试 24/24、静态分析零问题、Web Debug、Wasm dry run 和 `git diff --check` 通过。本窗口没有实现网络失败时使用过期字节；下一步可独立决策该语义，或实现图片元数据驱动的 90%→75% 淘汰。
@@ -308,7 +311,6 @@ flutter build web --release
 
 ## 10. 下一位 Agent 的建议启动流程
 
-1. 使用 `ps-utf8-io` 初始化每个 PowerShell 会话。
 2. 运行 `trellis-start` 或至少读取 `.trellis/workflow.md`、`AGENTS.md` 和 `get_context.py` 输出。
 3. 检查脏工作树，先确认 `.gitignore` 的 `.opencode` 改动及其他未跟踪文件归属。
 4. 让用户明确选择一个剩余子任务；不要根据编号自行启动。
@@ -321,7 +323,6 @@ flutter build web --release
 
 ## 11. Suggested skills
 
-- `ps-utf8-io`：Windows 中文、Flutter、Gradle、Git 输出前必用。
 - `trellis-start`：新会话初始化和任务状态识别。
 - `trellis-continue`：恢复已获批准且正在进行的任务。
 - `trellis-brainstorm`：只有已完成规划出现真实需求变化或未决产品选择时再使用，不从头重复访谈。
