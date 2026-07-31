@@ -1,9 +1,27 @@
-import 'dart:typed_data';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mio_ani/src/core/failures/app_failure.dart';
+import 'package:mio_ani/src/core/network/network_uri_policy.dart';
+import 'package:mio_ani/src/core/network/request_coordinator.dart';
 import 'package:mio_ani/src/features/catalog/application/catalog_providers.dart';
 import 'package:mio_ani/src/shared/design_system/mio_tokens.dart';
+
+bool shouldUseWebDirectImageFallback({
+  required bool isWeb,
+  required Uri uri,
+  required Object error,
+  NetworkUriPolicy uriPolicy = const NetworkUriPolicy(),
+}) {
+  if (!isWeb || error is! OfflineFailure) return false;
+
+  try {
+    uriPolicy.validate(NetworkSource.bangumiImages, uri);
+    return true;
+  } on BrowserPolicyFailure {
+    return false;
+  }
+}
 
 class MioImage extends ConsumerWidget {
   const MioImage({
@@ -40,15 +58,53 @@ class MioImage extends ConsumerWidget {
                   label: '$semanticLabel：图片加载中',
                   loading: true,
                 ),
-                error: (_, _) => _ImageFallback(
-                  icon: Icons.broken_image_outlined,
-                  label: '$semanticLabel：图片加载失败',
-                ),
+                error: (error, _) =>
+                    shouldUseWebDirectImageFallback(
+                      isWeb: kIsWeb,
+                      uri: uri,
+                      error: error,
+                    )
+                    ? _WebDirectImageFallback(
+                        uri: uri,
+                        fit: fit,
+                        semanticLabel: semanticLabel,
+                      )
+                    : _ImageFallback(
+                        icon: Icons.broken_image_outlined,
+                        label: '$semanticLabel：图片加载失败',
+                      ),
               );
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
       child: ColoredBox(color: MioColors.surfaceHigh, child: child),
+    );
+  }
+}
+
+class _WebDirectImageFallback extends StatelessWidget {
+  const _WebDirectImageFallback({
+    required this.uri,
+    required this.fit,
+    required this.semanticLabel,
+  });
+
+  final Uri uri;
+  final BoxFit fit;
+  final String semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.network(
+      uri.toString(),
+      fit: fit,
+      gaplessPlayback: true,
+      semanticLabel: semanticLabel,
+      webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
+      errorBuilder: (_, _, _) => _ImageFallback(
+        icon: Icons.broken_image_outlined,
+        label: '$semanticLabel：图片加载失败',
+      ),
     );
   }
 }

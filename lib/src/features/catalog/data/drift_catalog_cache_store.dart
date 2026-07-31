@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:drift/drift.dart' show Value;
 import 'package:mio_ani/src/core/persistence/catalog_database.dart';
 import 'package:mio_ani/src/features/catalog/data/catalog_cache_codec.dart';
 import 'package:mio_ani/src/features/catalog/data/catalog_cache_store.dart';
@@ -79,14 +82,17 @@ final class DriftCatalogCacheStore implements CatalogCacheStore {
     String key,
     String payload,
     CatalogCacheRecord<T> record,
-  ) {
-    return database.writeCacheEntry(
+  ) async {
+    await database.writeCacheEntry(
       StructuredCacheEntriesCompanion.insert(
         cacheKey: key,
         payload: payload,
         fetchedAt: record.fetchedAt.millisecondsSinceEpoch,
         staleAt: record.staleAt.millisecondsSinceEpoch,
         expiresAt: record.expiresAt.millisecondsSinceEpoch,
+        category: Value(key.startsWith('detail:') ? 'detail' : 'catalog'),
+        byteSize: Value(utf8.encode(payload).length),
+        lastAccessedAt: Value(record.fetchedAt.millisecondsSinceEpoch),
       ),
     );
   }
