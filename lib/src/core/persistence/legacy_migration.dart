@@ -168,6 +168,138 @@ final class LegacyMigrationCommitPlan {
   final LegacyProfileRecord? profile;
 }
 
+enum LegacyMigrationCommitStatus { committed, alreadyMigrated }
+
+final class LegacyMigrationCommitResult {
+  const LegacyMigrationCommitResult({
+    required this.status,
+    required this.fingerprint,
+    required this.migratedEntries,
+  });
+
+  final LegacyMigrationCommitStatus status;
+  final String fingerprint;
+  final int migratedEntries;
+}
+
+enum LegacyMigrationOutcomeKind {
+  notNeeded,
+  migrated,
+  alreadyMigrated,
+  failed,
+}
+
+final class LegacyMigrationOutcome {
+  const LegacyMigrationOutcome({
+    required this.kind,
+    this.fingerprint,
+    this.migratedEntries = 0,
+    this.diagnosticMessage,
+  });
+
+  final LegacyMigrationOutcomeKind kind;
+  final String? fingerprint;
+  final int migratedEntries;
+  final String? diagnosticMessage;
+}
+
+final class LegacyStorageSnapshot {
+  const LegacyStorageSnapshot({this.libraryJson, this.profileJson});
+
+  final String? libraryJson;
+  final String? profileJson;
+
+  bool get isEmpty => libraryJson == null && profileJson == null;
+}
+
+abstract interface class LegacyStorageReader {
+  Future<LegacyStorageSnapshot> read();
+}
+
+final class EmptyLegacyStorageReader implements LegacyStorageReader {
+  const EmptyLegacyStorageReader();
+
+  @override
+  Future<LegacyStorageSnapshot> read() async {
+    return const LegacyStorageSnapshot();
+  }
+}
+
+/// Narrow commit surface used by [LegacyMigrationRunner].
+///
+/// The database layer implements this so Feature/Widget code never sees Drift
+/// rows, SQL, or platform storage types.
+abstract interface class LegacyMigrationCommitter {
+  Future<LegacyMigrationCommitResult> commitLegacyMigrationPlan(
+    LegacyMigrationCommitPlan plan, {
+    required DateTime now,
+  });
+}
+
+final class LegacyMigrationRunner {
+  LegacyMigrationRunner({
+    required this.database,
+    required this.reader,
+    this.parser = const LegacyMigrationParser(),
+    this.planner = const LegacyMigrationPlanner(),
+    DateTime Function()? now,
+  }) : now = now ?? DateTime.now;
+
+  final LegacyMigrationCommitter database;
+  final LegacyStorageReader reader;
+  final LegacyMigrationParser parser;
+  final LegacyMigrationPlanner planner;
+  final DateTime Function() now;
+
+  Future<LegacyMigrationOutcome> run([LegacyStorageSnapshot? preloaded]) async {
+    final snapshot = preloaded ?? await reader.read();
+    if (snapshot.isEmpty) {
+      return const LegacyMigrationOutcome(
+        kind: LegacyMigrationOutcomeKind.notNeeded,
+      );
+    }
+
+    try {
+      final parsed = parser.parse(
+        libraryJson: snapshot.libraryJson,
+        profileJson: snapshot.profileJson,
+      );
+      final plan = planner.plan(parsed);
+      final result = await database.commitLegacyMigrationPlan(
+        plan,
+        now: now().toUtc(),
+      );
+      return LegacyMigrationOutcome(
+        kind: switch (result.status) {
+          LegacyMigrationCommitStatus.committed =>
+            LegacyMigrationOutcomeKind.migrated,
+          LegacyMigrationCommitStatus.alreadyMigrated =>
+            LegacyMigrationOutcomeKind.alreadyMigrated,
+        },
+        fingerprint: result.fingerprint,
+        migratedEntries: result.migratedEntries,
+      );
+    } on LegacyMigrationParseFailure catch (error) {
+      return LegacyMigrationOutcome(
+        kind: LegacyMigrationOutcomeKind.failed,
+        diagnosticMessage:
+            'legacy migration parse failed with ${error.issues.length} issue(s)',
+      );
+    } on LegacyMigrationConflictFailure catch (error) {
+      return LegacyMigrationOutcome(
+        kind: LegacyMigrationOutcomeKind.failed,
+        diagnosticMessage:
+            'legacy migration conflict with ${error.conflicts.length} conflict(s)',
+      );
+    } catch (error) {
+      return LegacyMigrationOutcome(
+        kind: LegacyMigrationOutcomeKind.failed,
+        diagnosticMessage: 'legacy migration failed: $error',
+      );
+    }
+  }
+}
+
 final class LegacyMigrationPlanner {
   const LegacyMigrationPlanner();
 

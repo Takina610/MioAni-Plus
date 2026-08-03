@@ -9,6 +9,8 @@ import 'package:mio_ani/src/core/image/image_pipeline.dart';
 import 'package:mio_ani/src/core/network/network_uri_policy.dart';
 import 'package:mio_ani/src/core/network/request_coordinator.dart';
 import 'package:mio_ani/src/core/persistence/catalog_database.dart';
+import 'package:mio_ani/src/core/persistence/legacy_migration.dart';
+import 'package:mio_ani/src/core/persistence/legacy_storage_reader_factory.dart';
 import 'package:mio_ani/src/features/catalog/data/bangumi_catalog_source.dart';
 import 'package:mio_ani/src/features/catalog/data/catalog_cache_store.dart';
 import 'package:mio_ani/src/features/catalog/data/catalog_repository.dart';
@@ -45,6 +47,28 @@ final catalogDatabaseProvider = Provider<MioAniDatabase>((ref) {
   final database = MioAniDatabase.defaults();
   ref.onDispose(() => unawaited(database.close()));
   return database;
+});
+
+final legacyStorageReaderProvider = Provider<LegacyStorageReader>((ref) {
+  return createPlatformLegacyStorageReader();
+});
+
+final legacyMigrationOutcomeProvider =
+    FutureProvider<LegacyMigrationOutcome>((ref) async {
+  final reader = ref.watch(legacyStorageReaderProvider);
+  final snapshot = await reader.read();
+  // Native/no-op storage never needs the database; avoid opening Drift just to
+  // report notNeeded and leave timers after widget tests dispose.
+  if (snapshot.isEmpty) {
+    return const LegacyMigrationOutcome(
+      kind: LegacyMigrationOutcomeKind.notNeeded,
+    );
+  }
+  final runner = LegacyMigrationRunner(
+    database: ref.watch(catalogDatabaseProvider),
+    reader: reader,
+  );
+  return runner.run(snapshot);
 });
 
 final catalogCacheStoreProvider = Provider<CatalogCacheStore>((ref) {

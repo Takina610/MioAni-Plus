@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:mio_ani/src/core/image/image_pipeline.dart';
+import 'package:mio_ani/src/core/persistence/legacy_migration.dart';
 
 part 'catalog_database.g.dart';
 
@@ -234,10 +235,12 @@ class ImageCacheEntries extends Table {
   ],
 )
 final class MioAniDatabase extends _$MioAniDatabase
-    implements ImageCacheMetadataStore {
+    implements ImageCacheMetadataStore, LegacyMigrationCommitter {
   MioAniDatabase(super.executor);
 
   static const String databaseName = 'mio_ani';
+  static const String vueMigrationKey = 'vue-web-v1';
+  static const int vueMigrationVersion = 1;
   static const int structuredCacheCapacityBytes = 64 * 1024 * 1024;
   static const double cacheHighWatermark = 0.90;
   static const double cacheLowWatermark = 0.75;
@@ -449,6 +452,161 @@ final class MioAniDatabase extends _$MioAniDatabase
       await delete(structuredCacheEntries).go();
       await delete(imageCacheEntries).go();
     });
+  }
+
+  @override
+  Future<LegacyMigrationCommitResult> commitLegacyMigrationPlan(
+    LegacyMigrationCommitPlan plan, {
+    required DateTime now,
+  }) {
+    final nowMillis = now.toUtc().millisecondsSinceEpoch;
+    return transaction(() async {
+      final existingLedger =
+          await (select(migrationLedger)..where(
+                (row) =>
+                    row.migrationKey.equals(vueMigrationKey) &
+                    row.sourceFingerprint.equals(plan.fingerprint) &
+                    row.status.equals('completed'),
+              ))
+              .getSingleOrNull();
+      if (existingLedger != null) {
+        return LegacyMigrationCommitResult(
+          status: LegacyMigrationCommitStatus.alreadyMigrated,
+          fingerprint: plan.fingerprint,
+          migratedEntries: existingLedger.migratedEntries,
+        );
+      }
+
+      for (final identity in plan.identities) {
+        await _upsertMigratedIdentity(identity, nowMillis: nowMillis);
+      }
+      await _upsertMigratedProfile(plan.profile, nowMillis: nowMillis);
+
+      await into(migrationLedger).insert(
+        MigrationLedgerCompanion.insert(
+          migrationKey: vueMigrationKey,
+          sourceFingerprint: plan.fingerprint,
+          migrationVersion: vueMigrationVersion,
+          status: 'completed',
+          migratedEntries: Value(plan.identities.length),
+          completedAt: nowMillis,
+        ),
+      );
+
+      return LegacyMigrationCommitResult(
+        status: LegacyMigrationCommitStatus.committed,
+        fingerprint: plan.fingerprint,
+        migratedEntries: plan.identities.length,
+      );
+    });
+  }
+
+  Future<void> _upsertMigratedIdentity(
+    LegacyPlannedIdentity identity, {
+    required int nowMillis,
+  }) async {
+    final existingIdentity =
+        await (select(animeIdentities)
+              ..where((row) => row.identityId.equals(identity.identityKey)))
+            .getSingleOrNull();
+    if (existingIdentity == null) {
+      await into(animeIdentities).insert(
+        AnimeIdentitiesCompanion.insert(
+          identityId: identity.identityKey,
+          canonicalTitle: Value(identity.canonicalTitle),
+          createdAt: nowMillis,
+          updatedAt: nowMillis,
+        ),
+      );
+    }
+
+    for (final entity in identity.sourceEntities) {
+      final existingSource =
+          await (select(sourceEntities)..where(
+                (row) =>
+                    row.source.equals(entity.source.name) &
+                    row.sourceId.equals(entity.sourceId),
+              ))
+              .getSingleOrNull();
+      if (existingSource == null) {
+        await into(sourceEntities).insert(
+          SourceEntitiesCompanion.insert(
+            source: entity.source.name,
+            sourceId: entity.sourceId,
+            identityId: identity.identityKey,
+            title: Value(entity.title),
+            originalTitle: Value(entity.originalTitle ?? ''),
+            year: Value(entity.year),
+            episodes: Value(entity.episodes),
+            observedAt: nowMillis,
+          ),
+        );
+      }
+    }
+
+    for (final linkedId in identity.legacyLinkedIds) {
+      final existingLink =
+          await (select(legacyIdentityLinks)..where(
+                (row) =>
+                    row.identityId.equals(identity.identityKey) &
+                    row.linkedSourceId.equals(linkedId),
+              ))
+              .getSingleOrNull();
+      if (existingLink == null) {
+        await into(legacyIdentityLinks).insert(
+          LegacyIdentityLinksCompanion.insert(
+            identityId: identity.identityKey,
+            linkedSourceId: linkedId,
+          ),
+        );
+      }
+    }
+
+    final existingLibrary =
+        await (select(libraryEntries)
+              ..where((row) => row.identityId.equals(identity.identityKey)))
+            .getSingleOrNull();
+    if (existingLibrary != null) {
+      // Existing Flutter library rows always win; later legacy retries may only
+      // enrich missing source/link evidence above and never replace status or
+      // reduce watched progress.
+      return;
+    }
+
+    await into(libraryEntries).insert(
+      LibraryEntriesCompanion.insert(
+        identityId: identity.identityKey,
+        status: Value(identity.status.name),
+        watched: Value(identity.watched),
+        updatedAt: nowMillis,
+      ),
+    );
+  }
+
+  Future<void> _upsertMigratedProfile(
+    LegacyProfileRecord? profile, {
+    required int nowMillis,
+  }) async {
+    if (profile == null) return;
+    for (final source in profile.sources) {
+      final existing =
+          await (select(publicAccounts)..where(
+                (row) =>
+                    row.source.equals(source.name) &
+                    row.stableUserId.equals(profile.name),
+              ))
+              .getSingleOrNull();
+      if (existing != null) continue;
+      await into(publicAccounts).insert(
+        PublicAccountsCompanion.insert(
+          source: source.name,
+          stableUserId: profile.name,
+          displayName: profile.name,
+          createdAt: nowMillis,
+          updatedAt: nowMillis,
+        ),
+      );
+    }
   }
 
   Future<List<String>> enforceStructuredCacheBudget({
