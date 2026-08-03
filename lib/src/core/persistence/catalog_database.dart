@@ -233,9 +233,9 @@ class ImageCacheEntries extends Table {
     ImageCacheEntries,
   ],
 )
-final class CatalogDatabase extends _$CatalogDatabase
+final class MioAniDatabase extends _$MioAniDatabase
     implements ImageCacheMetadataStore {
-  CatalogDatabase(super.executor);
+  MioAniDatabase(super.executor);
 
   static const String databaseName = 'mio_ani';
   static const int structuredCacheCapacityBytes = 64 * 1024 * 1024;
@@ -244,7 +244,7 @@ final class CatalogDatabase extends _$CatalogDatabase
   static final Uri sqliteWasmUri = Uri.parse('sqlite3.wasm');
   static final Uri driftWorkerUri = Uri.parse('drift_worker.js');
 
-  CatalogDatabase.defaults()
+  MioAniDatabase.defaults()
     : super(
         driftDatabase(
           name: databaseName,
@@ -498,3 +498,5 @@ final class CatalogDatabase extends _$CatalogDatabase
     return evictedKeys;
   }
 }
+
+typedef CatalogDatabase = MioAniDatabase;

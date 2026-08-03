@@ -15,7 +15,7 @@ final class DriftCatalogCacheStore implements CatalogCacheStore {
 
   static const _catalogKey = 'catalog:bangumi:calendar:v1';
 
-  final CatalogDatabase database;
+  final MioAniDatabase database;
   final CatalogCacheCodec codec;
 
   @override

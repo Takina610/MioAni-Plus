@@ -47,6 +47,8 @@ app.*.map.json
 .open-project
 .trellis
 .codex
+.opencode
 .agents
 docs
 AGENTS.md
+.playwright-cli

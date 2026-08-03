@@ -3829,9 +3829,9 @@ class ImageCacheEntriesCompanion extends UpdateCompanion<ImageCacheEntry> {
   }
 }
 
-abstract class _$CatalogDatabase extends GeneratedDatabase {
-  _$CatalogDatabase(QueryExecutor e) : super(e);
-  $CatalogDatabaseManager get managers => $CatalogDatabaseManager(this);
+abstract class _$MioAniDatabase extends GeneratedDatabase {
+  _$MioAniDatabase(QueryExecutor e) : super(e);
+  $MioAniDatabaseManager get managers => $MioAniDatabaseManager(this);
   late final $StructuredCacheEntriesTable structuredCacheEntries =
       $StructuredCacheEntriesTable(this);
   late final $AnimeIdentitiesTable animeIdentities = $AnimeIdentitiesTable(
@@ -3915,7 +3915,7 @@ typedef $$StructuredCacheEntriesTableUpdateCompanionBuilder =
     });
 
 class $$StructuredCacheEntriesTableFilterComposer
-    extends Composer<_$CatalogDatabase, $StructuredCacheEntriesTable> {
+    extends Composer<_$MioAniDatabase, $StructuredCacheEntriesTable> {
   $$StructuredCacheEntriesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -3965,7 +3965,7 @@ class $$StructuredCacheEntriesTableFilterComposer
 }
 
 class $$StructuredCacheEntriesTableOrderingComposer
-    extends Composer<_$CatalogDatabase, $StructuredCacheEntriesTable> {
+    extends Composer<_$MioAniDatabase, $StructuredCacheEntriesTable> {
   $$StructuredCacheEntriesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -4015,7 +4015,7 @@ class $$StructuredCacheEntriesTableOrderingComposer
 }
 
 class $$StructuredCacheEntriesTableAnnotationComposer
-    extends Composer<_$CatalogDatabase, $StructuredCacheEntriesTable> {
+    extends Composer<_$MioAniDatabase, $StructuredCacheEntriesTable> {
   $$StructuredCacheEntriesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -4053,7 +4053,7 @@ class $$StructuredCacheEntriesTableAnnotationComposer
 class $$StructuredCacheEntriesTableTableManager
     extends
         RootTableManager<
-          _$CatalogDatabase,
+          _$MioAniDatabase,
           $StructuredCacheEntriesTable,
           StructuredCacheEntry,
           $$StructuredCacheEntriesTableFilterComposer,
@@ -4064,7 +4064,7 @@ class $$StructuredCacheEntriesTableTableManager
           (
             StructuredCacheEntry,
             BaseReferences<
-              _$CatalogDatabase,
+              _$MioAniDatabase,
               $StructuredCacheEntriesTable,
               StructuredCacheEntry
             >,
@@ -4073,7 +4073,7 @@ class $$StructuredCacheEntriesTableTableManager
           PrefetchHooks Function()
         > {
   $$StructuredCacheEntriesTableTableManager(
-    _$CatalogDatabase db,
+    _$MioAniDatabase db,
     $StructuredCacheEntriesTable table,
   ) : super(
         TableManagerState(
@@ -4148,7 +4148,7 @@ class $$StructuredCacheEntriesTableTableManager
 
 typedef $$StructuredCacheEntriesTableProcessedTableManager =
     ProcessedTableManager<
-      _$CatalogDatabase,
+      _$MioAniDatabase,
       $StructuredCacheEntriesTable,
       StructuredCacheEntry,
       $$StructuredCacheEntriesTableFilterComposer,
@@ -4159,7 +4159,7 @@ typedef $$StructuredCacheEntriesTableProcessedTableManager =
       (
         StructuredCacheEntry,
         BaseReferences<
-          _$CatalogDatabase,
+          _$MioAniDatabase,
           $StructuredCacheEntriesTable,
           StructuredCacheEntry
         >,
@@ -4186,11 +4186,7 @@ typedef $$AnimeIdentitiesTableUpdateCompanionBuilder =
 
 final class $$AnimeIdentitiesTableReferences
     extends
-        BaseReferences<
-          _$CatalogDatabase,
-          $AnimeIdentitiesTable,
-          AnimeIdentity
-        > {
+        BaseReferences<_$MioAniDatabase, $AnimeIdentitiesTable, AnimeIdentity> {
   $$AnimeIdentitiesTableReferences(
     super.$_db,
     super.$_table,
@@ -4198,7 +4194,7 @@ final class $$AnimeIdentitiesTableReferences
   );
 
   static MultiTypedResultKey<$SourceEntitiesTable, List<SourceEntity>>
-  _sourceEntitiesRefsTable(_$CatalogDatabase db) =>
+  _sourceEntitiesRefsTable(_$MioAniDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.sourceEntities,
         aliasName:
@@ -4223,7 +4219,7 @@ final class $$AnimeIdentitiesTableReferences
     $LegacyIdentityLinksTable,
     List<LegacyIdentityLink>
   >
-  _legacyIdentityLinksRefsTable(_$CatalogDatabase db) =>
+  _legacyIdentityLinksRefsTable(_$MioAniDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.legacyIdentityLinks,
         aliasName:
@@ -4250,7 +4246,7 @@ final class $$AnimeIdentitiesTableReferences
   }
 
   static MultiTypedResultKey<$LibraryEntriesTable, List<LibraryEntry>>
-  _libraryEntriesRefsTable(_$CatalogDatabase db) =>
+  _libraryEntriesRefsTable(_$MioAniDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.libraryEntries,
         aliasName:
@@ -4273,7 +4269,7 @@ final class $$AnimeIdentitiesTableReferences
 }
 
 class $$AnimeIdentitiesTableFilterComposer
-    extends Composer<_$CatalogDatabase, $AnimeIdentitiesTable> {
+    extends Composer<_$MioAniDatabase, $AnimeIdentitiesTable> {
   $$AnimeIdentitiesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -4378,7 +4374,7 @@ class $$AnimeIdentitiesTableFilterComposer
 }
 
 class $$AnimeIdentitiesTableOrderingComposer
-    extends Composer<_$CatalogDatabase, $AnimeIdentitiesTable> {
+    extends Composer<_$MioAniDatabase, $AnimeIdentitiesTable> {
   $$AnimeIdentitiesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -4408,7 +4404,7 @@ class $$AnimeIdentitiesTableOrderingComposer
 }
 
 class $$AnimeIdentitiesTableAnnotationComposer
-    extends Composer<_$CatalogDatabase, $AnimeIdentitiesTable> {
+    extends Composer<_$MioAniDatabase, $AnimeIdentitiesTable> {
   $$AnimeIdentitiesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -4512,7 +4508,7 @@ class $$AnimeIdentitiesTableAnnotationComposer
 class $$AnimeIdentitiesTableTableManager
     extends
         RootTableManager<
-          _$CatalogDatabase,
+          _$MioAniDatabase,
           $AnimeIdentitiesTable,
           AnimeIdentity,
           $$AnimeIdentitiesTableFilterComposer,
@@ -4529,7 +4525,7 @@ class $$AnimeIdentitiesTableTableManager
           })
         > {
   $$AnimeIdentitiesTableTableManager(
-    _$CatalogDatabase db,
+    _$MioAniDatabase db,
     $AnimeIdentitiesTable table,
   ) : super(
         TableManagerState(
@@ -4666,7 +4662,7 @@ class $$AnimeIdentitiesTableTableManager
 
 typedef $$AnimeIdentitiesTableProcessedTableManager =
     ProcessedTableManager<
-      _$CatalogDatabase,
+      _$MioAniDatabase,
       $AnimeIdentitiesTable,
       AnimeIdentity,
       $$AnimeIdentitiesTableFilterComposer,
@@ -4711,14 +4707,14 @@ typedef $$SourceEntitiesTableUpdateCompanionBuilder =
 
 final class $$SourceEntitiesTableReferences
     extends
-        BaseReferences<_$CatalogDatabase, $SourceEntitiesTable, SourceEntity> {
+        BaseReferences<_$MioAniDatabase, $SourceEntitiesTable, SourceEntity> {
   $$SourceEntitiesTableReferences(
     super.$_db,
     super.$_table,
     super.$_typedResult,
   );
 
-  static $AnimeIdentitiesTable _identityIdTable(_$CatalogDatabase db) =>
+  static $AnimeIdentitiesTable _identityIdTable(_$MioAniDatabase db) =>
       db.animeIdentities.createAlias(
         'source_entities__identity_id__anime_identities__identity_id',
       );
@@ -4739,7 +4735,7 @@ final class $$SourceEntitiesTableReferences
 }
 
 class $$SourceEntitiesTableFilterComposer
-    extends Composer<_$CatalogDatabase, $SourceEntitiesTable> {
+    extends Composer<_$MioAniDatabase, $SourceEntitiesTable> {
   $$SourceEntitiesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -4812,7 +4808,7 @@ class $$SourceEntitiesTableFilterComposer
 }
 
 class $$SourceEntitiesTableOrderingComposer
-    extends Composer<_$CatalogDatabase, $SourceEntitiesTable> {
+    extends Composer<_$MioAniDatabase, $SourceEntitiesTable> {
   $$SourceEntitiesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -4885,7 +4881,7 @@ class $$SourceEntitiesTableOrderingComposer
 }
 
 class $$SourceEntitiesTableAnnotationComposer
-    extends Composer<_$CatalogDatabase, $SourceEntitiesTable> {
+    extends Composer<_$MioAniDatabase, $SourceEntitiesTable> {
   $$SourceEntitiesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -4948,7 +4944,7 @@ class $$SourceEntitiesTableAnnotationComposer
 class $$SourceEntitiesTableTableManager
     extends
         RootTableManager<
-          _$CatalogDatabase,
+          _$MioAniDatabase,
           $SourceEntitiesTable,
           SourceEntity,
           $$SourceEntitiesTableFilterComposer,
@@ -4961,7 +4957,7 @@ class $$SourceEntitiesTableTableManager
           PrefetchHooks Function({bool identityId})
         > {
   $$SourceEntitiesTableTableManager(
-    _$CatalogDatabase db,
+    _$MioAniDatabase db,
     $SourceEntitiesTable table,
   ) : super(
         TableManagerState(
@@ -5077,7 +5073,7 @@ class $$SourceEntitiesTableTableManager
 
 typedef $$SourceEntitiesTableProcessedTableManager =
     ProcessedTableManager<
-      _$CatalogDatabase,
+      _$MioAniDatabase,
       $SourceEntitiesTable,
       SourceEntity,
       $$SourceEntitiesTableFilterComposer,
@@ -5107,7 +5103,7 @@ typedef $$LegacyIdentityLinksTableUpdateCompanionBuilder =
 final class $$LegacyIdentityLinksTableReferences
     extends
         BaseReferences<
-          _$CatalogDatabase,
+          _$MioAniDatabase,
           $LegacyIdentityLinksTable,
           LegacyIdentityLink
         > {
@@ -5117,7 +5113,7 @@ final class $$LegacyIdentityLinksTableReferences
     super.$_typedResult,
   );
 
-  static $AnimeIdentitiesTable _identityIdTable(_$CatalogDatabase db) =>
+  static $AnimeIdentitiesTable _identityIdTable(_$MioAniDatabase db) =>
       db.animeIdentities.createAlias(
         'legacy_identity_links__identity_id__anime_identities__identity_id',
       );
@@ -5138,7 +5134,7 @@ final class $$LegacyIdentityLinksTableReferences
 }
 
 class $$LegacyIdentityLinksTableFilterComposer
-    extends Composer<_$CatalogDatabase, $LegacyIdentityLinksTable> {
+    extends Composer<_$MioAniDatabase, $LegacyIdentityLinksTable> {
   $$LegacyIdentityLinksTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -5181,7 +5177,7 @@ class $$LegacyIdentityLinksTableFilterComposer
 }
 
 class $$LegacyIdentityLinksTableOrderingComposer
-    extends Composer<_$CatalogDatabase, $LegacyIdentityLinksTable> {
+    extends Composer<_$MioAniDatabase, $LegacyIdentityLinksTable> {
   $$LegacyIdentityLinksTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -5224,7 +5220,7 @@ class $$LegacyIdentityLinksTableOrderingComposer
 }
 
 class $$LegacyIdentityLinksTableAnnotationComposer
-    extends Composer<_$CatalogDatabase, $LegacyIdentityLinksTable> {
+    extends Composer<_$MioAniDatabase, $LegacyIdentityLinksTable> {
   $$LegacyIdentityLinksTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -5267,7 +5263,7 @@ class $$LegacyIdentityLinksTableAnnotationComposer
 class $$LegacyIdentityLinksTableTableManager
     extends
         RootTableManager<
-          _$CatalogDatabase,
+          _$MioAniDatabase,
           $LegacyIdentityLinksTable,
           LegacyIdentityLink,
           $$LegacyIdentityLinksTableFilterComposer,
@@ -5280,7 +5276,7 @@ class $$LegacyIdentityLinksTableTableManager
           PrefetchHooks Function({bool identityId})
         > {
   $$LegacyIdentityLinksTableTableManager(
-    _$CatalogDatabase db,
+    _$MioAniDatabase db,
     $LegacyIdentityLinksTable table,
   ) : super(
         TableManagerState(
@@ -5379,7 +5375,7 @@ class $$LegacyIdentityLinksTableTableManager
 
 typedef $$LegacyIdentityLinksTableProcessedTableManager =
     ProcessedTableManager<
-      _$CatalogDatabase,
+      _$MioAniDatabase,
       $LegacyIdentityLinksTable,
       LegacyIdentityLink,
       $$LegacyIdentityLinksTableFilterComposer,
@@ -5412,14 +5408,14 @@ typedef $$LibraryEntriesTableUpdateCompanionBuilder =
 
 final class $$LibraryEntriesTableReferences
     extends
-        BaseReferences<_$CatalogDatabase, $LibraryEntriesTable, LibraryEntry> {
+        BaseReferences<_$MioAniDatabase, $LibraryEntriesTable, LibraryEntry> {
   $$LibraryEntriesTableReferences(
     super.$_db,
     super.$_table,
     super.$_typedResult,
   );
 
-  static $AnimeIdentitiesTable _identityIdTable(_$CatalogDatabase db) =>
+  static $AnimeIdentitiesTable _identityIdTable(_$MioAniDatabase db) =>
       db.animeIdentities.createAlias(
         'library_entries__identity_id__anime_identities__identity_id',
       );
@@ -5440,7 +5436,7 @@ final class $$LibraryEntriesTableReferences
 }
 
 class $$LibraryEntriesTableFilterComposer
-    extends Composer<_$CatalogDatabase, $LibraryEntriesTable> {
+    extends Composer<_$MioAniDatabase, $LibraryEntriesTable> {
   $$LibraryEntriesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -5493,7 +5489,7 @@ class $$LibraryEntriesTableFilterComposer
 }
 
 class $$LibraryEntriesTableOrderingComposer
-    extends Composer<_$CatalogDatabase, $LibraryEntriesTable> {
+    extends Composer<_$MioAniDatabase, $LibraryEntriesTable> {
   $$LibraryEntriesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -5546,7 +5542,7 @@ class $$LibraryEntriesTableOrderingComposer
 }
 
 class $$LibraryEntriesTableAnnotationComposer
-    extends Composer<_$CatalogDatabase, $LibraryEntriesTable> {
+    extends Composer<_$MioAniDatabase, $LibraryEntriesTable> {
   $$LibraryEntriesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -5595,7 +5591,7 @@ class $$LibraryEntriesTableAnnotationComposer
 class $$LibraryEntriesTableTableManager
     extends
         RootTableManager<
-          _$CatalogDatabase,
+          _$MioAniDatabase,
           $LibraryEntriesTable,
           LibraryEntry,
           $$LibraryEntriesTableFilterComposer,
@@ -5608,7 +5604,7 @@ class $$LibraryEntriesTableTableManager
           PrefetchHooks Function({bool identityId})
         > {
   $$LibraryEntriesTableTableManager(
-    _$CatalogDatabase db,
+    _$MioAniDatabase db,
     $LibraryEntriesTable table,
   ) : super(
         TableManagerState(
@@ -5708,7 +5704,7 @@ class $$LibraryEntriesTableTableManager
 
 typedef $$LibraryEntriesTableProcessedTableManager =
     ProcessedTableManager<
-      _$CatalogDatabase,
+      _$MioAniDatabase,
       $LibraryEntriesTable,
       LibraryEntry,
       $$LibraryEntriesTableFilterComposer,
@@ -5740,7 +5736,7 @@ typedef $$PublicAccountsTableUpdateCompanionBuilder =
     });
 
 class $$PublicAccountsTableFilterComposer
-    extends Composer<_$CatalogDatabase, $PublicAccountsTable> {
+    extends Composer<_$MioAniDatabase, $PublicAccountsTable> {
   $$PublicAccountsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -5775,7 +5771,7 @@ class $$PublicAccountsTableFilterComposer
 }
 
 class $$PublicAccountsTableOrderingComposer
-    extends Composer<_$CatalogDatabase, $PublicAccountsTable> {
+    extends Composer<_$MioAniDatabase, $PublicAccountsTable> {
   $$PublicAccountsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -5810,7 +5806,7 @@ class $$PublicAccountsTableOrderingComposer
 }
 
 class $$PublicAccountsTableAnnotationComposer
-    extends Composer<_$CatalogDatabase, $PublicAccountsTable> {
+    extends Composer<_$MioAniDatabase, $PublicAccountsTable> {
   $$PublicAccountsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -5841,7 +5837,7 @@ class $$PublicAccountsTableAnnotationComposer
 class $$PublicAccountsTableTableManager
     extends
         RootTableManager<
-          _$CatalogDatabase,
+          _$MioAniDatabase,
           $PublicAccountsTable,
           PublicAccount,
           $$PublicAccountsTableFilterComposer,
@@ -5852,7 +5848,7 @@ class $$PublicAccountsTableTableManager
           (
             PublicAccount,
             BaseReferences<
-              _$CatalogDatabase,
+              _$MioAniDatabase,
               $PublicAccountsTable,
               PublicAccount
             >,
@@ -5861,7 +5857,7 @@ class $$PublicAccountsTableTableManager
           PrefetchHooks Function()
         > {
   $$PublicAccountsTableTableManager(
-    _$CatalogDatabase db,
+    _$MioAniDatabase db,
     $PublicAccountsTable table,
   ) : super(
         TableManagerState(
@@ -5915,7 +5911,7 @@ class $$PublicAccountsTableTableManager
 
 typedef $$PublicAccountsTableProcessedTableManager =
     ProcessedTableManager<
-      _$CatalogDatabase,
+      _$MioAniDatabase,
       $PublicAccountsTable,
       PublicAccount,
       $$PublicAccountsTableFilterComposer,
@@ -5925,7 +5921,7 @@ typedef $$PublicAccountsTableProcessedTableManager =
       $$PublicAccountsTableUpdateCompanionBuilder,
       (
         PublicAccount,
-        BaseReferences<_$CatalogDatabase, $PublicAccountsTable, PublicAccount>,
+        BaseReferences<_$MioAniDatabase, $PublicAccountsTable, PublicAccount>,
       ),
       PublicAccount,
       PrefetchHooks Function()
@@ -5948,7 +5944,7 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
     });
 
 class $$AppSettingsTableFilterComposer
-    extends Composer<_$CatalogDatabase, $AppSettingsTable> {
+    extends Composer<_$MioAniDatabase, $AppSettingsTable> {
   $$AppSettingsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -5978,7 +5974,7 @@ class $$AppSettingsTableFilterComposer
 }
 
 class $$AppSettingsTableOrderingComposer
-    extends Composer<_$CatalogDatabase, $AppSettingsTable> {
+    extends Composer<_$MioAniDatabase, $AppSettingsTable> {
   $$AppSettingsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -6008,7 +6004,7 @@ class $$AppSettingsTableOrderingComposer
 }
 
 class $$AppSettingsTableAnnotationComposer
-    extends Composer<_$CatalogDatabase, $AppSettingsTable> {
+    extends Composer<_$MioAniDatabase, $AppSettingsTable> {
   $$AppSettingsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -6034,7 +6030,7 @@ class $$AppSettingsTableAnnotationComposer
 class $$AppSettingsTableTableManager
     extends
         RootTableManager<
-          _$CatalogDatabase,
+          _$MioAniDatabase,
           $AppSettingsTable,
           AppSetting,
           $$AppSettingsTableFilterComposer,
@@ -6044,12 +6040,12 @@ class $$AppSettingsTableTableManager
           $$AppSettingsTableUpdateCompanionBuilder,
           (
             AppSetting,
-            BaseReferences<_$CatalogDatabase, $AppSettingsTable, AppSetting>,
+            BaseReferences<_$MioAniDatabase, $AppSettingsTable, AppSetting>,
           ),
           AppSetting,
           PrefetchHooks Function()
         > {
-  $$AppSettingsTableTableManager(_$CatalogDatabase db, $AppSettingsTable table)
+  $$AppSettingsTableTableManager(_$MioAniDatabase db, $AppSettingsTable table)
     : super(
         TableManagerState(
           db: db,
@@ -6098,7 +6094,7 @@ class $$AppSettingsTableTableManager
 
 typedef $$AppSettingsTableProcessedTableManager =
     ProcessedTableManager<
-      _$CatalogDatabase,
+      _$MioAniDatabase,
       $AppSettingsTable,
       AppSetting,
       $$AppSettingsTableFilterComposer,
@@ -6108,7 +6104,7 @@ typedef $$AppSettingsTableProcessedTableManager =
       $$AppSettingsTableUpdateCompanionBuilder,
       (
         AppSetting,
-        BaseReferences<_$CatalogDatabase, $AppSettingsTable, AppSetting>,
+        BaseReferences<_$MioAniDatabase, $AppSettingsTable, AppSetting>,
       ),
       AppSetting,
       PrefetchHooks Function()
@@ -6135,7 +6131,7 @@ typedef $$MigrationLedgerTableUpdateCompanionBuilder =
     });
 
 class $$MigrationLedgerTableFilterComposer
-    extends Composer<_$CatalogDatabase, $MigrationLedgerTable> {
+    extends Composer<_$MioAniDatabase, $MigrationLedgerTable> {
   $$MigrationLedgerTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -6175,7 +6171,7 @@ class $$MigrationLedgerTableFilterComposer
 }
 
 class $$MigrationLedgerTableOrderingComposer
-    extends Composer<_$CatalogDatabase, $MigrationLedgerTable> {
+    extends Composer<_$MioAniDatabase, $MigrationLedgerTable> {
   $$MigrationLedgerTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -6215,7 +6211,7 @@ class $$MigrationLedgerTableOrderingComposer
 }
 
 class $$MigrationLedgerTableAnnotationComposer
-    extends Composer<_$CatalogDatabase, $MigrationLedgerTable> {
+    extends Composer<_$MioAniDatabase, $MigrationLedgerTable> {
   $$MigrationLedgerTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -6255,7 +6251,7 @@ class $$MigrationLedgerTableAnnotationComposer
 class $$MigrationLedgerTableTableManager
     extends
         RootTableManager<
-          _$CatalogDatabase,
+          _$MioAniDatabase,
           $MigrationLedgerTable,
           MigrationLedgerData,
           $$MigrationLedgerTableFilterComposer,
@@ -6266,7 +6262,7 @@ class $$MigrationLedgerTableTableManager
           (
             MigrationLedgerData,
             BaseReferences<
-              _$CatalogDatabase,
+              _$MioAniDatabase,
               $MigrationLedgerTable,
               MigrationLedgerData
             >,
@@ -6275,7 +6271,7 @@ class $$MigrationLedgerTableTableManager
           PrefetchHooks Function()
         > {
   $$MigrationLedgerTableTableManager(
-    _$CatalogDatabase db,
+    _$MioAniDatabase db,
     $MigrationLedgerTable table,
   ) : super(
         TableManagerState(
@@ -6333,7 +6329,7 @@ class $$MigrationLedgerTableTableManager
 
 typedef $$MigrationLedgerTableProcessedTableManager =
     ProcessedTableManager<
-      _$CatalogDatabase,
+      _$MioAniDatabase,
       $MigrationLedgerTable,
       MigrationLedgerData,
       $$MigrationLedgerTableFilterComposer,
@@ -6344,7 +6340,7 @@ typedef $$MigrationLedgerTableProcessedTableManager =
       (
         MigrationLedgerData,
         BaseReferences<
-          _$CatalogDatabase,
+          _$MioAniDatabase,
           $MigrationLedgerTable,
           MigrationLedgerData
         >,
@@ -6382,7 +6378,7 @@ typedef $$ImageCacheEntriesTableUpdateCompanionBuilder =
     });
 
 class $$ImageCacheEntriesTableFilterComposer
-    extends Composer<_$CatalogDatabase, $ImageCacheEntriesTable> {
+    extends Composer<_$MioAniDatabase, $ImageCacheEntriesTable> {
   $$ImageCacheEntriesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -6442,7 +6438,7 @@ class $$ImageCacheEntriesTableFilterComposer
 }
 
 class $$ImageCacheEntriesTableOrderingComposer
-    extends Composer<_$CatalogDatabase, $ImageCacheEntriesTable> {
+    extends Composer<_$MioAniDatabase, $ImageCacheEntriesTable> {
   $$ImageCacheEntriesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -6502,7 +6498,7 @@ class $$ImageCacheEntriesTableOrderingComposer
 }
 
 class $$ImageCacheEntriesTableAnnotationComposer
-    extends Composer<_$CatalogDatabase, $ImageCacheEntriesTable> {
+    extends Composer<_$MioAniDatabase, $ImageCacheEntriesTable> {
   $$ImageCacheEntriesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -6550,7 +6546,7 @@ class $$ImageCacheEntriesTableAnnotationComposer
 class $$ImageCacheEntriesTableTableManager
     extends
         RootTableManager<
-          _$CatalogDatabase,
+          _$MioAniDatabase,
           $ImageCacheEntriesTable,
           ImageCacheEntry,
           $$ImageCacheEntriesTableFilterComposer,
@@ -6561,7 +6557,7 @@ class $$ImageCacheEntriesTableTableManager
           (
             ImageCacheEntry,
             BaseReferences<
-              _$CatalogDatabase,
+              _$MioAniDatabase,
               $ImageCacheEntriesTable,
               ImageCacheEntry
             >,
@@ -6570,7 +6566,7 @@ class $$ImageCacheEntriesTableTableManager
           PrefetchHooks Function()
         > {
   $$ImageCacheEntriesTableTableManager(
-    _$CatalogDatabase db,
+    _$MioAniDatabase db,
     $ImageCacheEntriesTable table,
   ) : super(
         TableManagerState(
@@ -6647,7 +6643,7 @@ class $$ImageCacheEntriesTableTableManager
 
 typedef $$ImageCacheEntriesTableProcessedTableManager =
     ProcessedTableManager<
-      _$CatalogDatabase,
+      _$MioAniDatabase,
       $ImageCacheEntriesTable,
       ImageCacheEntry,
       $$ImageCacheEntriesTableFilterComposer,
@@ -6658,7 +6654,7 @@ typedef $$ImageCacheEntriesTableProcessedTableManager =
       (
         ImageCacheEntry,
         BaseReferences<
-          _$CatalogDatabase,
+          _$MioAniDatabase,
           $ImageCacheEntriesTable,
           ImageCacheEntry
         >,
@@ -6667,9 +6663,9 @@ typedef $$ImageCacheEntriesTableProcessedTableManager =
       PrefetchHooks Function()
     >;
 
-class $CatalogDatabaseManager {
-  final _$CatalogDatabase _db;
-  $CatalogDatabaseManager(this._db);
+class $MioAniDatabaseManager {
+  final _$MioAniDatabase _db;
+  $MioAniDatabaseManager(this._db);
   $$StructuredCacheEntriesTableTableManager get structuredCacheEntries =>
       $$StructuredCacheEntriesTableTableManager(
         _db,

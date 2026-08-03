@@ -41,8 +41,8 @@ final requestCoordinatorProvider = Provider<RequestCoordinator>((ref) {
   return RequestCoordinator();
 });
 
-final catalogDatabaseProvider = Provider<CatalogDatabase>((ref) {
-  final database = CatalogDatabase.defaults();
+final catalogDatabaseProvider = Provider<MioAniDatabase>((ref) {
+  final database = MioAniDatabase.defaults();
   ref.onDispose(() => unawaited(database.close()));
   return database;
 });

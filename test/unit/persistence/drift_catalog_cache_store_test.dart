@@ -12,14 +12,14 @@ import 'package:mio_ani/src/features/catalog/domain/anime_summary.dart';
 import '../../support/fake_catalog_repository.dart';
 
 void main() {
-  late CatalogDatabase database;
+  late MioAniDatabase database;
   late DriftCatalogCacheStore store;
   final fetchedAt = DateTime.utc(2026, 7, 31, 8);
   final staleAt = DateTime.utc(2026, 7, 31, 8, 30);
   final expiresAt = DateTime.utc(2026, 8, 7, 8);
 
   setUp(() {
-    database = CatalogDatabase(NativeDatabase.memory());
+    database = MioAniDatabase(NativeDatabase.memory());
     store = DriftCatalogCacheStore(database: database);
   });
 
@@ -86,7 +86,7 @@ void main() {
 
   test('migrates a version 1 cache row without rebuilding it', () async {
     await database.close();
-    final legacyDatabase = CatalogDatabase(
+    final legacyDatabase = MioAniDatabase(
       NativeDatabase.memory(
         setup: (rawDatabase) {
           rawDatabase
@@ -252,6 +252,13 @@ void main() {
 
     await metadataStore.removeImageMetadata(uri);
     expect(await database.select(database.imageCacheEntries).get(), isEmpty);
+  });
+
+  test('keeps CatalogDatabase as a compatibility alias', () async {
+    final CatalogDatabase compatibilityDatabase = database;
+
+    expect(compatibilityDatabase, same(database));
+    expect(compatibilityDatabase, isA<MioAniDatabase>());
   });
 
   test('evicts image metadata at 90% by expiry then LRU to 75%', () async {
