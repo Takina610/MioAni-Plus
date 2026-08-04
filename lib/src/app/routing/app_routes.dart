@@ -6,6 +6,7 @@ import 'package:mio_ani/src/app/shell/mio_ani_shell.dart';
 import 'package:mio_ani/src/features/anime_detail/presentation/anime_detail_page.dart';
 import 'package:mio_ani/src/features/discover/presentation/discover_page.dart';
 import 'package:mio_ani/src/features/home/presentation/home_page.dart';
+import 'package:mio_ani/src/features/imports/presentation/import_page.dart';
 import 'package:mio_ani/src/features/library/domain/library_query.dart';
 import 'package:mio_ani/src/features/library/presentation/library_page.dart';
 import 'package:mio_ani/src/features/people/presentation/person_detail_page.dart';
@@ -102,6 +103,16 @@ class LibraryRouteData extends GoRouteData with $LibraryRouteData {
   @override
   Widget build(BuildContext context, GoRouterState state) {
     return LibraryPage(initialQuery: LibraryQuery.fromUri(state.uri));
+  }
+}
+
+@TypedGoRoute<ImportRouteData>(path: AppPaths.imports)
+class ImportRouteData extends GoRouteData with $ImportRouteData {
+  const ImportRouteData();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return const ImportPage();
   }
 }
 

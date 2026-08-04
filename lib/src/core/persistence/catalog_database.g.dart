@@ -5678,6 +5678,1670 @@ class IdentityOperationLogsCompanion
   }
 }
 
+class $ImportBatchRecordsTable extends ImportBatchRecords
+    with TableInfo<$ImportBatchRecordsTable, ImportBatchRecord> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ImportBatchRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _batchIdMeta = const VerificationMeta(
+    'batchId',
+  );
+  @override
+  late final GeneratedColumn<String> batchId = GeneratedColumn<String>(
+    'batch_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _stableUserIdMeta = const VerificationMeta(
+    'stableUserId',
+  );
+  @override
+  late final GeneratedColumn<String> stableUserId = GeneratedColumn<String>(
+    'stable_user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _displayNameMeta = const VerificationMeta(
+    'displayName',
+  );
+  @override
+  late final GeneratedColumn<String> displayName = GeneratedColumn<String>(
+    'display_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fingerprintMeta = const VerificationMeta(
+    'fingerprint',
+  );
+  @override
+  late final GeneratedColumn<String> fingerprint = GeneratedColumn<String>(
+    'fingerprint',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _pagesFetchedMeta = const VerificationMeta(
+    'pagesFetched',
+  );
+  @override
+  late final GeneratedColumn<int> pagesFetched = GeneratedColumn<int>(
+    'pages_fetched',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _declaredTotalMeta = const VerificationMeta(
+    'declaredTotal',
+  );
+  @override
+  late final GeneratedColumn<int> declaredTotal = GeneratedColumn<int>(
+    'declared_total',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _itemCountMeta = const VerificationMeta(
+    'itemCount',
+  );
+  @override
+  late final GeneratedColumn<int> itemCount = GeneratedColumn<int>(
+    'item_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _countsJsonMeta = const VerificationMeta(
+    'countsJson',
+  );
+  @override
+  late final GeneratedColumn<String> countsJson = GeneratedColumn<String>(
+    'counts_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  static const VerificationMeta _previousBatchIdMeta = const VerificationMeta(
+    'previousBatchId',
+  );
+  @override
+  late final GeneratedColumn<String> previousBatchId = GeneratedColumn<String>(
+    'previous_batch_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('succeeded'),
+  );
+  static const VerificationMeta _undoneAtMeta = const VerificationMeta(
+    'undoneAt',
+  );
+  @override
+  late final GeneratedColumn<int> undoneAt = GeneratedColumn<int>(
+    'undone_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    batchId,
+    source,
+    stableUserId,
+    displayName,
+    fingerprint,
+    createdAt,
+    pagesFetched,
+    declaredTotal,
+    itemCount,
+    countsJson,
+    previousBatchId,
+    status,
+    undoneAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'import_batches';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ImportBatchRecord> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('batch_id')) {
+      context.handle(
+        _batchIdMeta,
+        batchId.isAcceptableOrUnknown(data['batch_id']!, _batchIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_batchIdMeta);
+    }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceMeta);
+    }
+    if (data.containsKey('stable_user_id')) {
+      context.handle(
+        _stableUserIdMeta,
+        stableUserId.isAcceptableOrUnknown(
+          data['stable_user_id']!,
+          _stableUserIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_stableUserIdMeta);
+    }
+    if (data.containsKey('display_name')) {
+      context.handle(
+        _displayNameMeta,
+        displayName.isAcceptableOrUnknown(
+          data['display_name']!,
+          _displayNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_displayNameMeta);
+    }
+    if (data.containsKey('fingerprint')) {
+      context.handle(
+        _fingerprintMeta,
+        fingerprint.isAcceptableOrUnknown(
+          data['fingerprint']!,
+          _fingerprintMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_fingerprintMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('pages_fetched')) {
+      context.handle(
+        _pagesFetchedMeta,
+        pagesFetched.isAcceptableOrUnknown(
+          data['pages_fetched']!,
+          _pagesFetchedMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_pagesFetchedMeta);
+    }
+    if (data.containsKey('declared_total')) {
+      context.handle(
+        _declaredTotalMeta,
+        declaredTotal.isAcceptableOrUnknown(
+          data['declared_total']!,
+          _declaredTotalMeta,
+        ),
+      );
+    }
+    if (data.containsKey('item_count')) {
+      context.handle(
+        _itemCountMeta,
+        itemCount.isAcceptableOrUnknown(data['item_count']!, _itemCountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemCountMeta);
+    }
+    if (data.containsKey('counts_json')) {
+      context.handle(
+        _countsJsonMeta,
+        countsJson.isAcceptableOrUnknown(data['counts_json']!, _countsJsonMeta),
+      );
+    }
+    if (data.containsKey('previous_batch_id')) {
+      context.handle(
+        _previousBatchIdMeta,
+        previousBatchId.isAcceptableOrUnknown(
+          data['previous_batch_id']!,
+          _previousBatchIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('undone_at')) {
+      context.handle(
+        _undoneAtMeta,
+        undoneAt.isAcceptableOrUnknown(data['undone_at']!, _undoneAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {batchId};
+  @override
+  ImportBatchRecord map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ImportBatchRecord(
+      batchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}batch_id'],
+      )!,
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      )!,
+      stableUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}stable_user_id'],
+      )!,
+      displayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}display_name'],
+      )!,
+      fingerprint: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fingerprint'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      pagesFetched: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pages_fetched'],
+      )!,
+      declaredTotal: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}declared_total'],
+      ),
+      itemCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}item_count'],
+      )!,
+      countsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}counts_json'],
+      )!,
+      previousBatchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}previous_batch_id'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      undoneAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}undone_at'],
+      ),
+    );
+  }
+
+  @override
+  $ImportBatchRecordsTable createAlias(String alias) {
+    return $ImportBatchRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class ImportBatchRecord extends DataClass
+    implements Insertable<ImportBatchRecord> {
+  final String batchId;
+  final String source;
+  final String stableUserId;
+  final String displayName;
+  final String fingerprint;
+  final int createdAt;
+  final int pagesFetched;
+  final int? declaredTotal;
+  final int itemCount;
+  final String countsJson;
+  final String? previousBatchId;
+  final String status;
+  final int? undoneAt;
+  const ImportBatchRecord({
+    required this.batchId,
+    required this.source,
+    required this.stableUserId,
+    required this.displayName,
+    required this.fingerprint,
+    required this.createdAt,
+    required this.pagesFetched,
+    this.declaredTotal,
+    required this.itemCount,
+    required this.countsJson,
+    this.previousBatchId,
+    required this.status,
+    this.undoneAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['batch_id'] = Variable<String>(batchId);
+    map['source'] = Variable<String>(source);
+    map['stable_user_id'] = Variable<String>(stableUserId);
+    map['display_name'] = Variable<String>(displayName);
+    map['fingerprint'] = Variable<String>(fingerprint);
+    map['created_at'] = Variable<int>(createdAt);
+    map['pages_fetched'] = Variable<int>(pagesFetched);
+    if (!nullToAbsent || declaredTotal != null) {
+      map['declared_total'] = Variable<int>(declaredTotal);
+    }
+    map['item_count'] = Variable<int>(itemCount);
+    map['counts_json'] = Variable<String>(countsJson);
+    if (!nullToAbsent || previousBatchId != null) {
+      map['previous_batch_id'] = Variable<String>(previousBatchId);
+    }
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || undoneAt != null) {
+      map['undone_at'] = Variable<int>(undoneAt);
+    }
+    return map;
+  }
+
+  ImportBatchRecordsCompanion toCompanion(bool nullToAbsent) {
+    return ImportBatchRecordsCompanion(
+      batchId: Value(batchId),
+      source: Value(source),
+      stableUserId: Value(stableUserId),
+      displayName: Value(displayName),
+      fingerprint: Value(fingerprint),
+      createdAt: Value(createdAt),
+      pagesFetched: Value(pagesFetched),
+      declaredTotal: declaredTotal == null && nullToAbsent
+          ? const Value.absent()
+          : Value(declaredTotal),
+      itemCount: Value(itemCount),
+      countsJson: Value(countsJson),
+      previousBatchId: previousBatchId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(previousBatchId),
+      status: Value(status),
+      undoneAt: undoneAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(undoneAt),
+    );
+  }
+
+  factory ImportBatchRecord.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ImportBatchRecord(
+      batchId: serializer.fromJson<String>(json['batchId']),
+      source: serializer.fromJson<String>(json['source']),
+      stableUserId: serializer.fromJson<String>(json['stableUserId']),
+      displayName: serializer.fromJson<String>(json['displayName']),
+      fingerprint: serializer.fromJson<String>(json['fingerprint']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      pagesFetched: serializer.fromJson<int>(json['pagesFetched']),
+      declaredTotal: serializer.fromJson<int?>(json['declaredTotal']),
+      itemCount: serializer.fromJson<int>(json['itemCount']),
+      countsJson: serializer.fromJson<String>(json['countsJson']),
+      previousBatchId: serializer.fromJson<String?>(json['previousBatchId']),
+      status: serializer.fromJson<String>(json['status']),
+      undoneAt: serializer.fromJson<int?>(json['undoneAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'batchId': serializer.toJson<String>(batchId),
+      'source': serializer.toJson<String>(source),
+      'stableUserId': serializer.toJson<String>(stableUserId),
+      'displayName': serializer.toJson<String>(displayName),
+      'fingerprint': serializer.toJson<String>(fingerprint),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'pagesFetched': serializer.toJson<int>(pagesFetched),
+      'declaredTotal': serializer.toJson<int?>(declaredTotal),
+      'itemCount': serializer.toJson<int>(itemCount),
+      'countsJson': serializer.toJson<String>(countsJson),
+      'previousBatchId': serializer.toJson<String?>(previousBatchId),
+      'status': serializer.toJson<String>(status),
+      'undoneAt': serializer.toJson<int?>(undoneAt),
+    };
+  }
+
+  ImportBatchRecord copyWith({
+    String? batchId,
+    String? source,
+    String? stableUserId,
+    String? displayName,
+    String? fingerprint,
+    int? createdAt,
+    int? pagesFetched,
+    Value<int?> declaredTotal = const Value.absent(),
+    int? itemCount,
+    String? countsJson,
+    Value<String?> previousBatchId = const Value.absent(),
+    String? status,
+    Value<int?> undoneAt = const Value.absent(),
+  }) => ImportBatchRecord(
+    batchId: batchId ?? this.batchId,
+    source: source ?? this.source,
+    stableUserId: stableUserId ?? this.stableUserId,
+    displayName: displayName ?? this.displayName,
+    fingerprint: fingerprint ?? this.fingerprint,
+    createdAt: createdAt ?? this.createdAt,
+    pagesFetched: pagesFetched ?? this.pagesFetched,
+    declaredTotal: declaredTotal.present
+        ? declaredTotal.value
+        : this.declaredTotal,
+    itemCount: itemCount ?? this.itemCount,
+    countsJson: countsJson ?? this.countsJson,
+    previousBatchId: previousBatchId.present
+        ? previousBatchId.value
+        : this.previousBatchId,
+    status: status ?? this.status,
+    undoneAt: undoneAt.present ? undoneAt.value : this.undoneAt,
+  );
+  ImportBatchRecord copyWithCompanion(ImportBatchRecordsCompanion data) {
+    return ImportBatchRecord(
+      batchId: data.batchId.present ? data.batchId.value : this.batchId,
+      source: data.source.present ? data.source.value : this.source,
+      stableUserId: data.stableUserId.present
+          ? data.stableUserId.value
+          : this.stableUserId,
+      displayName: data.displayName.present
+          ? data.displayName.value
+          : this.displayName,
+      fingerprint: data.fingerprint.present
+          ? data.fingerprint.value
+          : this.fingerprint,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      pagesFetched: data.pagesFetched.present
+          ? data.pagesFetched.value
+          : this.pagesFetched,
+      declaredTotal: data.declaredTotal.present
+          ? data.declaredTotal.value
+          : this.declaredTotal,
+      itemCount: data.itemCount.present ? data.itemCount.value : this.itemCount,
+      countsJson: data.countsJson.present
+          ? data.countsJson.value
+          : this.countsJson,
+      previousBatchId: data.previousBatchId.present
+          ? data.previousBatchId.value
+          : this.previousBatchId,
+      status: data.status.present ? data.status.value : this.status,
+      undoneAt: data.undoneAt.present ? data.undoneAt.value : this.undoneAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ImportBatchRecord(')
+          ..write('batchId: $batchId, ')
+          ..write('source: $source, ')
+          ..write('stableUserId: $stableUserId, ')
+          ..write('displayName: $displayName, ')
+          ..write('fingerprint: $fingerprint, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('pagesFetched: $pagesFetched, ')
+          ..write('declaredTotal: $declaredTotal, ')
+          ..write('itemCount: $itemCount, ')
+          ..write('countsJson: $countsJson, ')
+          ..write('previousBatchId: $previousBatchId, ')
+          ..write('status: $status, ')
+          ..write('undoneAt: $undoneAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    batchId,
+    source,
+    stableUserId,
+    displayName,
+    fingerprint,
+    createdAt,
+    pagesFetched,
+    declaredTotal,
+    itemCount,
+    countsJson,
+    previousBatchId,
+    status,
+    undoneAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ImportBatchRecord &&
+          other.batchId == this.batchId &&
+          other.source == this.source &&
+          other.stableUserId == this.stableUserId &&
+          other.displayName == this.displayName &&
+          other.fingerprint == this.fingerprint &&
+          other.createdAt == this.createdAt &&
+          other.pagesFetched == this.pagesFetched &&
+          other.declaredTotal == this.declaredTotal &&
+          other.itemCount == this.itemCount &&
+          other.countsJson == this.countsJson &&
+          other.previousBatchId == this.previousBatchId &&
+          other.status == this.status &&
+          other.undoneAt == this.undoneAt);
+}
+
+class ImportBatchRecordsCompanion extends UpdateCompanion<ImportBatchRecord> {
+  final Value<String> batchId;
+  final Value<String> source;
+  final Value<String> stableUserId;
+  final Value<String> displayName;
+  final Value<String> fingerprint;
+  final Value<int> createdAt;
+  final Value<int> pagesFetched;
+  final Value<int?> declaredTotal;
+  final Value<int> itemCount;
+  final Value<String> countsJson;
+  final Value<String?> previousBatchId;
+  final Value<String> status;
+  final Value<int?> undoneAt;
+  final Value<int> rowid;
+  const ImportBatchRecordsCompanion({
+    this.batchId = const Value.absent(),
+    this.source = const Value.absent(),
+    this.stableUserId = const Value.absent(),
+    this.displayName = const Value.absent(),
+    this.fingerprint = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.pagesFetched = const Value.absent(),
+    this.declaredTotal = const Value.absent(),
+    this.itemCount = const Value.absent(),
+    this.countsJson = const Value.absent(),
+    this.previousBatchId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.undoneAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ImportBatchRecordsCompanion.insert({
+    required String batchId,
+    required String source,
+    required String stableUserId,
+    required String displayName,
+    required String fingerprint,
+    required int createdAt,
+    required int pagesFetched,
+    this.declaredTotal = const Value.absent(),
+    required int itemCount,
+    this.countsJson = const Value.absent(),
+    this.previousBatchId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.undoneAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : batchId = Value(batchId),
+       source = Value(source),
+       stableUserId = Value(stableUserId),
+       displayName = Value(displayName),
+       fingerprint = Value(fingerprint),
+       createdAt = Value(createdAt),
+       pagesFetched = Value(pagesFetched),
+       itemCount = Value(itemCount);
+  static Insertable<ImportBatchRecord> custom({
+    Expression<String>? batchId,
+    Expression<String>? source,
+    Expression<String>? stableUserId,
+    Expression<String>? displayName,
+    Expression<String>? fingerprint,
+    Expression<int>? createdAt,
+    Expression<int>? pagesFetched,
+    Expression<int>? declaredTotal,
+    Expression<int>? itemCount,
+    Expression<String>? countsJson,
+    Expression<String>? previousBatchId,
+    Expression<String>? status,
+    Expression<int>? undoneAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (batchId != null) 'batch_id': batchId,
+      if (source != null) 'source': source,
+      if (stableUserId != null) 'stable_user_id': stableUserId,
+      if (displayName != null) 'display_name': displayName,
+      if (fingerprint != null) 'fingerprint': fingerprint,
+      if (createdAt != null) 'created_at': createdAt,
+      if (pagesFetched != null) 'pages_fetched': pagesFetched,
+      if (declaredTotal != null) 'declared_total': declaredTotal,
+      if (itemCount != null) 'item_count': itemCount,
+      if (countsJson != null) 'counts_json': countsJson,
+      if (previousBatchId != null) 'previous_batch_id': previousBatchId,
+      if (status != null) 'status': status,
+      if (undoneAt != null) 'undone_at': undoneAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ImportBatchRecordsCompanion copyWith({
+    Value<String>? batchId,
+    Value<String>? source,
+    Value<String>? stableUserId,
+    Value<String>? displayName,
+    Value<String>? fingerprint,
+    Value<int>? createdAt,
+    Value<int>? pagesFetched,
+    Value<int?>? declaredTotal,
+    Value<int>? itemCount,
+    Value<String>? countsJson,
+    Value<String?>? previousBatchId,
+    Value<String>? status,
+    Value<int?>? undoneAt,
+    Value<int>? rowid,
+  }) {
+    return ImportBatchRecordsCompanion(
+      batchId: batchId ?? this.batchId,
+      source: source ?? this.source,
+      stableUserId: stableUserId ?? this.stableUserId,
+      displayName: displayName ?? this.displayName,
+      fingerprint: fingerprint ?? this.fingerprint,
+      createdAt: createdAt ?? this.createdAt,
+      pagesFetched: pagesFetched ?? this.pagesFetched,
+      declaredTotal: declaredTotal ?? this.declaredTotal,
+      itemCount: itemCount ?? this.itemCount,
+      countsJson: countsJson ?? this.countsJson,
+      previousBatchId: previousBatchId ?? this.previousBatchId,
+      status: status ?? this.status,
+      undoneAt: undoneAt ?? this.undoneAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (batchId.present) {
+      map['batch_id'] = Variable<String>(batchId.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (stableUserId.present) {
+      map['stable_user_id'] = Variable<String>(stableUserId.value);
+    }
+    if (displayName.present) {
+      map['display_name'] = Variable<String>(displayName.value);
+    }
+    if (fingerprint.present) {
+      map['fingerprint'] = Variable<String>(fingerprint.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (pagesFetched.present) {
+      map['pages_fetched'] = Variable<int>(pagesFetched.value);
+    }
+    if (declaredTotal.present) {
+      map['declared_total'] = Variable<int>(declaredTotal.value);
+    }
+    if (itemCount.present) {
+      map['item_count'] = Variable<int>(itemCount.value);
+    }
+    if (countsJson.present) {
+      map['counts_json'] = Variable<String>(countsJson.value);
+    }
+    if (previousBatchId.present) {
+      map['previous_batch_id'] = Variable<String>(previousBatchId.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (undoneAt.present) {
+      map['undone_at'] = Variable<int>(undoneAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ImportBatchRecordsCompanion(')
+          ..write('batchId: $batchId, ')
+          ..write('source: $source, ')
+          ..write('stableUserId: $stableUserId, ')
+          ..write('displayName: $displayName, ')
+          ..write('fingerprint: $fingerprint, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('pagesFetched: $pagesFetched, ')
+          ..write('declaredTotal: $declaredTotal, ')
+          ..write('itemCount: $itemCount, ')
+          ..write('countsJson: $countsJson, ')
+          ..write('previousBatchId: $previousBatchId, ')
+          ..write('status: $status, ')
+          ..write('undoneAt: $undoneAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ImportContributionRecordsTable extends ImportContributionRecords
+    with TableInfo<$ImportContributionRecordsTable, ImportContributionRecord> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ImportContributionRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _batchIdMeta = const VerificationMeta(
+    'batchId',
+  );
+  @override
+  late final GeneratedColumn<String> batchId = GeneratedColumn<String>(
+    'batch_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES import_batches (batch_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _sourceIdMeta = const VerificationMeta(
+    'sourceId',
+  );
+  @override
+  late final GeneratedColumn<String> sourceId = GeneratedColumn<String>(
+    'source_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _identityIdMeta = const VerificationMeta(
+    'identityId',
+  );
+  @override
+  late final GeneratedColumn<String> identityId = GeneratedColumn<String>(
+    'identity_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES anime_identities (identity_id) ON DELETE SET NULL',
+    ),
+  );
+  static const VerificationMeta _dispositionMeta = const VerificationMeta(
+    'disposition',
+  );
+  @override
+  late final GeneratedColumn<String> disposition = GeneratedColumn<String>(
+    'disposition',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _observedAtMeta = const VerificationMeta(
+    'observedAt',
+  );
+  @override
+  late final GeneratedColumn<int> observedAt = GeneratedColumn<int>(
+    'observed_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _reasonMeta = const VerificationMeta('reason');
+  @override
+  late final GeneratedColumn<String> reason = GeneratedColumn<String>(
+    'reason',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    batchId,
+    sourceId,
+    identityId,
+    disposition,
+    observedAt,
+    reason,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'import_contributions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ImportContributionRecord> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('batch_id')) {
+      context.handle(
+        _batchIdMeta,
+        batchId.isAcceptableOrUnknown(data['batch_id']!, _batchIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_batchIdMeta);
+    }
+    if (data.containsKey('source_id')) {
+      context.handle(
+        _sourceIdMeta,
+        sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceIdMeta);
+    }
+    if (data.containsKey('identity_id')) {
+      context.handle(
+        _identityIdMeta,
+        identityId.isAcceptableOrUnknown(data['identity_id']!, _identityIdMeta),
+      );
+    }
+    if (data.containsKey('disposition')) {
+      context.handle(
+        _dispositionMeta,
+        disposition.isAcceptableOrUnknown(
+          data['disposition']!,
+          _dispositionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_dispositionMeta);
+    }
+    if (data.containsKey('observed_at')) {
+      context.handle(
+        _observedAtMeta,
+        observedAt.isAcceptableOrUnknown(data['observed_at']!, _observedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_observedAtMeta);
+    }
+    if (data.containsKey('reason')) {
+      context.handle(
+        _reasonMeta,
+        reason.isAcceptableOrUnknown(data['reason']!, _reasonMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {batchId, sourceId};
+  @override
+  ImportContributionRecord map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ImportContributionRecord(
+      batchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}batch_id'],
+      )!,
+      sourceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_id'],
+      )!,
+      identityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}identity_id'],
+      ),
+      disposition: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}disposition'],
+      )!,
+      observedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}observed_at'],
+      )!,
+      reason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reason'],
+      ),
+    );
+  }
+
+  @override
+  $ImportContributionRecordsTable createAlias(String alias) {
+    return $ImportContributionRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class ImportContributionRecord extends DataClass
+    implements Insertable<ImportContributionRecord> {
+  final String batchId;
+  final String sourceId;
+  final String? identityId;
+  final String disposition;
+  final int observedAt;
+  final String? reason;
+  const ImportContributionRecord({
+    required this.batchId,
+    required this.sourceId,
+    this.identityId,
+    required this.disposition,
+    required this.observedAt,
+    this.reason,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['batch_id'] = Variable<String>(batchId);
+    map['source_id'] = Variable<String>(sourceId);
+    if (!nullToAbsent || identityId != null) {
+      map['identity_id'] = Variable<String>(identityId);
+    }
+    map['disposition'] = Variable<String>(disposition);
+    map['observed_at'] = Variable<int>(observedAt);
+    if (!nullToAbsent || reason != null) {
+      map['reason'] = Variable<String>(reason);
+    }
+    return map;
+  }
+
+  ImportContributionRecordsCompanion toCompanion(bool nullToAbsent) {
+    return ImportContributionRecordsCompanion(
+      batchId: Value(batchId),
+      sourceId: Value(sourceId),
+      identityId: identityId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(identityId),
+      disposition: Value(disposition),
+      observedAt: Value(observedAt),
+      reason: reason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reason),
+    );
+  }
+
+  factory ImportContributionRecord.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ImportContributionRecord(
+      batchId: serializer.fromJson<String>(json['batchId']),
+      sourceId: serializer.fromJson<String>(json['sourceId']),
+      identityId: serializer.fromJson<String?>(json['identityId']),
+      disposition: serializer.fromJson<String>(json['disposition']),
+      observedAt: serializer.fromJson<int>(json['observedAt']),
+      reason: serializer.fromJson<String?>(json['reason']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'batchId': serializer.toJson<String>(batchId),
+      'sourceId': serializer.toJson<String>(sourceId),
+      'identityId': serializer.toJson<String?>(identityId),
+      'disposition': serializer.toJson<String>(disposition),
+      'observedAt': serializer.toJson<int>(observedAt),
+      'reason': serializer.toJson<String?>(reason),
+    };
+  }
+
+  ImportContributionRecord copyWith({
+    String? batchId,
+    String? sourceId,
+    Value<String?> identityId = const Value.absent(),
+    String? disposition,
+    int? observedAt,
+    Value<String?> reason = const Value.absent(),
+  }) => ImportContributionRecord(
+    batchId: batchId ?? this.batchId,
+    sourceId: sourceId ?? this.sourceId,
+    identityId: identityId.present ? identityId.value : this.identityId,
+    disposition: disposition ?? this.disposition,
+    observedAt: observedAt ?? this.observedAt,
+    reason: reason.present ? reason.value : this.reason,
+  );
+  ImportContributionRecord copyWithCompanion(
+    ImportContributionRecordsCompanion data,
+  ) {
+    return ImportContributionRecord(
+      batchId: data.batchId.present ? data.batchId.value : this.batchId,
+      sourceId: data.sourceId.present ? data.sourceId.value : this.sourceId,
+      identityId: data.identityId.present
+          ? data.identityId.value
+          : this.identityId,
+      disposition: data.disposition.present
+          ? data.disposition.value
+          : this.disposition,
+      observedAt: data.observedAt.present
+          ? data.observedAt.value
+          : this.observedAt,
+      reason: data.reason.present ? data.reason.value : this.reason,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ImportContributionRecord(')
+          ..write('batchId: $batchId, ')
+          ..write('sourceId: $sourceId, ')
+          ..write('identityId: $identityId, ')
+          ..write('disposition: $disposition, ')
+          ..write('observedAt: $observedAt, ')
+          ..write('reason: $reason')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    batchId,
+    sourceId,
+    identityId,
+    disposition,
+    observedAt,
+    reason,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ImportContributionRecord &&
+          other.batchId == this.batchId &&
+          other.sourceId == this.sourceId &&
+          other.identityId == this.identityId &&
+          other.disposition == this.disposition &&
+          other.observedAt == this.observedAt &&
+          other.reason == this.reason);
+}
+
+class ImportContributionRecordsCompanion
+    extends UpdateCompanion<ImportContributionRecord> {
+  final Value<String> batchId;
+  final Value<String> sourceId;
+  final Value<String?> identityId;
+  final Value<String> disposition;
+  final Value<int> observedAt;
+  final Value<String?> reason;
+  final Value<int> rowid;
+  const ImportContributionRecordsCompanion({
+    this.batchId = const Value.absent(),
+    this.sourceId = const Value.absent(),
+    this.identityId = const Value.absent(),
+    this.disposition = const Value.absent(),
+    this.observedAt = const Value.absent(),
+    this.reason = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ImportContributionRecordsCompanion.insert({
+    required String batchId,
+    required String sourceId,
+    this.identityId = const Value.absent(),
+    required String disposition,
+    required int observedAt,
+    this.reason = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : batchId = Value(batchId),
+       sourceId = Value(sourceId),
+       disposition = Value(disposition),
+       observedAt = Value(observedAt);
+  static Insertable<ImportContributionRecord> custom({
+    Expression<String>? batchId,
+    Expression<String>? sourceId,
+    Expression<String>? identityId,
+    Expression<String>? disposition,
+    Expression<int>? observedAt,
+    Expression<String>? reason,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (batchId != null) 'batch_id': batchId,
+      if (sourceId != null) 'source_id': sourceId,
+      if (identityId != null) 'identity_id': identityId,
+      if (disposition != null) 'disposition': disposition,
+      if (observedAt != null) 'observed_at': observedAt,
+      if (reason != null) 'reason': reason,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ImportContributionRecordsCompanion copyWith({
+    Value<String>? batchId,
+    Value<String>? sourceId,
+    Value<String?>? identityId,
+    Value<String>? disposition,
+    Value<int>? observedAt,
+    Value<String?>? reason,
+    Value<int>? rowid,
+  }) {
+    return ImportContributionRecordsCompanion(
+      batchId: batchId ?? this.batchId,
+      sourceId: sourceId ?? this.sourceId,
+      identityId: identityId ?? this.identityId,
+      disposition: disposition ?? this.disposition,
+      observedAt: observedAt ?? this.observedAt,
+      reason: reason ?? this.reason,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (batchId.present) {
+      map['batch_id'] = Variable<String>(batchId.value);
+    }
+    if (sourceId.present) {
+      map['source_id'] = Variable<String>(sourceId.value);
+    }
+    if (identityId.present) {
+      map['identity_id'] = Variable<String>(identityId.value);
+    }
+    if (disposition.present) {
+      map['disposition'] = Variable<String>(disposition.value);
+    }
+    if (observedAt.present) {
+      map['observed_at'] = Variable<int>(observedAt.value);
+    }
+    if (reason.present) {
+      map['reason'] = Variable<String>(reason.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ImportContributionRecordsCompanion(')
+          ..write('batchId: $batchId, ')
+          ..write('sourceId: $sourceId, ')
+          ..write('identityId: $identityId, ')
+          ..write('disposition: $disposition, ')
+          ..write('observedAt: $observedAt, ')
+          ..write('reason: $reason, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ImportSnapshotRecordsTable extends ImportSnapshotRecords
+    with TableInfo<$ImportSnapshotRecordsTable, ImportSnapshotRecord> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ImportSnapshotRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _batchIdMeta = const VerificationMeta(
+    'batchId',
+  );
+  @override
+  late final GeneratedColumn<String> batchId = GeneratedColumn<String>(
+    'batch_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES import_batches (batch_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _stableUserIdMeta = const VerificationMeta(
+    'stableUserId',
+  );
+  @override
+  late final GeneratedColumn<String> stableUserId = GeneratedColumn<String>(
+    'stable_user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fingerprintMeta = const VerificationMeta(
+    'fingerprint',
+  );
+  @override
+  late final GeneratedColumn<String> fingerprint = GeneratedColumn<String>(
+    'fingerprint',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemsJsonMeta = const VerificationMeta(
+    'itemsJson',
+  );
+  @override
+  late final GeneratedColumn<String> itemsJson = GeneratedColumn<String>(
+    'items_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    batchId,
+    source,
+    stableUserId,
+    fingerprint,
+    itemsJson,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'import_snapshots';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ImportSnapshotRecord> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('batch_id')) {
+      context.handle(
+        _batchIdMeta,
+        batchId.isAcceptableOrUnknown(data['batch_id']!, _batchIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_batchIdMeta);
+    }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceMeta);
+    }
+    if (data.containsKey('stable_user_id')) {
+      context.handle(
+        _stableUserIdMeta,
+        stableUserId.isAcceptableOrUnknown(
+          data['stable_user_id']!,
+          _stableUserIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_stableUserIdMeta);
+    }
+    if (data.containsKey('fingerprint')) {
+      context.handle(
+        _fingerprintMeta,
+        fingerprint.isAcceptableOrUnknown(
+          data['fingerprint']!,
+          _fingerprintMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_fingerprintMeta);
+    }
+    if (data.containsKey('items_json')) {
+      context.handle(
+        _itemsJsonMeta,
+        itemsJson.isAcceptableOrUnknown(data['items_json']!, _itemsJsonMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {batchId};
+  @override
+  ImportSnapshotRecord map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ImportSnapshotRecord(
+      batchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}batch_id'],
+      )!,
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      )!,
+      stableUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}stable_user_id'],
+      )!,
+      fingerprint: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fingerprint'],
+      )!,
+      itemsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}items_json'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ImportSnapshotRecordsTable createAlias(String alias) {
+    return $ImportSnapshotRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class ImportSnapshotRecord extends DataClass
+    implements Insertable<ImportSnapshotRecord> {
+  final String batchId;
+  final String source;
+  final String stableUserId;
+  final String fingerprint;
+  final String itemsJson;
+  final int createdAt;
+  const ImportSnapshotRecord({
+    required this.batchId,
+    required this.source,
+    required this.stableUserId,
+    required this.fingerprint,
+    required this.itemsJson,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['batch_id'] = Variable<String>(batchId);
+    map['source'] = Variable<String>(source);
+    map['stable_user_id'] = Variable<String>(stableUserId);
+    map['fingerprint'] = Variable<String>(fingerprint);
+    map['items_json'] = Variable<String>(itemsJson);
+    map['created_at'] = Variable<int>(createdAt);
+    return map;
+  }
+
+  ImportSnapshotRecordsCompanion toCompanion(bool nullToAbsent) {
+    return ImportSnapshotRecordsCompanion(
+      batchId: Value(batchId),
+      source: Value(source),
+      stableUserId: Value(stableUserId),
+      fingerprint: Value(fingerprint),
+      itemsJson: Value(itemsJson),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory ImportSnapshotRecord.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ImportSnapshotRecord(
+      batchId: serializer.fromJson<String>(json['batchId']),
+      source: serializer.fromJson<String>(json['source']),
+      stableUserId: serializer.fromJson<String>(json['stableUserId']),
+      fingerprint: serializer.fromJson<String>(json['fingerprint']),
+      itemsJson: serializer.fromJson<String>(json['itemsJson']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'batchId': serializer.toJson<String>(batchId),
+      'source': serializer.toJson<String>(source),
+      'stableUserId': serializer.toJson<String>(stableUserId),
+      'fingerprint': serializer.toJson<String>(fingerprint),
+      'itemsJson': serializer.toJson<String>(itemsJson),
+      'createdAt': serializer.toJson<int>(createdAt),
+    };
+  }
+
+  ImportSnapshotRecord copyWith({
+    String? batchId,
+    String? source,
+    String? stableUserId,
+    String? fingerprint,
+    String? itemsJson,
+    int? createdAt,
+  }) => ImportSnapshotRecord(
+    batchId: batchId ?? this.batchId,
+    source: source ?? this.source,
+    stableUserId: stableUserId ?? this.stableUserId,
+    fingerprint: fingerprint ?? this.fingerprint,
+    itemsJson: itemsJson ?? this.itemsJson,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  ImportSnapshotRecord copyWithCompanion(ImportSnapshotRecordsCompanion data) {
+    return ImportSnapshotRecord(
+      batchId: data.batchId.present ? data.batchId.value : this.batchId,
+      source: data.source.present ? data.source.value : this.source,
+      stableUserId: data.stableUserId.present
+          ? data.stableUserId.value
+          : this.stableUserId,
+      fingerprint: data.fingerprint.present
+          ? data.fingerprint.value
+          : this.fingerprint,
+      itemsJson: data.itemsJson.present ? data.itemsJson.value : this.itemsJson,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ImportSnapshotRecord(')
+          ..write('batchId: $batchId, ')
+          ..write('source: $source, ')
+          ..write('stableUserId: $stableUserId, ')
+          ..write('fingerprint: $fingerprint, ')
+          ..write('itemsJson: $itemsJson, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    batchId,
+    source,
+    stableUserId,
+    fingerprint,
+    itemsJson,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ImportSnapshotRecord &&
+          other.batchId == this.batchId &&
+          other.source == this.source &&
+          other.stableUserId == this.stableUserId &&
+          other.fingerprint == this.fingerprint &&
+          other.itemsJson == this.itemsJson &&
+          other.createdAt == this.createdAt);
+}
+
+class ImportSnapshotRecordsCompanion
+    extends UpdateCompanion<ImportSnapshotRecord> {
+  final Value<String> batchId;
+  final Value<String> source;
+  final Value<String> stableUserId;
+  final Value<String> fingerprint;
+  final Value<String> itemsJson;
+  final Value<int> createdAt;
+  final Value<int> rowid;
+  const ImportSnapshotRecordsCompanion({
+    this.batchId = const Value.absent(),
+    this.source = const Value.absent(),
+    this.stableUserId = const Value.absent(),
+    this.fingerprint = const Value.absent(),
+    this.itemsJson = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ImportSnapshotRecordsCompanion.insert({
+    required String batchId,
+    required String source,
+    required String stableUserId,
+    required String fingerprint,
+    this.itemsJson = const Value.absent(),
+    required int createdAt,
+    this.rowid = const Value.absent(),
+  }) : batchId = Value(batchId),
+       source = Value(source),
+       stableUserId = Value(stableUserId),
+       fingerprint = Value(fingerprint),
+       createdAt = Value(createdAt);
+  static Insertable<ImportSnapshotRecord> custom({
+    Expression<String>? batchId,
+    Expression<String>? source,
+    Expression<String>? stableUserId,
+    Expression<String>? fingerprint,
+    Expression<String>? itemsJson,
+    Expression<int>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (batchId != null) 'batch_id': batchId,
+      if (source != null) 'source': source,
+      if (stableUserId != null) 'stable_user_id': stableUserId,
+      if (fingerprint != null) 'fingerprint': fingerprint,
+      if (itemsJson != null) 'items_json': itemsJson,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ImportSnapshotRecordsCompanion copyWith({
+    Value<String>? batchId,
+    Value<String>? source,
+    Value<String>? stableUserId,
+    Value<String>? fingerprint,
+    Value<String>? itemsJson,
+    Value<int>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return ImportSnapshotRecordsCompanion(
+      batchId: batchId ?? this.batchId,
+      source: source ?? this.source,
+      stableUserId: stableUserId ?? this.stableUserId,
+      fingerprint: fingerprint ?? this.fingerprint,
+      itemsJson: itemsJson ?? this.itemsJson,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (batchId.present) {
+      map['batch_id'] = Variable<String>(batchId.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (stableUserId.present) {
+      map['stable_user_id'] = Variable<String>(stableUserId.value);
+    }
+    if (fingerprint.present) {
+      map['fingerprint'] = Variable<String>(fingerprint.value);
+    }
+    if (itemsJson.present) {
+      map['items_json'] = Variable<String>(itemsJson.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ImportSnapshotRecordsCompanion(')
+          ..write('batchId: $batchId, ')
+          ..write('source: $source, ')
+          ..write('stableUserId: $stableUserId, ')
+          ..write('fingerprint: $fingerprint, ')
+          ..write('itemsJson: $itemsJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$MioAniDatabase extends GeneratedDatabase {
   _$MioAniDatabase(QueryExecutor e) : super(e);
   $MioAniDatabaseManager get managers => $MioAniDatabaseManager(this);
@@ -5706,6 +7370,12 @@ abstract class _$MioAniDatabase extends GeneratedDatabase {
       $IdentityDecisionsTable(this);
   late final $IdentityOperationLogsTable identityOperationLogs =
       $IdentityOperationLogsTable(this);
+  late final $ImportBatchRecordsTable importBatchRecords =
+      $ImportBatchRecordsTable(this);
+  late final $ImportContributionRecordsTable importContributionRecords =
+      $ImportContributionRecordsTable(this);
+  late final $ImportSnapshotRecordsTable importSnapshotRecords =
+      $ImportSnapshotRecordsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5724,6 +7394,9 @@ abstract class _$MioAniDatabase extends GeneratedDatabase {
     identityReviews,
     identityDecisions,
     identityOperationLogs,
+    importBatchRecords,
+    importContributionRecords,
+    importSnapshotRecords,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -5747,6 +7420,27 @@ abstract class _$MioAniDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('library_entries', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'import_batches',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('import_contributions', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'anime_identities',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('import_contributions', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'import_batches',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('import_snapshots', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -6130,6 +7824,37 @@ final class $$AnimeIdentitiesTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<
+    $ImportContributionRecordsTable,
+    List<ImportContributionRecord>
+  >
+  _importContributionRecordsRefsTable(_$MioAniDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.importContributionRecords,
+        aliasName:
+            'anime_identities__identity_id__import_contributions__identity_id',
+      );
+
+  $$ImportContributionRecordsTableProcessedTableManager
+  get importContributionRecordsRefs {
+    final manager =
+        $$ImportContributionRecordsTableTableManager(
+          $_db,
+          $_db.importContributionRecords,
+        ).filter(
+          (f) => f.identityId.identityId.sqlEquals(
+            $_itemColumn<String>('identity_id')!,
+          ),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _importContributionRecordsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$AnimeIdentitiesTableFilterComposer
@@ -6238,6 +7963,33 @@ class $$AnimeIdentitiesTableFilterComposer
                 $removeJoinBuilderFromRootComposer,
           ),
     );
+    return f(composer);
+  }
+
+  Expression<bool> importContributionRecordsRefs(
+    Expression<bool> Function($$ImportContributionRecordsTableFilterComposer f)
+    f,
+  ) {
+    final $$ImportContributionRecordsTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.identityId,
+          referencedTable: $db.importContributionRecords,
+          getReferencedColumn: (t) => t.identityId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ImportContributionRecordsTableFilterComposer(
+                $db: $db,
+                $table: $db.importContributionRecords,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 }
@@ -6380,6 +8132,33 @@ class $$AnimeIdentitiesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> importContributionRecordsRefs<T extends Object>(
+    Expression<T> Function($$ImportContributionRecordsTableAnnotationComposer a)
+    f,
+  ) {
+    final $$ImportContributionRecordsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.identityId,
+          referencedTable: $db.importContributionRecords,
+          getReferencedColumn: (t) => t.identityId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ImportContributionRecordsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.importContributionRecords,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$AnimeIdentitiesTableTableManager
@@ -6399,6 +8178,7 @@ class $$AnimeIdentitiesTableTableManager
             bool sourceEntitiesRefs,
             bool legacyIdentityLinksRefs,
             bool libraryEntriesRefs,
+            bool importContributionRecordsRefs,
           })
         > {
   $$AnimeIdentitiesTableTableManager(
@@ -6459,6 +8239,7 @@ class $$AnimeIdentitiesTableTableManager
                 sourceEntitiesRefs = false,
                 legacyIdentityLinksRefs = false,
                 libraryEntriesRefs = false,
+                importContributionRecordsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -6466,6 +8247,8 @@ class $$AnimeIdentitiesTableTableManager
                     if (sourceEntitiesRefs) db.sourceEntities,
                     if (legacyIdentityLinksRefs) db.legacyIdentityLinks,
                     if (libraryEntriesRefs) db.libraryEntries,
+                    if (importContributionRecordsRefs)
+                      db.importContributionRecords,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -6533,6 +8316,27 @@ class $$AnimeIdentitiesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (importContributionRecordsRefs)
+                        await $_getPrefetchedData<
+                          AnimeIdentity,
+                          $AnimeIdentitiesTable,
+                          ImportContributionRecord
+                        >(
+                          currentTable: table,
+                          referencedTable: $$AnimeIdentitiesTableReferences
+                              ._importContributionRecordsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$AnimeIdentitiesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).importContributionRecordsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.identityId == item.identityId,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -6557,6 +8361,7 @@ typedef $$AnimeIdentitiesTableProcessedTableManager =
         bool sourceEntitiesRefs,
         bool legacyIdentityLinksRefs,
         bool libraryEntriesRefs,
+        bool importContributionRecordsRefs,
       })
     >;
 typedef $$SourceEntitiesTableCreateCompanionBuilder =
@@ -9536,6 +11341,1439 @@ typedef $$IdentityOperationLogsTableProcessedTableManager =
       IdentityOperationLog,
       PrefetchHooks Function()
     >;
+typedef $$ImportBatchRecordsTableCreateCompanionBuilder =
+    ImportBatchRecordsCompanion Function({
+      required String batchId,
+      required String source,
+      required String stableUserId,
+      required String displayName,
+      required String fingerprint,
+      required int createdAt,
+      required int pagesFetched,
+      Value<int?> declaredTotal,
+      required int itemCount,
+      Value<String> countsJson,
+      Value<String?> previousBatchId,
+      Value<String> status,
+      Value<int?> undoneAt,
+      Value<int> rowid,
+    });
+typedef $$ImportBatchRecordsTableUpdateCompanionBuilder =
+    ImportBatchRecordsCompanion Function({
+      Value<String> batchId,
+      Value<String> source,
+      Value<String> stableUserId,
+      Value<String> displayName,
+      Value<String> fingerprint,
+      Value<int> createdAt,
+      Value<int> pagesFetched,
+      Value<int?> declaredTotal,
+      Value<int> itemCount,
+      Value<String> countsJson,
+      Value<String?> previousBatchId,
+      Value<String> status,
+      Value<int?> undoneAt,
+      Value<int> rowid,
+    });
+
+final class $$ImportBatchRecordsTableReferences
+    extends
+        BaseReferences<
+          _$MioAniDatabase,
+          $ImportBatchRecordsTable,
+          ImportBatchRecord
+        > {
+  $$ImportBatchRecordsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static MultiTypedResultKey<
+    $ImportContributionRecordsTable,
+    List<ImportContributionRecord>
+  >
+  _importContributionRecordsRefsTable(_$MioAniDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.importContributionRecords,
+        aliasName: 'import_batches__batch_id__import_contributions__batch_id',
+      );
+
+  $$ImportContributionRecordsTableProcessedTableManager
+  get importContributionRecordsRefs {
+    final manager =
+        $$ImportContributionRecordsTableTableManager(
+          $_db,
+          $_db.importContributionRecords,
+        ).filter(
+          (f) => f.batchId.batchId.sqlEquals($_itemColumn<String>('batch_id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _importContributionRecordsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $ImportSnapshotRecordsTable,
+    List<ImportSnapshotRecord>
+  >
+  _importSnapshotRecordsRefsTable(_$MioAniDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.importSnapshotRecords,
+        aliasName: 'import_batches__batch_id__import_snapshots__batch_id',
+      );
+
+  $$ImportSnapshotRecordsTableProcessedTableManager
+  get importSnapshotRecordsRefs {
+    final manager =
+        $$ImportSnapshotRecordsTableTableManager(
+          $_db,
+          $_db.importSnapshotRecords,
+        ).filter(
+          (f) => f.batchId.batchId.sqlEquals($_itemColumn<String>('batch_id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _importSnapshotRecordsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$ImportBatchRecordsTableFilterComposer
+    extends Composer<_$MioAniDatabase, $ImportBatchRecordsTable> {
+  $$ImportBatchRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get batchId => $composableBuilder(
+    column: $table.batchId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get stableUserId => $composableBuilder(
+    column: $table.stableUserId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fingerprint => $composableBuilder(
+    column: $table.fingerprint,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get pagesFetched => $composableBuilder(
+    column: $table.pagesFetched,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get declaredTotal => $composableBuilder(
+    column: $table.declaredTotal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get itemCount => $composableBuilder(
+    column: $table.itemCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get countsJson => $composableBuilder(
+    column: $table.countsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get previousBatchId => $composableBuilder(
+    column: $table.previousBatchId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get undoneAt => $composableBuilder(
+    column: $table.undoneAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> importContributionRecordsRefs(
+    Expression<bool> Function($$ImportContributionRecordsTableFilterComposer f)
+    f,
+  ) {
+    final $$ImportContributionRecordsTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.batchId,
+          referencedTable: $db.importContributionRecords,
+          getReferencedColumn: (t) => t.batchId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ImportContributionRecordsTableFilterComposer(
+                $db: $db,
+                $table: $db.importContributionRecords,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<bool> importSnapshotRecordsRefs(
+    Expression<bool> Function($$ImportSnapshotRecordsTableFilterComposer f) f,
+  ) {
+    final $$ImportSnapshotRecordsTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.batchId,
+          referencedTable: $db.importSnapshotRecords,
+          getReferencedColumn: (t) => t.batchId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ImportSnapshotRecordsTableFilterComposer(
+                $db: $db,
+                $table: $db.importSnapshotRecords,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+}
+
+class $$ImportBatchRecordsTableOrderingComposer
+    extends Composer<_$MioAniDatabase, $ImportBatchRecordsTable> {
+  $$ImportBatchRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get batchId => $composableBuilder(
+    column: $table.batchId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get stableUserId => $composableBuilder(
+    column: $table.stableUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fingerprint => $composableBuilder(
+    column: $table.fingerprint,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get pagesFetched => $composableBuilder(
+    column: $table.pagesFetched,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get declaredTotal => $composableBuilder(
+    column: $table.declaredTotal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get itemCount => $composableBuilder(
+    column: $table.itemCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get countsJson => $composableBuilder(
+    column: $table.countsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get previousBatchId => $composableBuilder(
+    column: $table.previousBatchId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get undoneAt => $composableBuilder(
+    column: $table.undoneAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ImportBatchRecordsTableAnnotationComposer
+    extends Composer<_$MioAniDatabase, $ImportBatchRecordsTable> {
+  $$ImportBatchRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get batchId =>
+      $composableBuilder(column: $table.batchId, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<String> get stableUserId => $composableBuilder(
+    column: $table.stableUserId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get displayName => $composableBuilder(
+    column: $table.displayName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get fingerprint => $composableBuilder(
+    column: $table.fingerprint,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get pagesFetched => $composableBuilder(
+    column: $table.pagesFetched,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get declaredTotal => $composableBuilder(
+    column: $table.declaredTotal,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get itemCount =>
+      $composableBuilder(column: $table.itemCount, builder: (column) => column);
+
+  GeneratedColumn<String> get countsJson => $composableBuilder(
+    column: $table.countsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get previousBatchId => $composableBuilder(
+    column: $table.previousBatchId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get undoneAt =>
+      $composableBuilder(column: $table.undoneAt, builder: (column) => column);
+
+  Expression<T> importContributionRecordsRefs<T extends Object>(
+    Expression<T> Function($$ImportContributionRecordsTableAnnotationComposer a)
+    f,
+  ) {
+    final $$ImportContributionRecordsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.batchId,
+          referencedTable: $db.importContributionRecords,
+          getReferencedColumn: (t) => t.batchId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ImportContributionRecordsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.importContributionRecords,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> importSnapshotRecordsRefs<T extends Object>(
+    Expression<T> Function($$ImportSnapshotRecordsTableAnnotationComposer a) f,
+  ) {
+    final $$ImportSnapshotRecordsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.batchId,
+          referencedTable: $db.importSnapshotRecords,
+          getReferencedColumn: (t) => t.batchId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ImportSnapshotRecordsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.importSnapshotRecords,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+}
+
+class $$ImportBatchRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$MioAniDatabase,
+          $ImportBatchRecordsTable,
+          ImportBatchRecord,
+          $$ImportBatchRecordsTableFilterComposer,
+          $$ImportBatchRecordsTableOrderingComposer,
+          $$ImportBatchRecordsTableAnnotationComposer,
+          $$ImportBatchRecordsTableCreateCompanionBuilder,
+          $$ImportBatchRecordsTableUpdateCompanionBuilder,
+          (ImportBatchRecord, $$ImportBatchRecordsTableReferences),
+          ImportBatchRecord,
+          PrefetchHooks Function({
+            bool importContributionRecordsRefs,
+            bool importSnapshotRecordsRefs,
+          })
+        > {
+  $$ImportBatchRecordsTableTableManager(
+    _$MioAniDatabase db,
+    $ImportBatchRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ImportBatchRecordsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ImportBatchRecordsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ImportBatchRecordsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> batchId = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<String> stableUserId = const Value.absent(),
+                Value<String> displayName = const Value.absent(),
+                Value<String> fingerprint = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> pagesFetched = const Value.absent(),
+                Value<int?> declaredTotal = const Value.absent(),
+                Value<int> itemCount = const Value.absent(),
+                Value<String> countsJson = const Value.absent(),
+                Value<String?> previousBatchId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int?> undoneAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ImportBatchRecordsCompanion(
+                batchId: batchId,
+                source: source,
+                stableUserId: stableUserId,
+                displayName: displayName,
+                fingerprint: fingerprint,
+                createdAt: createdAt,
+                pagesFetched: pagesFetched,
+                declaredTotal: declaredTotal,
+                itemCount: itemCount,
+                countsJson: countsJson,
+                previousBatchId: previousBatchId,
+                status: status,
+                undoneAt: undoneAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String batchId,
+                required String source,
+                required String stableUserId,
+                required String displayName,
+                required String fingerprint,
+                required int createdAt,
+                required int pagesFetched,
+                Value<int?> declaredTotal = const Value.absent(),
+                required int itemCount,
+                Value<String> countsJson = const Value.absent(),
+                Value<String?> previousBatchId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int?> undoneAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ImportBatchRecordsCompanion.insert(
+                batchId: batchId,
+                source: source,
+                stableUserId: stableUserId,
+                displayName: displayName,
+                fingerprint: fingerprint,
+                createdAt: createdAt,
+                pagesFetched: pagesFetched,
+                declaredTotal: declaredTotal,
+                itemCount: itemCount,
+                countsJson: countsJson,
+                previousBatchId: previousBatchId,
+                status: status,
+                undoneAt: undoneAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ImportBatchRecordsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({
+                importContributionRecordsRefs = false,
+                importSnapshotRecordsRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (importContributionRecordsRefs)
+                      db.importContributionRecords,
+                    if (importSnapshotRecordsRefs) db.importSnapshotRecords,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (importContributionRecordsRefs)
+                        await $_getPrefetchedData<
+                          ImportBatchRecord,
+                          $ImportBatchRecordsTable,
+                          ImportContributionRecord
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ImportBatchRecordsTableReferences
+                              ._importContributionRecordsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ImportBatchRecordsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).importContributionRecordsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.batchId == item.batchId,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (importSnapshotRecordsRefs)
+                        await $_getPrefetchedData<
+                          ImportBatchRecord,
+                          $ImportBatchRecordsTable,
+                          ImportSnapshotRecord
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ImportBatchRecordsTableReferences
+                              ._importSnapshotRecordsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ImportBatchRecordsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).importSnapshotRecordsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.batchId == item.batchId,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$ImportBatchRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$MioAniDatabase,
+      $ImportBatchRecordsTable,
+      ImportBatchRecord,
+      $$ImportBatchRecordsTableFilterComposer,
+      $$ImportBatchRecordsTableOrderingComposer,
+      $$ImportBatchRecordsTableAnnotationComposer,
+      $$ImportBatchRecordsTableCreateCompanionBuilder,
+      $$ImportBatchRecordsTableUpdateCompanionBuilder,
+      (ImportBatchRecord, $$ImportBatchRecordsTableReferences),
+      ImportBatchRecord,
+      PrefetchHooks Function({
+        bool importContributionRecordsRefs,
+        bool importSnapshotRecordsRefs,
+      })
+    >;
+typedef $$ImportContributionRecordsTableCreateCompanionBuilder =
+    ImportContributionRecordsCompanion Function({
+      required String batchId,
+      required String sourceId,
+      Value<String?> identityId,
+      required String disposition,
+      required int observedAt,
+      Value<String?> reason,
+      Value<int> rowid,
+    });
+typedef $$ImportContributionRecordsTableUpdateCompanionBuilder =
+    ImportContributionRecordsCompanion Function({
+      Value<String> batchId,
+      Value<String> sourceId,
+      Value<String?> identityId,
+      Value<String> disposition,
+      Value<int> observedAt,
+      Value<String?> reason,
+      Value<int> rowid,
+    });
+
+final class $$ImportContributionRecordsTableReferences
+    extends
+        BaseReferences<
+          _$MioAniDatabase,
+          $ImportContributionRecordsTable,
+          ImportContributionRecord
+        > {
+  $$ImportContributionRecordsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ImportBatchRecordsTable _batchIdTable(_$MioAniDatabase db) => db
+      .importBatchRecords
+      .createAlias('import_contributions__batch_id__import_batches__batch_id');
+
+  $$ImportBatchRecordsTableProcessedTableManager get batchId {
+    final $_column = $_itemColumn<String>('batch_id')!;
+
+    final manager = $$ImportBatchRecordsTableTableManager(
+      $_db,
+      $_db.importBatchRecords,
+    ).filter((f) => f.batchId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_batchIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $AnimeIdentitiesTable _identityIdTable(_$MioAniDatabase db) =>
+      db.animeIdentities.createAlias(
+        'import_contributions__identity_id__anime_identities__identity_id',
+      );
+
+  $$AnimeIdentitiesTableProcessedTableManager? get identityId {
+    final $_column = $_itemColumn<String>('identity_id');
+    if ($_column == null) return null;
+    final manager = $$AnimeIdentitiesTableTableManager(
+      $_db,
+      $_db.animeIdentities,
+    ).filter((f) => f.identityId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_identityIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ImportContributionRecordsTableFilterComposer
+    extends Composer<_$MioAniDatabase, $ImportContributionRecordsTable> {
+  $$ImportContributionRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get sourceId => $composableBuilder(
+    column: $table.sourceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get disposition => $composableBuilder(
+    column: $table.disposition,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get observedAt => $composableBuilder(
+    column: $table.observedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reason => $composableBuilder(
+    column: $table.reason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ImportBatchRecordsTableFilterComposer get batchId {
+    final $$ImportBatchRecordsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.batchId,
+      referencedTable: $db.importBatchRecords,
+      getReferencedColumn: (t) => t.batchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ImportBatchRecordsTableFilterComposer(
+            $db: $db,
+            $table: $db.importBatchRecords,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$AnimeIdentitiesTableFilterComposer get identityId {
+    final $$AnimeIdentitiesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.identityId,
+      referencedTable: $db.animeIdentities,
+      getReferencedColumn: (t) => t.identityId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AnimeIdentitiesTableFilterComposer(
+            $db: $db,
+            $table: $db.animeIdentities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ImportContributionRecordsTableOrderingComposer
+    extends Composer<_$MioAniDatabase, $ImportContributionRecordsTable> {
+  $$ImportContributionRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get sourceId => $composableBuilder(
+    column: $table.sourceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get disposition => $composableBuilder(
+    column: $table.disposition,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get observedAt => $composableBuilder(
+    column: $table.observedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reason => $composableBuilder(
+    column: $table.reason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ImportBatchRecordsTableOrderingComposer get batchId {
+    final $$ImportBatchRecordsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.batchId,
+      referencedTable: $db.importBatchRecords,
+      getReferencedColumn: (t) => t.batchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ImportBatchRecordsTableOrderingComposer(
+            $db: $db,
+            $table: $db.importBatchRecords,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$AnimeIdentitiesTableOrderingComposer get identityId {
+    final $$AnimeIdentitiesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.identityId,
+      referencedTable: $db.animeIdentities,
+      getReferencedColumn: (t) => t.identityId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AnimeIdentitiesTableOrderingComposer(
+            $db: $db,
+            $table: $db.animeIdentities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ImportContributionRecordsTableAnnotationComposer
+    extends Composer<_$MioAniDatabase, $ImportContributionRecordsTable> {
+  $$ImportContributionRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get sourceId =>
+      $composableBuilder(column: $table.sourceId, builder: (column) => column);
+
+  GeneratedColumn<String> get disposition => $composableBuilder(
+    column: $table.disposition,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get observedAt => $composableBuilder(
+    column: $table.observedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reason =>
+      $composableBuilder(column: $table.reason, builder: (column) => column);
+
+  $$ImportBatchRecordsTableAnnotationComposer get batchId {
+    final $$ImportBatchRecordsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.batchId,
+          referencedTable: $db.importBatchRecords,
+          getReferencedColumn: (t) => t.batchId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ImportBatchRecordsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.importBatchRecords,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+
+  $$AnimeIdentitiesTableAnnotationComposer get identityId {
+    final $$AnimeIdentitiesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.identityId,
+      referencedTable: $db.animeIdentities,
+      getReferencedColumn: (t) => t.identityId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AnimeIdentitiesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.animeIdentities,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ImportContributionRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$MioAniDatabase,
+          $ImportContributionRecordsTable,
+          ImportContributionRecord,
+          $$ImportContributionRecordsTableFilterComposer,
+          $$ImportContributionRecordsTableOrderingComposer,
+          $$ImportContributionRecordsTableAnnotationComposer,
+          $$ImportContributionRecordsTableCreateCompanionBuilder,
+          $$ImportContributionRecordsTableUpdateCompanionBuilder,
+          (
+            ImportContributionRecord,
+            $$ImportContributionRecordsTableReferences,
+          ),
+          ImportContributionRecord,
+          PrefetchHooks Function({bool batchId, bool identityId})
+        > {
+  $$ImportContributionRecordsTableTableManager(
+    _$MioAniDatabase db,
+    $ImportContributionRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ImportContributionRecordsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$ImportContributionRecordsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ImportContributionRecordsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> batchId = const Value.absent(),
+                Value<String> sourceId = const Value.absent(),
+                Value<String?> identityId = const Value.absent(),
+                Value<String> disposition = const Value.absent(),
+                Value<int> observedAt = const Value.absent(),
+                Value<String?> reason = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ImportContributionRecordsCompanion(
+                batchId: batchId,
+                sourceId: sourceId,
+                identityId: identityId,
+                disposition: disposition,
+                observedAt: observedAt,
+                reason: reason,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String batchId,
+                required String sourceId,
+                Value<String?> identityId = const Value.absent(),
+                required String disposition,
+                required int observedAt,
+                Value<String?> reason = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ImportContributionRecordsCompanion.insert(
+                batchId: batchId,
+                sourceId: sourceId,
+                identityId: identityId,
+                disposition: disposition,
+                observedAt: observedAt,
+                reason: reason,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ImportContributionRecordsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({batchId = false, identityId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (batchId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.batchId,
+                                referencedTable:
+                                    $$ImportContributionRecordsTableReferences
+                                        ._batchIdTable(db),
+                                referencedColumn:
+                                    $$ImportContributionRecordsTableReferences
+                                        ._batchIdTable(db)
+                                        .batchId,
+                              )
+                              as T;
+                    }
+                    if (identityId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.identityId,
+                                referencedTable:
+                                    $$ImportContributionRecordsTableReferences
+                                        ._identityIdTable(db),
+                                referencedColumn:
+                                    $$ImportContributionRecordsTableReferences
+                                        ._identityIdTable(db)
+                                        .identityId,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ImportContributionRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$MioAniDatabase,
+      $ImportContributionRecordsTable,
+      ImportContributionRecord,
+      $$ImportContributionRecordsTableFilterComposer,
+      $$ImportContributionRecordsTableOrderingComposer,
+      $$ImportContributionRecordsTableAnnotationComposer,
+      $$ImportContributionRecordsTableCreateCompanionBuilder,
+      $$ImportContributionRecordsTableUpdateCompanionBuilder,
+      (ImportContributionRecord, $$ImportContributionRecordsTableReferences),
+      ImportContributionRecord,
+      PrefetchHooks Function({bool batchId, bool identityId})
+    >;
+typedef $$ImportSnapshotRecordsTableCreateCompanionBuilder =
+    ImportSnapshotRecordsCompanion Function({
+      required String batchId,
+      required String source,
+      required String stableUserId,
+      required String fingerprint,
+      Value<String> itemsJson,
+      required int createdAt,
+      Value<int> rowid,
+    });
+typedef $$ImportSnapshotRecordsTableUpdateCompanionBuilder =
+    ImportSnapshotRecordsCompanion Function({
+      Value<String> batchId,
+      Value<String> source,
+      Value<String> stableUserId,
+      Value<String> fingerprint,
+      Value<String> itemsJson,
+      Value<int> createdAt,
+      Value<int> rowid,
+    });
+
+final class $$ImportSnapshotRecordsTableReferences
+    extends
+        BaseReferences<
+          _$MioAniDatabase,
+          $ImportSnapshotRecordsTable,
+          ImportSnapshotRecord
+        > {
+  $$ImportSnapshotRecordsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ImportBatchRecordsTable _batchIdTable(_$MioAniDatabase db) => db
+      .importBatchRecords
+      .createAlias('import_snapshots__batch_id__import_batches__batch_id');
+
+  $$ImportBatchRecordsTableProcessedTableManager get batchId {
+    final $_column = $_itemColumn<String>('batch_id')!;
+
+    final manager = $$ImportBatchRecordsTableTableManager(
+      $_db,
+      $_db.importBatchRecords,
+    ).filter((f) => f.batchId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_batchIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ImportSnapshotRecordsTableFilterComposer
+    extends Composer<_$MioAniDatabase, $ImportSnapshotRecordsTable> {
+  $$ImportSnapshotRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get stableUserId => $composableBuilder(
+    column: $table.stableUserId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fingerprint => $composableBuilder(
+    column: $table.fingerprint,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemsJson => $composableBuilder(
+    column: $table.itemsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ImportBatchRecordsTableFilterComposer get batchId {
+    final $$ImportBatchRecordsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.batchId,
+      referencedTable: $db.importBatchRecords,
+      getReferencedColumn: (t) => t.batchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ImportBatchRecordsTableFilterComposer(
+            $db: $db,
+            $table: $db.importBatchRecords,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ImportSnapshotRecordsTableOrderingComposer
+    extends Composer<_$MioAniDatabase, $ImportSnapshotRecordsTable> {
+  $$ImportSnapshotRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get stableUserId => $composableBuilder(
+    column: $table.stableUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fingerprint => $composableBuilder(
+    column: $table.fingerprint,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemsJson => $composableBuilder(
+    column: $table.itemsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ImportBatchRecordsTableOrderingComposer get batchId {
+    final $$ImportBatchRecordsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.batchId,
+      referencedTable: $db.importBatchRecords,
+      getReferencedColumn: (t) => t.batchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ImportBatchRecordsTableOrderingComposer(
+            $db: $db,
+            $table: $db.importBatchRecords,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ImportSnapshotRecordsTableAnnotationComposer
+    extends Composer<_$MioAniDatabase, $ImportSnapshotRecordsTable> {
+  $$ImportSnapshotRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<String> get stableUserId => $composableBuilder(
+    column: $table.stableUserId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get fingerprint => $composableBuilder(
+    column: $table.fingerprint,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get itemsJson =>
+      $composableBuilder(column: $table.itemsJson, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$ImportBatchRecordsTableAnnotationComposer get batchId {
+    final $$ImportBatchRecordsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.batchId,
+          referencedTable: $db.importBatchRecords,
+          getReferencedColumn: (t) => t.batchId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ImportBatchRecordsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.importBatchRecords,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+}
+
+class $$ImportSnapshotRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$MioAniDatabase,
+          $ImportSnapshotRecordsTable,
+          ImportSnapshotRecord,
+          $$ImportSnapshotRecordsTableFilterComposer,
+          $$ImportSnapshotRecordsTableOrderingComposer,
+          $$ImportSnapshotRecordsTableAnnotationComposer,
+          $$ImportSnapshotRecordsTableCreateCompanionBuilder,
+          $$ImportSnapshotRecordsTableUpdateCompanionBuilder,
+          (ImportSnapshotRecord, $$ImportSnapshotRecordsTableReferences),
+          ImportSnapshotRecord,
+          PrefetchHooks Function({bool batchId})
+        > {
+  $$ImportSnapshotRecordsTableTableManager(
+    _$MioAniDatabase db,
+    $ImportSnapshotRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ImportSnapshotRecordsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$ImportSnapshotRecordsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ImportSnapshotRecordsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> batchId = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<String> stableUserId = const Value.absent(),
+                Value<String> fingerprint = const Value.absent(),
+                Value<String> itemsJson = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ImportSnapshotRecordsCompanion(
+                batchId: batchId,
+                source: source,
+                stableUserId: stableUserId,
+                fingerprint: fingerprint,
+                itemsJson: itemsJson,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String batchId,
+                required String source,
+                required String stableUserId,
+                required String fingerprint,
+                Value<String> itemsJson = const Value.absent(),
+                required int createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => ImportSnapshotRecordsCompanion.insert(
+                batchId: batchId,
+                source: source,
+                stableUserId: stableUserId,
+                fingerprint: fingerprint,
+                itemsJson: itemsJson,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ImportSnapshotRecordsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({batchId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (batchId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.batchId,
+                                referencedTable:
+                                    $$ImportSnapshotRecordsTableReferences
+                                        ._batchIdTable(db),
+                                referencedColumn:
+                                    $$ImportSnapshotRecordsTableReferences
+                                        ._batchIdTable(db)
+                                        .batchId,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ImportSnapshotRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$MioAniDatabase,
+      $ImportSnapshotRecordsTable,
+      ImportSnapshotRecord,
+      $$ImportSnapshotRecordsTableFilterComposer,
+      $$ImportSnapshotRecordsTableOrderingComposer,
+      $$ImportSnapshotRecordsTableAnnotationComposer,
+      $$ImportSnapshotRecordsTableCreateCompanionBuilder,
+      $$ImportSnapshotRecordsTableUpdateCompanionBuilder,
+      (ImportSnapshotRecord, $$ImportSnapshotRecordsTableReferences),
+      ImportSnapshotRecord,
+      PrefetchHooks Function({bool batchId})
+    >;
 
 class $MioAniDatabaseManager {
   final _$MioAniDatabase _db;
@@ -9572,4 +12810,13 @@ class $MioAniDatabaseManager {
       $$IdentityDecisionsTableTableManager(_db, _db.identityDecisions);
   $$IdentityOperationLogsTableTableManager get identityOperationLogs =>
       $$IdentityOperationLogsTableTableManager(_db, _db.identityOperationLogs);
+  $$ImportBatchRecordsTableTableManager get importBatchRecords =>
+      $$ImportBatchRecordsTableTableManager(_db, _db.importBatchRecords);
+  $$ImportContributionRecordsTableTableManager get importContributionRecords =>
+      $$ImportContributionRecordsTableTableManager(
+        _db,
+        _db.importContributionRecords,
+      );
+  $$ImportSnapshotRecordsTableTableManager get importSnapshotRecords =>
+      $$ImportSnapshotRecordsTableTableManager(_db, _db.importSnapshotRecords);
 }

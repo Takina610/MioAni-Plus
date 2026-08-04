@@ -8,6 +8,7 @@ part of 'app_routes.dart';
 
 List<RouteBase> get $appRoutes => [
   $mioShellRouteData,
+  $importRouteData,
   $animeDetailRouteData,
   $characterDetailRouteData,
   $personDetailRouteData,
@@ -133,6 +134,33 @@ mixin $LibraryRouteData on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/library');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $importRouteData => GoRouteData.$route(
+  path: '/imports',
+  hasOverriddenOnExit: false,
+  factory: $ImportRouteData._fromState,
+);
+
+mixin $ImportRouteData on GoRouteData {
+  static ImportRouteData _fromState(GoRouterState state) =>
+      const ImportRouteData();
+
+  @override
+  String get location => GoRouteData.$location('/imports');
 
   @override
   void go(BuildContext context) => context.go(location);

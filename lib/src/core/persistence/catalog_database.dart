@@ -201,6 +201,77 @@ class PublicAccounts extends Table {
   ];
 }
 
+class ImportBatchRecords extends Table {
+  TextColumn get batchId => text()();
+  TextColumn get source => text()();
+  TextColumn get stableUserId => text()();
+  TextColumn get displayName => text()();
+  TextColumn get fingerprint => text()();
+  IntColumn get createdAt => integer()();
+  IntColumn get pagesFetched => integer()();
+  IntColumn get declaredTotal => integer().nullable()();
+  IntColumn get itemCount => integer()();
+  TextColumn get countsJson => text().withDefault(const Constant('{}'))();
+  TextColumn get previousBatchId => text().nullable()();
+  TextColumn get status => text().withDefault(const Constant('succeeded'))();
+  IntColumn get undoneAt => integer().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{batchId};
+
+  @override
+  String get tableName => 'import_batches';
+
+  @override
+  List<String> get customConstraints => const <String>[
+    'CHECK (pages_fetched >= 0)',
+    'CHECK (declared_total IS NULL OR declared_total >= 0)',
+    'CHECK (item_count >= 0)',
+  ];
+}
+
+class ImportContributionRecords extends Table {
+  TextColumn get batchId => text().references(
+    ImportBatchRecords,
+    #batchId,
+    onDelete: KeyAction.cascade,
+  )();
+  TextColumn get sourceId => text()();
+  TextColumn get identityId => text().nullable().references(
+    AnimeIdentities,
+    #identityId,
+    onDelete: KeyAction.setNull,
+  )();
+  TextColumn get disposition => text()();
+  IntColumn get observedAt => integer()();
+  TextColumn get reason => text().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{batchId, sourceId};
+
+  @override
+  String get tableName => 'import_contributions';
+}
+
+class ImportSnapshotRecords extends Table {
+  TextColumn get batchId => text().references(
+    ImportBatchRecords,
+    #batchId,
+    onDelete: KeyAction.cascade,
+  )();
+  TextColumn get source => text()();
+  TextColumn get stableUserId => text()();
+  TextColumn get fingerprint => text()();
+  TextColumn get itemsJson => text().withDefault(const Constant('[]'))();
+  IntColumn get createdAt => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{batchId};
+
+  @override
+  String get tableName => 'import_snapshots';
+}
+
 class AppSettings extends Table {
   TextColumn get settingKey => text()();
 
@@ -290,6 +361,9 @@ class ImageCacheEntries extends Table {
     IdentityReviews,
     IdentityDecisions,
     IdentityOperationLogs,
+    ImportBatchRecords,
+    ImportContributionRecords,
+    ImportSnapshotRecords,
   ],
 )
 final class MioAniDatabase extends _$MioAniDatabase
@@ -317,7 +391,7 @@ final class MioAniDatabase extends _$MioAniDatabase
       );
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -360,6 +434,11 @@ final class MioAniDatabase extends _$MioAniDatabase
         await migrator.createTable(identityReviews);
         await migrator.createTable(identityDecisions);
         await migrator.createTable(identityOperationLogs);
+      }
+      if (from < 4) {
+        await migrator.createTable(importBatchRecords);
+        await migrator.createTable(importContributionRecords);
+        await migrator.createTable(importSnapshotRecords);
       }
     },
     beforeOpen: (_) => customStatement('PRAGMA foreign_keys = ON'),

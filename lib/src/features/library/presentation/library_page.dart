@@ -57,6 +57,11 @@ final class _LibraryPageState extends ConsumerState<LibraryPage> {
             icon: const Icon(Icons.add),
             onPressed: () => _showAddDialog(context, controller),
           ),
+          IconButton(
+            tooltip: '导入公开收藏',
+            icon: const Icon(Icons.download_for_offline_outlined),
+            onPressed: () => const ImportRouteData().push<void>(context),
+          ),
           PopupMenuButton<String>(
             tooltip: '数据清理',
             onSelected: (value) => _cleanupAction(context, value),

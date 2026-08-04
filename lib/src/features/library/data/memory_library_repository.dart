@@ -51,6 +51,19 @@ final class MemoryLibraryRepository implements LibraryRepository {
     }
   }
 
+  /// Captures the mutable state used by an import transaction. This is kept
+  /// intentionally narrow so import failures can restore the pre-batch state
+  /// without exposing the repository's internal maps to callers.
+  Object captureImportState() => _capture();
+
+  void restoreImportState(Object snapshot) {
+    if (snapshot is! _MemorySnapshot) {
+      throw ArgumentError.value(snapshot, 'snapshot');
+    }
+    _restore(snapshot);
+    _emit();
+  }
+
   @override
   List<IdentityCandidate> get pendingCandidates => _candidates.values
       .where((item) => item.status == IdentityReviewStatus.pending)
