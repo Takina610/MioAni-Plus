@@ -8,6 +8,7 @@ import 'package:mio_ani/src/app/shell/mio_destination.dart';
 import 'package:mio_ani/src/features/anime_detail/presentation/anime_detail_page.dart';
 import 'package:mio_ani/src/features/discover/presentation/discover_page.dart';
 import 'package:mio_ani/src/features/home/presentation/home_page.dart';
+import 'package:mio_ani/src/features/people/presentation/person_detail_page.dart';
 import 'package:mio_ani/src/features/schedule/application/schedule_route_intent.dart';
 import 'package:mio_ani/src/features/schedule/presentation/schedule_page.dart';
 
@@ -132,7 +133,7 @@ class CharacterDetailRouteData extends GoRouteData
     return buildMioDetailPage(
       context: context,
       state: state,
-      child: FoundationDetailPage(title: '角色详情', sourceId: id),
+      child: CharacterDetailPage(sourceId: id),
     );
   }
 }
@@ -148,7 +149,7 @@ class PersonDetailRouteData extends GoRouteData with $PersonDetailRouteData {
     return buildMioDetailPage(
       context: context,
       state: state,
-      child: FoundationDetailPage(title: '人物详情', sourceId: id),
+      child: PersonDetailPage(sourceId: id),
     );
   }
 }
