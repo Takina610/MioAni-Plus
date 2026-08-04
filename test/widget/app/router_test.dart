@@ -8,8 +8,13 @@ import 'package:mio_ani/src/app/routing/app_router.dart';
 import 'package:mio_ani/src/app/routing/app_routes.dart';
 import 'package:mio_ani/src/app/routing/mio_back_shortcuts.dart';
 import 'package:mio_ani/src/features/catalog/application/catalog_providers.dart';
+import 'package:mio_ani/src/features/home/application/home_providers.dart';
+import 'package:mio_ani/src/features/schedule/application/schedule_providers.dart';
+import 'package:mio_ani/src/features/schedule/domain/schedule_builder.dart';
 
 import '../../support/fake_catalog_repository.dart';
+import '../../support/fake_home_repository.dart';
+import '../../support/fake_schedule_repository.dart';
 import '../../support/test_viewport.dart';
 
 void main() {
@@ -48,6 +53,10 @@ void main() {
         router: router,
         providerOverrides: [
           catalogRepositoryProvider.overrideWithValue(repository),
+          scheduleRepositoryProvider.overrideWithValue(
+            FakeScheduleRepository(),
+          ),
+          homeRepositoryProvider.overrideWithValue(FakeHomeRepository()),
         ],
       ),
     );
@@ -83,6 +92,10 @@ void main() {
         router: router,
         providerOverrides: [
           catalogRepositoryProvider.overrideWithValue(repository),
+          scheduleRepositoryProvider.overrideWithValue(
+            FakeScheduleRepository(),
+          ),
+          homeRepositoryProvider.overrideWithValue(FakeHomeRepository()),
         ],
       ),
     );
@@ -134,7 +147,17 @@ void main() {
     final router = createMioAniRouter(initialLocation: '/schedule');
     addTearDown(router.dispose);
 
-    await tester.pumpWidget(MioAniRoot(router: router));
+    await tester.pumpWidget(
+      MioAniRoot(
+        router: router,
+        providerOverrides: [
+          scheduleRepositoryProvider.overrideWithValue(
+            FakeScheduleRepository(),
+          ),
+          homeRepositoryProvider.overrideWithValue(FakeHomeRepository()),
+        ],
+      ),
+    );
     await tester.pumpAndSettle();
     const characterRoute = CharacterDetailRouteData(id: 'bgm-character-1');
     expect(characterRoute.location, '/character/bgm-character-1');
@@ -168,5 +191,79 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
     expect(router.routeInformationProvider.value.uri.path, '/schedule');
+  });
+
+  testWidgets('schedule date query normalizes invalid values to today', (
+    tester,
+  ) async {
+    await configureTestViewport(tester, size: const Size(390, 844));
+    final router = createMioAniRouter(
+      initialLocation: '/schedule?date=2026-13-01',
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      MioAniRoot(
+        router: router,
+        providerOverrides: [
+          scheduleRepositoryProvider.overrideWithValue(
+            FakeScheduleRepository(),
+          ),
+          homeRepositoryProvider.overrideWithValue(FakeHomeRepository()),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final today = DateTime.now();
+    final weekStart = mondayOfWeek(today);
+    final weekEnd = addLocalDays(weekStart, 6);
+    final expected =
+        '${weekStart.month}/${weekStart.day} – '
+        '${weekEnd.month}/${weekEnd.day}';
+    expect(find.text(expected), findsOneWidget);
+  });
+
+  testWidgets('schedule date query survives detail push and back navigation', (
+    tester,
+  ) async {
+    await configureTestViewport(tester, size: const Size(390, 844));
+    final router = createMioAniRouter(
+      initialLocation: '/schedule?date=2026-08-11',
+    );
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      MioAniRoot(
+        router: router,
+        providerOverrides: [
+          scheduleRepositoryProvider.overrideWithValue(
+            FakeScheduleRepository(),
+          ),
+          homeRepositoryProvider.overrideWithValue(FakeHomeRepository()),
+          catalogRepositoryProvider.overrideWithValue(FakeCatalogRepository()),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('8/10 – 8/16'), findsOneWidget);
+
+    unawaited(
+      AnimeDetailRouteData(
+        id: 'bgm-1',
+      ).push<void>(tester.element(find.text('放送日程').hitTestable())),
+    );
+    await tester.pumpAndSettle();
+    expect(router.routeInformationProvider.value.uri.path, '/anime/bgm-1');
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(find.text('放送日程'), findsOneWidget);
+    expect(
+      router.routeInformationProvider.value.uri.queryParameters['date'],
+      '2026-08-11',
+    );
+    expect(find.text('8/10 – 8/16'), findsOneWidget);
   });
 }

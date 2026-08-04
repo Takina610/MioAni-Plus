@@ -9,6 +9,8 @@ class AnimeSummary {
     this.score,
     this.airDate,
     this.summary,
+    this.episodes,
+    this.popularity,
   });
 
   final AnimeSourceId id;
@@ -19,7 +21,16 @@ class AnimeSummary {
   final DateTime? airDate;
   final String? summary;
 
-  String get sourceLabel => 'Bangumi';
+  /// Known episode count for display (`更新至第X话`) and AniList enrichment.
+  final int? episodes;
+
+  /// Public follow/popularity counter used for stable schedule ordering.
+  final int? popularity;
+
+  String get sourceLabel => switch (id.source) {
+    AnimeSource.bangumi => 'Bangumi',
+    AnimeSource.anilist => 'AniList',
+  };
 
   @override
   bool operator ==(Object other) {
@@ -30,12 +41,23 @@ class AnimeSummary {
         other.imageUrl == imageUrl &&
         other.score == score &&
         other.airDate == airDate &&
-        other.summary == summary;
+        other.summary == summary &&
+        other.episodes == episodes &&
+        other.popularity == popularity;
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, title, sourceTitle, imageUrl, score, airDate, summary);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    sourceTitle,
+    imageUrl,
+    score,
+    airDate,
+    summary,
+    episodes,
+    popularity,
+  );
 }
 
 final class AnimeDetail extends AnimeSummary {
@@ -47,14 +69,14 @@ final class AnimeDetail extends AnimeSummary {
     super.score,
     super.airDate,
     super.summary,
-    this.episodes,
+    super.episodes,
+    super.popularity,
     this.rank,
     this.scoreCount,
     this.format,
     this.tags = const <String>[],
   });
 
-  final int? episodes;
   final int? rank;
   final int? scoreCount;
   final String? format;

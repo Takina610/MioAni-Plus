@@ -13,6 +13,8 @@ AnimeSummary mapBangumiSummary(BangumiSubjectDto dto) {
     score: dto.rating?.score,
     airDate: _date(dto.airDate ?? dto.date),
     summary: _cleanText(dto.summary),
+    episodes: dto.eps ?? dto.totalEpisodes,
+    popularity: dto.collection?.doing,
   );
 }
 
@@ -31,7 +33,8 @@ AnimeDetail mapBangumiDetail(BangumiSubjectDto dto) {
     score: summary.score,
     airDate: summary.airDate,
     summary: summary.summary,
-    episodes: dto.eps ?? dto.totalEpisodes,
+    episodes: summary.episodes,
+    popularity: summary.popularity,
     rank: dto.rank ?? dto.rating?.rank,
     scoreCount: dto.rating?.total,
     format: _firstText(<String?>[dto.platform, ...dto.metaTags]),

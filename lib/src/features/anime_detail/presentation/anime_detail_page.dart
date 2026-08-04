@@ -22,6 +22,8 @@ class AnimeDetailPage extends ConsumerWidget {
       body: SafeArea(
         child: id == null
             ? MioStateView.notFound(message: '无法识别动画 ID：$sourceId')
+            : id.source != AnimeSource.bangumi
+            ? MioStateView.notFound(message: '该来源的动画详情将在后续版本提供')
             : ref
                   .watch(animeDetailStreamProvider(id))
                   .when(

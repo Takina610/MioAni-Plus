@@ -199,7 +199,7 @@ final class DioImagePipeline implements ImagePipeline {
 
   @override
   Future<Uint8List> load(Uri uri) async {
-    uriPolicy.validate(NetworkSource.bangumiImages, uri);
+    final imageSource = uriPolicy.resolveImageSource(uri);
     final metadata = metadataStore;
     ImageCacheMetadata? staleMetadata;
     Uint8List? staleBytes;
@@ -244,7 +244,7 @@ final class DioImagePipeline implements ImagePipeline {
     }
     try {
       return await coordinator.execute<Uint8List>(
-        source: NetworkSource.bangumiImages,
+        source: imageSource,
         key: 'GET:$uri',
         retryEligible: true,
         operation: () async {

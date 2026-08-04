@@ -103,10 +103,15 @@ mixin $DiscoverRouteData on GoRouteData {
 
 mixin $ScheduleRouteData on GoRouteData {
   static ScheduleRouteData _fromState(GoRouterState state) =>
-      const ScheduleRouteData();
+      ScheduleRouteData(date: state.uri.queryParameters['date']);
+
+  ScheduleRouteData get _self => this as ScheduleRouteData;
 
   @override
-  String get location => GoRouteData.$location('/schedule');
+  String get location => GoRouteData.$location(
+    '/schedule',
+    queryParams: {if (_self.date != null) 'date': _self.date},
+  );
 
   @override
   void go(BuildContext context) => context.go(location);

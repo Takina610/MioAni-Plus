@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mio_ani/src/core/failures/app_failure.dart';
 import 'package:mio_ani/src/core/network/network_uri_policy.dart';
-import 'package:mio_ani/src/core/network/request_coordinator.dart';
 import 'package:mio_ani/src/features/catalog/application/catalog_providers.dart';
 import 'package:mio_ani/src/shared/design_system/mio_tokens.dart';
 
@@ -16,7 +15,7 @@ bool shouldUseWebDirectImageFallback({
   if (!isWeb || error is! OfflineFailure) return false;
 
   try {
-    uriPolicy.validate(NetworkSource.bangumiImages, uri);
+    uriPolicy.resolveImageSource(uri);
     return true;
   } on BrowserPolicyFailure {
     return false;

@@ -3,7 +3,7 @@ import 'dart:collection';
 
 import 'package:mio_ani/src/core/failures/app_failure.dart';
 
-enum NetworkSource { bangumiApi, bangumiImages }
+enum NetworkSource { bangumiApi, bangumiImages, anilistApi, anilistImages }
 
 typedef RequestWait = Future<void> Function(Duration duration);
 typedef RequestNow = DateTime Function();

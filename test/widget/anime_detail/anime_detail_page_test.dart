@@ -27,6 +27,19 @@ void main() {
     expect(repository.detailCalls, 0);
   });
 
+  testWidgets('AniList IDs show a placeholder without calling Bangumi', (
+    tester,
+  ) async {
+    final repository = FakeCatalogRepository();
+
+    await _pumpPage(tester, repository, 'anilist-12345');
+    await tester.pump();
+
+    expect(find.text('页面不存在'), findsOneWidget);
+    expect(find.textContaining('后续版本提供'), findsOneWidget);
+    expect(repository.detailCalls, 0);
+  });
+
   testWidgets('renders a valid detail and stale state at 200% text scale', (
     tester,
   ) async {
