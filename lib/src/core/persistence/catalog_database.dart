@@ -43,8 +43,60 @@ class AnimeIdentities extends Table {
 
   IntColumn get updatedAt => integer()();
 
+  IntColumn get revision => integer().withDefault(const Constant(0))();
+
   @override
   Set<Column<Object>> get primaryKey => <Column<Object>>{identityId};
+}
+
+class IdentityEvidenceRecords extends Table {
+  TextColumn get evidenceId => text()();
+  TextColumn get identityId => text().nullable()();
+  TextColumn get sourceIds => text().withDefault(const Constant(''))();
+  TextColumn get kind => text()();
+  TextColumn get explanation => text()();
+  IntColumn get score => integer().nullable()();
+  IntColumn get createdAt => integer()();
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{evidenceId};
+}
+
+class IdentityReviews extends Table {
+  TextColumn get reviewId => text()();
+  TextColumn get leftSourceId => text()();
+  TextColumn get rightSourceId => text()();
+  TextColumn get status => text().withDefault(const Constant('pending'))();
+  TextColumn get explanation => text().withDefault(const Constant(''))();
+  IntColumn get baselineRevision => integer().withDefault(const Constant(0))();
+  IntColumn get createdAt => integer()();
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{reviewId};
+  @override
+  List<String> get customConstraints => const <String>[
+    "CHECK (status IN ('pending', 'confirmed', 'ignored', 'split'))",
+    'CHECK (baseline_revision >= 0)',
+  ];
+}
+
+class IdentityDecisions extends Table {
+  TextColumn get decisionId => text()();
+  TextColumn get reviewId => text()();
+  TextColumn get kind => text()();
+  TextColumn get explanation => text().withDefault(const Constant(''))();
+  IntColumn get createdAt => integer()();
+  IntColumn get undoneAt => integer().nullable()();
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{decisionId};
+}
+
+class IdentityOperationLogs extends Table {
+  TextColumn get operationId => text()();
+  TextColumn get operationKind => text()();
+  TextColumn get payload => text().withDefault(const Constant('{}'))();
+  IntColumn get createdAt => integer()();
+  IntColumn get undoneAt => integer().nullable()();
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{operationId};
 }
 
 class SourceEntities extends Table {
@@ -69,6 +121,8 @@ class SourceEntities extends Table {
   IntColumn get episodes => integer().nullable()();
 
   IntColumn get observedAt => integer()();
+
+  IntColumn get revision => integer().withDefault(const Constant(0))();
 
   @override
   Set<Column<Object>> get primaryKey => <Column<Object>>{source, sourceId};
@@ -232,6 +286,10 @@ class ImageCacheEntries extends Table {
     AppSettings,
     MigrationLedger,
     ImageCacheEntries,
+    IdentityEvidenceRecords,
+    IdentityReviews,
+    IdentityDecisions,
+    IdentityOperationLogs,
   ],
 )
 final class MioAniDatabase extends _$MioAniDatabase
@@ -259,7 +317,7 @@ final class MioAniDatabase extends _$MioAniDatabase
       );
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -292,6 +350,16 @@ final class MioAniDatabase extends _$MioAniDatabase
               last_accessed_at = fetched_at
         ''');
         await migrator.alterTable(TableMigration(structuredCacheEntries));
+      }
+      if (from < 3) {
+        if (from >= 2) {
+          await migrator.addColumn(animeIdentities, animeIdentities.revision);
+          await migrator.addColumn(sourceEntities, sourceEntities.revision);
+        }
+        await migrator.createTable(identityEvidenceRecords);
+        await migrator.createTable(identityReviews);
+        await migrator.createTable(identityDecisions);
+        await migrator.createTable(identityOperationLogs);
       }
     },
     beforeOpen: (_) => customStatement('PRAGMA foreign_keys = ON'),

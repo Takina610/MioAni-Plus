@@ -572,12 +572,25 @@ class $AnimeIdentitiesTable extends AnimeIdentities
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _revisionMeta = const VerificationMeta(
+    'revision',
+  );
+  @override
+  late final GeneratedColumn<int> revision = GeneratedColumn<int>(
+    'revision',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     identityId,
     canonicalTitle,
     createdAt,
     updatedAt,
+    revision,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -624,6 +637,12 @@ class $AnimeIdentitiesTable extends AnimeIdentities
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('revision')) {
+      context.handle(
+        _revisionMeta,
+        revision.isAcceptableOrUnknown(data['revision']!, _revisionMeta),
+      );
+    }
     return context;
   }
 
@@ -649,6 +668,10 @@ class $AnimeIdentitiesTable extends AnimeIdentities
         DriftSqlType.int,
         data['${effectivePrefix}updated_at'],
       )!,
+      revision: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}revision'],
+      )!,
     );
   }
 
@@ -663,11 +686,13 @@ class AnimeIdentity extends DataClass implements Insertable<AnimeIdentity> {
   final String canonicalTitle;
   final int createdAt;
   final int updatedAt;
+  final int revision;
   const AnimeIdentity({
     required this.identityId,
     required this.canonicalTitle,
     required this.createdAt,
     required this.updatedAt,
+    required this.revision,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -676,6 +701,7 @@ class AnimeIdentity extends DataClass implements Insertable<AnimeIdentity> {
     map['canonical_title'] = Variable<String>(canonicalTitle);
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
+    map['revision'] = Variable<int>(revision);
     return map;
   }
 
@@ -685,6 +711,7 @@ class AnimeIdentity extends DataClass implements Insertable<AnimeIdentity> {
       canonicalTitle: Value(canonicalTitle),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      revision: Value(revision),
     );
   }
 
@@ -698,6 +725,7 @@ class AnimeIdentity extends DataClass implements Insertable<AnimeIdentity> {
       canonicalTitle: serializer.fromJson<String>(json['canonicalTitle']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
+      revision: serializer.fromJson<int>(json['revision']),
     );
   }
   @override
@@ -708,6 +736,7 @@ class AnimeIdentity extends DataClass implements Insertable<AnimeIdentity> {
       'canonicalTitle': serializer.toJson<String>(canonicalTitle),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
+      'revision': serializer.toJson<int>(revision),
     };
   }
 
@@ -716,11 +745,13 @@ class AnimeIdentity extends DataClass implements Insertable<AnimeIdentity> {
     String? canonicalTitle,
     int? createdAt,
     int? updatedAt,
+    int? revision,
   }) => AnimeIdentity(
     identityId: identityId ?? this.identityId,
     canonicalTitle: canonicalTitle ?? this.canonicalTitle,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    revision: revision ?? this.revision,
   );
   AnimeIdentity copyWithCompanion(AnimeIdentitiesCompanion data) {
     return AnimeIdentity(
@@ -732,6 +763,7 @@ class AnimeIdentity extends DataClass implements Insertable<AnimeIdentity> {
           : this.canonicalTitle,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      revision: data.revision.present ? data.revision.value : this.revision,
     );
   }
 
@@ -741,14 +773,15 @@ class AnimeIdentity extends DataClass implements Insertable<AnimeIdentity> {
           ..write('identityId: $identityId, ')
           ..write('canonicalTitle: $canonicalTitle, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('revision: $revision')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode =>
-      Object.hash(identityId, canonicalTitle, createdAt, updatedAt);
+      Object.hash(identityId, canonicalTitle, createdAt, updatedAt, revision);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -756,7 +789,8 @@ class AnimeIdentity extends DataClass implements Insertable<AnimeIdentity> {
           other.identityId == this.identityId &&
           other.canonicalTitle == this.canonicalTitle &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.revision == this.revision);
 }
 
 class AnimeIdentitiesCompanion extends UpdateCompanion<AnimeIdentity> {
@@ -764,12 +798,14 @@ class AnimeIdentitiesCompanion extends UpdateCompanion<AnimeIdentity> {
   final Value<String> canonicalTitle;
   final Value<int> createdAt;
   final Value<int> updatedAt;
+  final Value<int> revision;
   final Value<int> rowid;
   const AnimeIdentitiesCompanion({
     this.identityId = const Value.absent(),
     this.canonicalTitle = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.revision = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   AnimeIdentitiesCompanion.insert({
@@ -777,6 +813,7 @@ class AnimeIdentitiesCompanion extends UpdateCompanion<AnimeIdentity> {
     this.canonicalTitle = const Value.absent(),
     required int createdAt,
     required int updatedAt,
+    this.revision = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : identityId = Value(identityId),
        createdAt = Value(createdAt),
@@ -786,6 +823,7 @@ class AnimeIdentitiesCompanion extends UpdateCompanion<AnimeIdentity> {
     Expression<String>? canonicalTitle,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
+    Expression<int>? revision,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -793,6 +831,7 @@ class AnimeIdentitiesCompanion extends UpdateCompanion<AnimeIdentity> {
       if (canonicalTitle != null) 'canonical_title': canonicalTitle,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (revision != null) 'revision': revision,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -802,6 +841,7 @@ class AnimeIdentitiesCompanion extends UpdateCompanion<AnimeIdentity> {
     Value<String>? canonicalTitle,
     Value<int>? createdAt,
     Value<int>? updatedAt,
+    Value<int>? revision,
     Value<int>? rowid,
   }) {
     return AnimeIdentitiesCompanion(
@@ -809,6 +849,7 @@ class AnimeIdentitiesCompanion extends UpdateCompanion<AnimeIdentity> {
       canonicalTitle: canonicalTitle ?? this.canonicalTitle,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      revision: revision ?? this.revision,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -828,6 +869,9 @@ class AnimeIdentitiesCompanion extends UpdateCompanion<AnimeIdentity> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
     }
+    if (revision.present) {
+      map['revision'] = Variable<int>(revision.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -841,6 +885,7 @@ class AnimeIdentitiesCompanion extends UpdateCompanion<AnimeIdentity> {
           ..write('canonicalTitle: $canonicalTitle, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('revision: $revision, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -951,6 +996,18 @@ class $SourceEntitiesTable extends SourceEntities
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _revisionMeta = const VerificationMeta(
+    'revision',
+  );
+  @override
+  late final GeneratedColumn<int> revision = GeneratedColumn<int>(
+    'revision',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     source,
@@ -962,6 +1019,7 @@ class $SourceEntitiesTable extends SourceEntities
     year,
     episodes,
     observedAt,
+    revision,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1040,6 +1098,12 @@ class $SourceEntitiesTable extends SourceEntities
     } else if (isInserting) {
       context.missing(_observedAtMeta);
     }
+    if (data.containsKey('revision')) {
+      context.handle(
+        _revisionMeta,
+        revision.isAcceptableOrUnknown(data['revision']!, _revisionMeta),
+      );
+    }
     return context;
   }
 
@@ -1085,6 +1149,10 @@ class $SourceEntitiesTable extends SourceEntities
         DriftSqlType.int,
         data['${effectivePrefix}observed_at'],
       )!,
+      revision: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}revision'],
+      )!,
     );
   }
 
@@ -1104,6 +1172,7 @@ class SourceEntity extends DataClass implements Insertable<SourceEntity> {
   final int? year;
   final int? episodes;
   final int observedAt;
+  final int revision;
   const SourceEntity({
     required this.source,
     required this.sourceId,
@@ -1114,6 +1183,7 @@ class SourceEntity extends DataClass implements Insertable<SourceEntity> {
     this.year,
     this.episodes,
     required this.observedAt,
+    required this.revision,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1133,6 +1203,7 @@ class SourceEntity extends DataClass implements Insertable<SourceEntity> {
       map['episodes'] = Variable<int>(episodes);
     }
     map['observed_at'] = Variable<int>(observedAt);
+    map['revision'] = Variable<int>(revision);
     return map;
   }
 
@@ -1151,6 +1222,7 @@ class SourceEntity extends DataClass implements Insertable<SourceEntity> {
           ? const Value.absent()
           : Value(episodes),
       observedAt: Value(observedAt),
+      revision: Value(revision),
     );
   }
 
@@ -1169,6 +1241,7 @@ class SourceEntity extends DataClass implements Insertable<SourceEntity> {
       year: serializer.fromJson<int?>(json['year']),
       episodes: serializer.fromJson<int?>(json['episodes']),
       observedAt: serializer.fromJson<int>(json['observedAt']),
+      revision: serializer.fromJson<int>(json['revision']),
     );
   }
   @override
@@ -1184,6 +1257,7 @@ class SourceEntity extends DataClass implements Insertable<SourceEntity> {
       'year': serializer.toJson<int?>(year),
       'episodes': serializer.toJson<int?>(episodes),
       'observedAt': serializer.toJson<int>(observedAt),
+      'revision': serializer.toJson<int>(revision),
     };
   }
 
@@ -1197,6 +1271,7 @@ class SourceEntity extends DataClass implements Insertable<SourceEntity> {
     Value<int?> year = const Value.absent(),
     Value<int?> episodes = const Value.absent(),
     int? observedAt,
+    int? revision,
   }) => SourceEntity(
     source: source ?? this.source,
     sourceId: sourceId ?? this.sourceId,
@@ -1207,6 +1282,7 @@ class SourceEntity extends DataClass implements Insertable<SourceEntity> {
     year: year.present ? year.value : this.year,
     episodes: episodes.present ? episodes.value : this.episodes,
     observedAt: observedAt ?? this.observedAt,
+    revision: revision ?? this.revision,
   );
   SourceEntity copyWithCompanion(SourceEntitiesCompanion data) {
     return SourceEntity(
@@ -1225,6 +1301,7 @@ class SourceEntity extends DataClass implements Insertable<SourceEntity> {
       observedAt: data.observedAt.present
           ? data.observedAt.value
           : this.observedAt,
+      revision: data.revision.present ? data.revision.value : this.revision,
     );
   }
 
@@ -1239,7 +1316,8 @@ class SourceEntity extends DataClass implements Insertable<SourceEntity> {
           ..write('imageUrl: $imageUrl, ')
           ..write('year: $year, ')
           ..write('episodes: $episodes, ')
-          ..write('observedAt: $observedAt')
+          ..write('observedAt: $observedAt, ')
+          ..write('revision: $revision')
           ..write(')'))
         .toString();
   }
@@ -1255,6 +1333,7 @@ class SourceEntity extends DataClass implements Insertable<SourceEntity> {
     year,
     episodes,
     observedAt,
+    revision,
   );
   @override
   bool operator ==(Object other) =>
@@ -1268,7 +1347,8 @@ class SourceEntity extends DataClass implements Insertable<SourceEntity> {
           other.imageUrl == this.imageUrl &&
           other.year == this.year &&
           other.episodes == this.episodes &&
-          other.observedAt == this.observedAt);
+          other.observedAt == this.observedAt &&
+          other.revision == this.revision);
 }
 
 class SourceEntitiesCompanion extends UpdateCompanion<SourceEntity> {
@@ -1281,6 +1361,7 @@ class SourceEntitiesCompanion extends UpdateCompanion<SourceEntity> {
   final Value<int?> year;
   final Value<int?> episodes;
   final Value<int> observedAt;
+  final Value<int> revision;
   final Value<int> rowid;
   const SourceEntitiesCompanion({
     this.source = const Value.absent(),
@@ -1292,6 +1373,7 @@ class SourceEntitiesCompanion extends UpdateCompanion<SourceEntity> {
     this.year = const Value.absent(),
     this.episodes = const Value.absent(),
     this.observedAt = const Value.absent(),
+    this.revision = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SourceEntitiesCompanion.insert({
@@ -1304,6 +1386,7 @@ class SourceEntitiesCompanion extends UpdateCompanion<SourceEntity> {
     this.year = const Value.absent(),
     this.episodes = const Value.absent(),
     required int observedAt,
+    this.revision = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : source = Value(source),
        sourceId = Value(sourceId),
@@ -1319,6 +1402,7 @@ class SourceEntitiesCompanion extends UpdateCompanion<SourceEntity> {
     Expression<int>? year,
     Expression<int>? episodes,
     Expression<int>? observedAt,
+    Expression<int>? revision,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1331,6 +1415,7 @@ class SourceEntitiesCompanion extends UpdateCompanion<SourceEntity> {
       if (year != null) 'year': year,
       if (episodes != null) 'episodes': episodes,
       if (observedAt != null) 'observed_at': observedAt,
+      if (revision != null) 'revision': revision,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1345,6 +1430,7 @@ class SourceEntitiesCompanion extends UpdateCompanion<SourceEntity> {
     Value<int?>? year,
     Value<int?>? episodes,
     Value<int>? observedAt,
+    Value<int>? revision,
     Value<int>? rowid,
   }) {
     return SourceEntitiesCompanion(
@@ -1357,6 +1443,7 @@ class SourceEntitiesCompanion extends UpdateCompanion<SourceEntity> {
       year: year ?? this.year,
       episodes: episodes ?? this.episodes,
       observedAt: observedAt ?? this.observedAt,
+      revision: revision ?? this.revision,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1391,6 +1478,9 @@ class SourceEntitiesCompanion extends UpdateCompanion<SourceEntity> {
     if (observedAt.present) {
       map['observed_at'] = Variable<int>(observedAt.value);
     }
+    if (revision.present) {
+      map['revision'] = Variable<int>(revision.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1409,6 +1499,7 @@ class SourceEntitiesCompanion extends UpdateCompanion<SourceEntity> {
           ..write('year: $year, ')
           ..write('episodes: $episodes, ')
           ..write('observedAt: $observedAt, ')
+          ..write('revision: $revision, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3829,6 +3920,1764 @@ class ImageCacheEntriesCompanion extends UpdateCompanion<ImageCacheEntry> {
   }
 }
 
+class $IdentityEvidenceRecordsTable extends IdentityEvidenceRecords
+    with TableInfo<$IdentityEvidenceRecordsTable, IdentityEvidenceRecord> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $IdentityEvidenceRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _evidenceIdMeta = const VerificationMeta(
+    'evidenceId',
+  );
+  @override
+  late final GeneratedColumn<String> evidenceId = GeneratedColumn<String>(
+    'evidence_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _identityIdMeta = const VerificationMeta(
+    'identityId',
+  );
+  @override
+  late final GeneratedColumn<String> identityId = GeneratedColumn<String>(
+    'identity_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sourceIdsMeta = const VerificationMeta(
+    'sourceIds',
+  );
+  @override
+  late final GeneratedColumn<String> sourceIds = GeneratedColumn<String>(
+    'source_ids',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _explanationMeta = const VerificationMeta(
+    'explanation',
+  );
+  @override
+  late final GeneratedColumn<String> explanation = GeneratedColumn<String>(
+    'explanation',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _scoreMeta = const VerificationMeta('score');
+  @override
+  late final GeneratedColumn<int> score = GeneratedColumn<int>(
+    'score',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    evidenceId,
+    identityId,
+    sourceIds,
+    kind,
+    explanation,
+    score,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'identity_evidence_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<IdentityEvidenceRecord> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('evidence_id')) {
+      context.handle(
+        _evidenceIdMeta,
+        evidenceId.isAcceptableOrUnknown(data['evidence_id']!, _evidenceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_evidenceIdMeta);
+    }
+    if (data.containsKey('identity_id')) {
+      context.handle(
+        _identityIdMeta,
+        identityId.isAcceptableOrUnknown(data['identity_id']!, _identityIdMeta),
+      );
+    }
+    if (data.containsKey('source_ids')) {
+      context.handle(
+        _sourceIdsMeta,
+        sourceIds.isAcceptableOrUnknown(data['source_ids']!, _sourceIdsMeta),
+      );
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('explanation')) {
+      context.handle(
+        _explanationMeta,
+        explanation.isAcceptableOrUnknown(
+          data['explanation']!,
+          _explanationMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_explanationMeta);
+    }
+    if (data.containsKey('score')) {
+      context.handle(
+        _scoreMeta,
+        score.isAcceptableOrUnknown(data['score']!, _scoreMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {evidenceId};
+  @override
+  IdentityEvidenceRecord map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return IdentityEvidenceRecord(
+      evidenceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}evidence_id'],
+      )!,
+      identityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}identity_id'],
+      ),
+      sourceIds: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_ids'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      explanation: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}explanation'],
+      )!,
+      score: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}score'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $IdentityEvidenceRecordsTable createAlias(String alias) {
+    return $IdentityEvidenceRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class IdentityEvidenceRecord extends DataClass
+    implements Insertable<IdentityEvidenceRecord> {
+  final String evidenceId;
+  final String? identityId;
+  final String sourceIds;
+  final String kind;
+  final String explanation;
+  final int? score;
+  final int createdAt;
+  const IdentityEvidenceRecord({
+    required this.evidenceId,
+    this.identityId,
+    required this.sourceIds,
+    required this.kind,
+    required this.explanation,
+    this.score,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['evidence_id'] = Variable<String>(evidenceId);
+    if (!nullToAbsent || identityId != null) {
+      map['identity_id'] = Variable<String>(identityId);
+    }
+    map['source_ids'] = Variable<String>(sourceIds);
+    map['kind'] = Variable<String>(kind);
+    map['explanation'] = Variable<String>(explanation);
+    if (!nullToAbsent || score != null) {
+      map['score'] = Variable<int>(score);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    return map;
+  }
+
+  IdentityEvidenceRecordsCompanion toCompanion(bool nullToAbsent) {
+    return IdentityEvidenceRecordsCompanion(
+      evidenceId: Value(evidenceId),
+      identityId: identityId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(identityId),
+      sourceIds: Value(sourceIds),
+      kind: Value(kind),
+      explanation: Value(explanation),
+      score: score == null && nullToAbsent
+          ? const Value.absent()
+          : Value(score),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory IdentityEvidenceRecord.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return IdentityEvidenceRecord(
+      evidenceId: serializer.fromJson<String>(json['evidenceId']),
+      identityId: serializer.fromJson<String?>(json['identityId']),
+      sourceIds: serializer.fromJson<String>(json['sourceIds']),
+      kind: serializer.fromJson<String>(json['kind']),
+      explanation: serializer.fromJson<String>(json['explanation']),
+      score: serializer.fromJson<int?>(json['score']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'evidenceId': serializer.toJson<String>(evidenceId),
+      'identityId': serializer.toJson<String?>(identityId),
+      'sourceIds': serializer.toJson<String>(sourceIds),
+      'kind': serializer.toJson<String>(kind),
+      'explanation': serializer.toJson<String>(explanation),
+      'score': serializer.toJson<int?>(score),
+      'createdAt': serializer.toJson<int>(createdAt),
+    };
+  }
+
+  IdentityEvidenceRecord copyWith({
+    String? evidenceId,
+    Value<String?> identityId = const Value.absent(),
+    String? sourceIds,
+    String? kind,
+    String? explanation,
+    Value<int?> score = const Value.absent(),
+    int? createdAt,
+  }) => IdentityEvidenceRecord(
+    evidenceId: evidenceId ?? this.evidenceId,
+    identityId: identityId.present ? identityId.value : this.identityId,
+    sourceIds: sourceIds ?? this.sourceIds,
+    kind: kind ?? this.kind,
+    explanation: explanation ?? this.explanation,
+    score: score.present ? score.value : this.score,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  IdentityEvidenceRecord copyWithCompanion(
+    IdentityEvidenceRecordsCompanion data,
+  ) {
+    return IdentityEvidenceRecord(
+      evidenceId: data.evidenceId.present
+          ? data.evidenceId.value
+          : this.evidenceId,
+      identityId: data.identityId.present
+          ? data.identityId.value
+          : this.identityId,
+      sourceIds: data.sourceIds.present ? data.sourceIds.value : this.sourceIds,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      explanation: data.explanation.present
+          ? data.explanation.value
+          : this.explanation,
+      score: data.score.present ? data.score.value : this.score,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IdentityEvidenceRecord(')
+          ..write('evidenceId: $evidenceId, ')
+          ..write('identityId: $identityId, ')
+          ..write('sourceIds: $sourceIds, ')
+          ..write('kind: $kind, ')
+          ..write('explanation: $explanation, ')
+          ..write('score: $score, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    evidenceId,
+    identityId,
+    sourceIds,
+    kind,
+    explanation,
+    score,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is IdentityEvidenceRecord &&
+          other.evidenceId == this.evidenceId &&
+          other.identityId == this.identityId &&
+          other.sourceIds == this.sourceIds &&
+          other.kind == this.kind &&
+          other.explanation == this.explanation &&
+          other.score == this.score &&
+          other.createdAt == this.createdAt);
+}
+
+class IdentityEvidenceRecordsCompanion
+    extends UpdateCompanion<IdentityEvidenceRecord> {
+  final Value<String> evidenceId;
+  final Value<String?> identityId;
+  final Value<String> sourceIds;
+  final Value<String> kind;
+  final Value<String> explanation;
+  final Value<int?> score;
+  final Value<int> createdAt;
+  final Value<int> rowid;
+  const IdentityEvidenceRecordsCompanion({
+    this.evidenceId = const Value.absent(),
+    this.identityId = const Value.absent(),
+    this.sourceIds = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.explanation = const Value.absent(),
+    this.score = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  IdentityEvidenceRecordsCompanion.insert({
+    required String evidenceId,
+    this.identityId = const Value.absent(),
+    this.sourceIds = const Value.absent(),
+    required String kind,
+    required String explanation,
+    this.score = const Value.absent(),
+    required int createdAt,
+    this.rowid = const Value.absent(),
+  }) : evidenceId = Value(evidenceId),
+       kind = Value(kind),
+       explanation = Value(explanation),
+       createdAt = Value(createdAt);
+  static Insertable<IdentityEvidenceRecord> custom({
+    Expression<String>? evidenceId,
+    Expression<String>? identityId,
+    Expression<String>? sourceIds,
+    Expression<String>? kind,
+    Expression<String>? explanation,
+    Expression<int>? score,
+    Expression<int>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (evidenceId != null) 'evidence_id': evidenceId,
+      if (identityId != null) 'identity_id': identityId,
+      if (sourceIds != null) 'source_ids': sourceIds,
+      if (kind != null) 'kind': kind,
+      if (explanation != null) 'explanation': explanation,
+      if (score != null) 'score': score,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  IdentityEvidenceRecordsCompanion copyWith({
+    Value<String>? evidenceId,
+    Value<String?>? identityId,
+    Value<String>? sourceIds,
+    Value<String>? kind,
+    Value<String>? explanation,
+    Value<int?>? score,
+    Value<int>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return IdentityEvidenceRecordsCompanion(
+      evidenceId: evidenceId ?? this.evidenceId,
+      identityId: identityId ?? this.identityId,
+      sourceIds: sourceIds ?? this.sourceIds,
+      kind: kind ?? this.kind,
+      explanation: explanation ?? this.explanation,
+      score: score ?? this.score,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (evidenceId.present) {
+      map['evidence_id'] = Variable<String>(evidenceId.value);
+    }
+    if (identityId.present) {
+      map['identity_id'] = Variable<String>(identityId.value);
+    }
+    if (sourceIds.present) {
+      map['source_ids'] = Variable<String>(sourceIds.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (explanation.present) {
+      map['explanation'] = Variable<String>(explanation.value);
+    }
+    if (score.present) {
+      map['score'] = Variable<int>(score.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IdentityEvidenceRecordsCompanion(')
+          ..write('evidenceId: $evidenceId, ')
+          ..write('identityId: $identityId, ')
+          ..write('sourceIds: $sourceIds, ')
+          ..write('kind: $kind, ')
+          ..write('explanation: $explanation, ')
+          ..write('score: $score, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $IdentityReviewsTable extends IdentityReviews
+    with TableInfo<$IdentityReviewsTable, IdentityReview> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $IdentityReviewsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _reviewIdMeta = const VerificationMeta(
+    'reviewId',
+  );
+  @override
+  late final GeneratedColumn<String> reviewId = GeneratedColumn<String>(
+    'review_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _leftSourceIdMeta = const VerificationMeta(
+    'leftSourceId',
+  );
+  @override
+  late final GeneratedColumn<String> leftSourceId = GeneratedColumn<String>(
+    'left_source_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rightSourceIdMeta = const VerificationMeta(
+    'rightSourceId',
+  );
+  @override
+  late final GeneratedColumn<String> rightSourceId = GeneratedColumn<String>(
+    'right_source_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _explanationMeta = const VerificationMeta(
+    'explanation',
+  );
+  @override
+  late final GeneratedColumn<String> explanation = GeneratedColumn<String>(
+    'explanation',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _baselineRevisionMeta = const VerificationMeta(
+    'baselineRevision',
+  );
+  @override
+  late final GeneratedColumn<int> baselineRevision = GeneratedColumn<int>(
+    'baseline_revision',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    reviewId,
+    leftSourceId,
+    rightSourceId,
+    status,
+    explanation,
+    baselineRevision,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'identity_reviews';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<IdentityReview> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('review_id')) {
+      context.handle(
+        _reviewIdMeta,
+        reviewId.isAcceptableOrUnknown(data['review_id']!, _reviewIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_reviewIdMeta);
+    }
+    if (data.containsKey('left_source_id')) {
+      context.handle(
+        _leftSourceIdMeta,
+        leftSourceId.isAcceptableOrUnknown(
+          data['left_source_id']!,
+          _leftSourceIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_leftSourceIdMeta);
+    }
+    if (data.containsKey('right_source_id')) {
+      context.handle(
+        _rightSourceIdMeta,
+        rightSourceId.isAcceptableOrUnknown(
+          data['right_source_id']!,
+          _rightSourceIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_rightSourceIdMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('explanation')) {
+      context.handle(
+        _explanationMeta,
+        explanation.isAcceptableOrUnknown(
+          data['explanation']!,
+          _explanationMeta,
+        ),
+      );
+    }
+    if (data.containsKey('baseline_revision')) {
+      context.handle(
+        _baselineRevisionMeta,
+        baselineRevision.isAcceptableOrUnknown(
+          data['baseline_revision']!,
+          _baselineRevisionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {reviewId};
+  @override
+  IdentityReview map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return IdentityReview(
+      reviewId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}review_id'],
+      )!,
+      leftSourceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}left_source_id'],
+      )!,
+      rightSourceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}right_source_id'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      explanation: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}explanation'],
+      )!,
+      baselineRevision: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}baseline_revision'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $IdentityReviewsTable createAlias(String alias) {
+    return $IdentityReviewsTable(attachedDatabase, alias);
+  }
+}
+
+class IdentityReview extends DataClass implements Insertable<IdentityReview> {
+  final String reviewId;
+  final String leftSourceId;
+  final String rightSourceId;
+  final String status;
+  final String explanation;
+  final int baselineRevision;
+  final int createdAt;
+  const IdentityReview({
+    required this.reviewId,
+    required this.leftSourceId,
+    required this.rightSourceId,
+    required this.status,
+    required this.explanation,
+    required this.baselineRevision,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['review_id'] = Variable<String>(reviewId);
+    map['left_source_id'] = Variable<String>(leftSourceId);
+    map['right_source_id'] = Variable<String>(rightSourceId);
+    map['status'] = Variable<String>(status);
+    map['explanation'] = Variable<String>(explanation);
+    map['baseline_revision'] = Variable<int>(baselineRevision);
+    map['created_at'] = Variable<int>(createdAt);
+    return map;
+  }
+
+  IdentityReviewsCompanion toCompanion(bool nullToAbsent) {
+    return IdentityReviewsCompanion(
+      reviewId: Value(reviewId),
+      leftSourceId: Value(leftSourceId),
+      rightSourceId: Value(rightSourceId),
+      status: Value(status),
+      explanation: Value(explanation),
+      baselineRevision: Value(baselineRevision),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory IdentityReview.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return IdentityReview(
+      reviewId: serializer.fromJson<String>(json['reviewId']),
+      leftSourceId: serializer.fromJson<String>(json['leftSourceId']),
+      rightSourceId: serializer.fromJson<String>(json['rightSourceId']),
+      status: serializer.fromJson<String>(json['status']),
+      explanation: serializer.fromJson<String>(json['explanation']),
+      baselineRevision: serializer.fromJson<int>(json['baselineRevision']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'reviewId': serializer.toJson<String>(reviewId),
+      'leftSourceId': serializer.toJson<String>(leftSourceId),
+      'rightSourceId': serializer.toJson<String>(rightSourceId),
+      'status': serializer.toJson<String>(status),
+      'explanation': serializer.toJson<String>(explanation),
+      'baselineRevision': serializer.toJson<int>(baselineRevision),
+      'createdAt': serializer.toJson<int>(createdAt),
+    };
+  }
+
+  IdentityReview copyWith({
+    String? reviewId,
+    String? leftSourceId,
+    String? rightSourceId,
+    String? status,
+    String? explanation,
+    int? baselineRevision,
+    int? createdAt,
+  }) => IdentityReview(
+    reviewId: reviewId ?? this.reviewId,
+    leftSourceId: leftSourceId ?? this.leftSourceId,
+    rightSourceId: rightSourceId ?? this.rightSourceId,
+    status: status ?? this.status,
+    explanation: explanation ?? this.explanation,
+    baselineRevision: baselineRevision ?? this.baselineRevision,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  IdentityReview copyWithCompanion(IdentityReviewsCompanion data) {
+    return IdentityReview(
+      reviewId: data.reviewId.present ? data.reviewId.value : this.reviewId,
+      leftSourceId: data.leftSourceId.present
+          ? data.leftSourceId.value
+          : this.leftSourceId,
+      rightSourceId: data.rightSourceId.present
+          ? data.rightSourceId.value
+          : this.rightSourceId,
+      status: data.status.present ? data.status.value : this.status,
+      explanation: data.explanation.present
+          ? data.explanation.value
+          : this.explanation,
+      baselineRevision: data.baselineRevision.present
+          ? data.baselineRevision.value
+          : this.baselineRevision,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IdentityReview(')
+          ..write('reviewId: $reviewId, ')
+          ..write('leftSourceId: $leftSourceId, ')
+          ..write('rightSourceId: $rightSourceId, ')
+          ..write('status: $status, ')
+          ..write('explanation: $explanation, ')
+          ..write('baselineRevision: $baselineRevision, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    reviewId,
+    leftSourceId,
+    rightSourceId,
+    status,
+    explanation,
+    baselineRevision,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is IdentityReview &&
+          other.reviewId == this.reviewId &&
+          other.leftSourceId == this.leftSourceId &&
+          other.rightSourceId == this.rightSourceId &&
+          other.status == this.status &&
+          other.explanation == this.explanation &&
+          other.baselineRevision == this.baselineRevision &&
+          other.createdAt == this.createdAt);
+}
+
+class IdentityReviewsCompanion extends UpdateCompanion<IdentityReview> {
+  final Value<String> reviewId;
+  final Value<String> leftSourceId;
+  final Value<String> rightSourceId;
+  final Value<String> status;
+  final Value<String> explanation;
+  final Value<int> baselineRevision;
+  final Value<int> createdAt;
+  final Value<int> rowid;
+  const IdentityReviewsCompanion({
+    this.reviewId = const Value.absent(),
+    this.leftSourceId = const Value.absent(),
+    this.rightSourceId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.explanation = const Value.absent(),
+    this.baselineRevision = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  IdentityReviewsCompanion.insert({
+    required String reviewId,
+    required String leftSourceId,
+    required String rightSourceId,
+    this.status = const Value.absent(),
+    this.explanation = const Value.absent(),
+    this.baselineRevision = const Value.absent(),
+    required int createdAt,
+    this.rowid = const Value.absent(),
+  }) : reviewId = Value(reviewId),
+       leftSourceId = Value(leftSourceId),
+       rightSourceId = Value(rightSourceId),
+       createdAt = Value(createdAt);
+  static Insertable<IdentityReview> custom({
+    Expression<String>? reviewId,
+    Expression<String>? leftSourceId,
+    Expression<String>? rightSourceId,
+    Expression<String>? status,
+    Expression<String>? explanation,
+    Expression<int>? baselineRevision,
+    Expression<int>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (reviewId != null) 'review_id': reviewId,
+      if (leftSourceId != null) 'left_source_id': leftSourceId,
+      if (rightSourceId != null) 'right_source_id': rightSourceId,
+      if (status != null) 'status': status,
+      if (explanation != null) 'explanation': explanation,
+      if (baselineRevision != null) 'baseline_revision': baselineRevision,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  IdentityReviewsCompanion copyWith({
+    Value<String>? reviewId,
+    Value<String>? leftSourceId,
+    Value<String>? rightSourceId,
+    Value<String>? status,
+    Value<String>? explanation,
+    Value<int>? baselineRevision,
+    Value<int>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return IdentityReviewsCompanion(
+      reviewId: reviewId ?? this.reviewId,
+      leftSourceId: leftSourceId ?? this.leftSourceId,
+      rightSourceId: rightSourceId ?? this.rightSourceId,
+      status: status ?? this.status,
+      explanation: explanation ?? this.explanation,
+      baselineRevision: baselineRevision ?? this.baselineRevision,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (reviewId.present) {
+      map['review_id'] = Variable<String>(reviewId.value);
+    }
+    if (leftSourceId.present) {
+      map['left_source_id'] = Variable<String>(leftSourceId.value);
+    }
+    if (rightSourceId.present) {
+      map['right_source_id'] = Variable<String>(rightSourceId.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (explanation.present) {
+      map['explanation'] = Variable<String>(explanation.value);
+    }
+    if (baselineRevision.present) {
+      map['baseline_revision'] = Variable<int>(baselineRevision.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IdentityReviewsCompanion(')
+          ..write('reviewId: $reviewId, ')
+          ..write('leftSourceId: $leftSourceId, ')
+          ..write('rightSourceId: $rightSourceId, ')
+          ..write('status: $status, ')
+          ..write('explanation: $explanation, ')
+          ..write('baselineRevision: $baselineRevision, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $IdentityDecisionsTable extends IdentityDecisions
+    with TableInfo<$IdentityDecisionsTable, IdentityDecision> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $IdentityDecisionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _decisionIdMeta = const VerificationMeta(
+    'decisionId',
+  );
+  @override
+  late final GeneratedColumn<String> decisionId = GeneratedColumn<String>(
+    'decision_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _reviewIdMeta = const VerificationMeta(
+    'reviewId',
+  );
+  @override
+  late final GeneratedColumn<String> reviewId = GeneratedColumn<String>(
+    'review_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _explanationMeta = const VerificationMeta(
+    'explanation',
+  );
+  @override
+  late final GeneratedColumn<String> explanation = GeneratedColumn<String>(
+    'explanation',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _undoneAtMeta = const VerificationMeta(
+    'undoneAt',
+  );
+  @override
+  late final GeneratedColumn<int> undoneAt = GeneratedColumn<int>(
+    'undone_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    decisionId,
+    reviewId,
+    kind,
+    explanation,
+    createdAt,
+    undoneAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'identity_decisions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<IdentityDecision> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('decision_id')) {
+      context.handle(
+        _decisionIdMeta,
+        decisionId.isAcceptableOrUnknown(data['decision_id']!, _decisionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_decisionIdMeta);
+    }
+    if (data.containsKey('review_id')) {
+      context.handle(
+        _reviewIdMeta,
+        reviewId.isAcceptableOrUnknown(data['review_id']!, _reviewIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_reviewIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('explanation')) {
+      context.handle(
+        _explanationMeta,
+        explanation.isAcceptableOrUnknown(
+          data['explanation']!,
+          _explanationMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('undone_at')) {
+      context.handle(
+        _undoneAtMeta,
+        undoneAt.isAcceptableOrUnknown(data['undone_at']!, _undoneAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {decisionId};
+  @override
+  IdentityDecision map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return IdentityDecision(
+      decisionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}decision_id'],
+      )!,
+      reviewId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}review_id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      explanation: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}explanation'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      undoneAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}undone_at'],
+      ),
+    );
+  }
+
+  @override
+  $IdentityDecisionsTable createAlias(String alias) {
+    return $IdentityDecisionsTable(attachedDatabase, alias);
+  }
+}
+
+class IdentityDecision extends DataClass
+    implements Insertable<IdentityDecision> {
+  final String decisionId;
+  final String reviewId;
+  final String kind;
+  final String explanation;
+  final int createdAt;
+  final int? undoneAt;
+  const IdentityDecision({
+    required this.decisionId,
+    required this.reviewId,
+    required this.kind,
+    required this.explanation,
+    required this.createdAt,
+    this.undoneAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['decision_id'] = Variable<String>(decisionId);
+    map['review_id'] = Variable<String>(reviewId);
+    map['kind'] = Variable<String>(kind);
+    map['explanation'] = Variable<String>(explanation);
+    map['created_at'] = Variable<int>(createdAt);
+    if (!nullToAbsent || undoneAt != null) {
+      map['undone_at'] = Variable<int>(undoneAt);
+    }
+    return map;
+  }
+
+  IdentityDecisionsCompanion toCompanion(bool nullToAbsent) {
+    return IdentityDecisionsCompanion(
+      decisionId: Value(decisionId),
+      reviewId: Value(reviewId),
+      kind: Value(kind),
+      explanation: Value(explanation),
+      createdAt: Value(createdAt),
+      undoneAt: undoneAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(undoneAt),
+    );
+  }
+
+  factory IdentityDecision.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return IdentityDecision(
+      decisionId: serializer.fromJson<String>(json['decisionId']),
+      reviewId: serializer.fromJson<String>(json['reviewId']),
+      kind: serializer.fromJson<String>(json['kind']),
+      explanation: serializer.fromJson<String>(json['explanation']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      undoneAt: serializer.fromJson<int?>(json['undoneAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'decisionId': serializer.toJson<String>(decisionId),
+      'reviewId': serializer.toJson<String>(reviewId),
+      'kind': serializer.toJson<String>(kind),
+      'explanation': serializer.toJson<String>(explanation),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'undoneAt': serializer.toJson<int?>(undoneAt),
+    };
+  }
+
+  IdentityDecision copyWith({
+    String? decisionId,
+    String? reviewId,
+    String? kind,
+    String? explanation,
+    int? createdAt,
+    Value<int?> undoneAt = const Value.absent(),
+  }) => IdentityDecision(
+    decisionId: decisionId ?? this.decisionId,
+    reviewId: reviewId ?? this.reviewId,
+    kind: kind ?? this.kind,
+    explanation: explanation ?? this.explanation,
+    createdAt: createdAt ?? this.createdAt,
+    undoneAt: undoneAt.present ? undoneAt.value : this.undoneAt,
+  );
+  IdentityDecision copyWithCompanion(IdentityDecisionsCompanion data) {
+    return IdentityDecision(
+      decisionId: data.decisionId.present
+          ? data.decisionId.value
+          : this.decisionId,
+      reviewId: data.reviewId.present ? data.reviewId.value : this.reviewId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      explanation: data.explanation.present
+          ? data.explanation.value
+          : this.explanation,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      undoneAt: data.undoneAt.present ? data.undoneAt.value : this.undoneAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IdentityDecision(')
+          ..write('decisionId: $decisionId, ')
+          ..write('reviewId: $reviewId, ')
+          ..write('kind: $kind, ')
+          ..write('explanation: $explanation, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('undoneAt: $undoneAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(decisionId, reviewId, kind, explanation, createdAt, undoneAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is IdentityDecision &&
+          other.decisionId == this.decisionId &&
+          other.reviewId == this.reviewId &&
+          other.kind == this.kind &&
+          other.explanation == this.explanation &&
+          other.createdAt == this.createdAt &&
+          other.undoneAt == this.undoneAt);
+}
+
+class IdentityDecisionsCompanion extends UpdateCompanion<IdentityDecision> {
+  final Value<String> decisionId;
+  final Value<String> reviewId;
+  final Value<String> kind;
+  final Value<String> explanation;
+  final Value<int> createdAt;
+  final Value<int?> undoneAt;
+  final Value<int> rowid;
+  const IdentityDecisionsCompanion({
+    this.decisionId = const Value.absent(),
+    this.reviewId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.explanation = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.undoneAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  IdentityDecisionsCompanion.insert({
+    required String decisionId,
+    required String reviewId,
+    required String kind,
+    this.explanation = const Value.absent(),
+    required int createdAt,
+    this.undoneAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : decisionId = Value(decisionId),
+       reviewId = Value(reviewId),
+       kind = Value(kind),
+       createdAt = Value(createdAt);
+  static Insertable<IdentityDecision> custom({
+    Expression<String>? decisionId,
+    Expression<String>? reviewId,
+    Expression<String>? kind,
+    Expression<String>? explanation,
+    Expression<int>? createdAt,
+    Expression<int>? undoneAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (decisionId != null) 'decision_id': decisionId,
+      if (reviewId != null) 'review_id': reviewId,
+      if (kind != null) 'kind': kind,
+      if (explanation != null) 'explanation': explanation,
+      if (createdAt != null) 'created_at': createdAt,
+      if (undoneAt != null) 'undone_at': undoneAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  IdentityDecisionsCompanion copyWith({
+    Value<String>? decisionId,
+    Value<String>? reviewId,
+    Value<String>? kind,
+    Value<String>? explanation,
+    Value<int>? createdAt,
+    Value<int?>? undoneAt,
+    Value<int>? rowid,
+  }) {
+    return IdentityDecisionsCompanion(
+      decisionId: decisionId ?? this.decisionId,
+      reviewId: reviewId ?? this.reviewId,
+      kind: kind ?? this.kind,
+      explanation: explanation ?? this.explanation,
+      createdAt: createdAt ?? this.createdAt,
+      undoneAt: undoneAt ?? this.undoneAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (decisionId.present) {
+      map['decision_id'] = Variable<String>(decisionId.value);
+    }
+    if (reviewId.present) {
+      map['review_id'] = Variable<String>(reviewId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (explanation.present) {
+      map['explanation'] = Variable<String>(explanation.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (undoneAt.present) {
+      map['undone_at'] = Variable<int>(undoneAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IdentityDecisionsCompanion(')
+          ..write('decisionId: $decisionId, ')
+          ..write('reviewId: $reviewId, ')
+          ..write('kind: $kind, ')
+          ..write('explanation: $explanation, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('undoneAt: $undoneAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $IdentityOperationLogsTable extends IdentityOperationLogs
+    with TableInfo<$IdentityOperationLogsTable, IdentityOperationLog> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $IdentityOperationLogsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _operationIdMeta = const VerificationMeta(
+    'operationId',
+  );
+  @override
+  late final GeneratedColumn<String> operationId = GeneratedColumn<String>(
+    'operation_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _operationKindMeta = const VerificationMeta(
+    'operationKind',
+  );
+  @override
+  late final GeneratedColumn<String> operationKind = GeneratedColumn<String>(
+    'operation_kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadMeta = const VerificationMeta(
+    'payload',
+  );
+  @override
+  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
+    'payload',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _undoneAtMeta = const VerificationMeta(
+    'undoneAt',
+  );
+  @override
+  late final GeneratedColumn<int> undoneAt = GeneratedColumn<int>(
+    'undone_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    operationId,
+    operationKind,
+    payload,
+    createdAt,
+    undoneAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'identity_operation_logs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<IdentityOperationLog> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('operation_id')) {
+      context.handle(
+        _operationIdMeta,
+        operationId.isAcceptableOrUnknown(
+          data['operation_id']!,
+          _operationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_operationIdMeta);
+    }
+    if (data.containsKey('operation_kind')) {
+      context.handle(
+        _operationKindMeta,
+        operationKind.isAcceptableOrUnknown(
+          data['operation_kind']!,
+          _operationKindMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_operationKindMeta);
+    }
+    if (data.containsKey('payload')) {
+      context.handle(
+        _payloadMeta,
+        payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('undone_at')) {
+      context.handle(
+        _undoneAtMeta,
+        undoneAt.isAcceptableOrUnknown(data['undone_at']!, _undoneAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {operationId};
+  @override
+  IdentityOperationLog map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return IdentityOperationLog(
+      operationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}operation_id'],
+      )!,
+      operationKind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}operation_kind'],
+      )!,
+      payload: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      undoneAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}undone_at'],
+      ),
+    );
+  }
+
+  @override
+  $IdentityOperationLogsTable createAlias(String alias) {
+    return $IdentityOperationLogsTable(attachedDatabase, alias);
+  }
+}
+
+class IdentityOperationLog extends DataClass
+    implements Insertable<IdentityOperationLog> {
+  final String operationId;
+  final String operationKind;
+  final String payload;
+  final int createdAt;
+  final int? undoneAt;
+  const IdentityOperationLog({
+    required this.operationId,
+    required this.operationKind,
+    required this.payload,
+    required this.createdAt,
+    this.undoneAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['operation_id'] = Variable<String>(operationId);
+    map['operation_kind'] = Variable<String>(operationKind);
+    map['payload'] = Variable<String>(payload);
+    map['created_at'] = Variable<int>(createdAt);
+    if (!nullToAbsent || undoneAt != null) {
+      map['undone_at'] = Variable<int>(undoneAt);
+    }
+    return map;
+  }
+
+  IdentityOperationLogsCompanion toCompanion(bool nullToAbsent) {
+    return IdentityOperationLogsCompanion(
+      operationId: Value(operationId),
+      operationKind: Value(operationKind),
+      payload: Value(payload),
+      createdAt: Value(createdAt),
+      undoneAt: undoneAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(undoneAt),
+    );
+  }
+
+  factory IdentityOperationLog.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return IdentityOperationLog(
+      operationId: serializer.fromJson<String>(json['operationId']),
+      operationKind: serializer.fromJson<String>(json['operationKind']),
+      payload: serializer.fromJson<String>(json['payload']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      undoneAt: serializer.fromJson<int?>(json['undoneAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'operationId': serializer.toJson<String>(operationId),
+      'operationKind': serializer.toJson<String>(operationKind),
+      'payload': serializer.toJson<String>(payload),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'undoneAt': serializer.toJson<int?>(undoneAt),
+    };
+  }
+
+  IdentityOperationLog copyWith({
+    String? operationId,
+    String? operationKind,
+    String? payload,
+    int? createdAt,
+    Value<int?> undoneAt = const Value.absent(),
+  }) => IdentityOperationLog(
+    operationId: operationId ?? this.operationId,
+    operationKind: operationKind ?? this.operationKind,
+    payload: payload ?? this.payload,
+    createdAt: createdAt ?? this.createdAt,
+    undoneAt: undoneAt.present ? undoneAt.value : this.undoneAt,
+  );
+  IdentityOperationLog copyWithCompanion(IdentityOperationLogsCompanion data) {
+    return IdentityOperationLog(
+      operationId: data.operationId.present
+          ? data.operationId.value
+          : this.operationId,
+      operationKind: data.operationKind.present
+          ? data.operationKind.value
+          : this.operationKind,
+      payload: data.payload.present ? data.payload.value : this.payload,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      undoneAt: data.undoneAt.present ? data.undoneAt.value : this.undoneAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IdentityOperationLog(')
+          ..write('operationId: $operationId, ')
+          ..write('operationKind: $operationKind, ')
+          ..write('payload: $payload, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('undoneAt: $undoneAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(operationId, operationKind, payload, createdAt, undoneAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is IdentityOperationLog &&
+          other.operationId == this.operationId &&
+          other.operationKind == this.operationKind &&
+          other.payload == this.payload &&
+          other.createdAt == this.createdAt &&
+          other.undoneAt == this.undoneAt);
+}
+
+class IdentityOperationLogsCompanion
+    extends UpdateCompanion<IdentityOperationLog> {
+  final Value<String> operationId;
+  final Value<String> operationKind;
+  final Value<String> payload;
+  final Value<int> createdAt;
+  final Value<int?> undoneAt;
+  final Value<int> rowid;
+  const IdentityOperationLogsCompanion({
+    this.operationId = const Value.absent(),
+    this.operationKind = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.undoneAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  IdentityOperationLogsCompanion.insert({
+    required String operationId,
+    required String operationKind,
+    this.payload = const Value.absent(),
+    required int createdAt,
+    this.undoneAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : operationId = Value(operationId),
+       operationKind = Value(operationKind),
+       createdAt = Value(createdAt);
+  static Insertable<IdentityOperationLog> custom({
+    Expression<String>? operationId,
+    Expression<String>? operationKind,
+    Expression<String>? payload,
+    Expression<int>? createdAt,
+    Expression<int>? undoneAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (operationId != null) 'operation_id': operationId,
+      if (operationKind != null) 'operation_kind': operationKind,
+      if (payload != null) 'payload': payload,
+      if (createdAt != null) 'created_at': createdAt,
+      if (undoneAt != null) 'undone_at': undoneAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  IdentityOperationLogsCompanion copyWith({
+    Value<String>? operationId,
+    Value<String>? operationKind,
+    Value<String>? payload,
+    Value<int>? createdAt,
+    Value<int?>? undoneAt,
+    Value<int>? rowid,
+  }) {
+    return IdentityOperationLogsCompanion(
+      operationId: operationId ?? this.operationId,
+      operationKind: operationKind ?? this.operationKind,
+      payload: payload ?? this.payload,
+      createdAt: createdAt ?? this.createdAt,
+      undoneAt: undoneAt ?? this.undoneAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (operationId.present) {
+      map['operation_id'] = Variable<String>(operationId.value);
+    }
+    if (operationKind.present) {
+      map['operation_kind'] = Variable<String>(operationKind.value);
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(payload.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (undoneAt.present) {
+      map['undone_at'] = Variable<int>(undoneAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IdentityOperationLogsCompanion(')
+          ..write('operationId: $operationId, ')
+          ..write('operationKind: $operationKind, ')
+          ..write('payload: $payload, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('undoneAt: $undoneAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$MioAniDatabase extends GeneratedDatabase {
   _$MioAniDatabase(QueryExecutor e) : super(e);
   $MioAniDatabaseManager get managers => $MioAniDatabaseManager(this);
@@ -3848,6 +5697,15 @@ abstract class _$MioAniDatabase extends GeneratedDatabase {
   );
   late final $ImageCacheEntriesTable imageCacheEntries =
       $ImageCacheEntriesTable(this);
+  late final $IdentityEvidenceRecordsTable identityEvidenceRecords =
+      $IdentityEvidenceRecordsTable(this);
+  late final $IdentityReviewsTable identityReviews = $IdentityReviewsTable(
+    this,
+  );
+  late final $IdentityDecisionsTable identityDecisions =
+      $IdentityDecisionsTable(this);
+  late final $IdentityOperationLogsTable identityOperationLogs =
+      $IdentityOperationLogsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3862,6 +5720,10 @@ abstract class _$MioAniDatabase extends GeneratedDatabase {
     appSettings,
     migrationLedger,
     imageCacheEntries,
+    identityEvidenceRecords,
+    identityReviews,
+    identityDecisions,
+    identityOperationLogs,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -4173,6 +6035,7 @@ typedef $$AnimeIdentitiesTableCreateCompanionBuilder =
       Value<String> canonicalTitle,
       required int createdAt,
       required int updatedAt,
+      Value<int> revision,
       Value<int> rowid,
     });
 typedef $$AnimeIdentitiesTableUpdateCompanionBuilder =
@@ -4181,6 +6044,7 @@ typedef $$AnimeIdentitiesTableUpdateCompanionBuilder =
       Value<String> canonicalTitle,
       Value<int> createdAt,
       Value<int> updatedAt,
+      Value<int> revision,
       Value<int> rowid,
     });
 
@@ -4297,6 +6161,11 @@ class $$AnimeIdentitiesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnFilters(column),
+  );
+
   Expression<bool> sourceEntitiesRefs(
     Expression<bool> Function($$SourceEntitiesTableFilterComposer f) f,
   ) {
@@ -4401,6 +6270,11 @@ class $$AnimeIdentitiesTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AnimeIdentitiesTableAnnotationComposer
@@ -4427,6 +6301,9 @@ class $$AnimeIdentitiesTableAnnotationComposer
 
   GeneratedColumn<int> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get revision =>
+      $composableBuilder(column: $table.revision, builder: (column) => column);
 
   Expression<T> sourceEntitiesRefs<T extends Object>(
     Expression<T> Function($$SourceEntitiesTableAnnotationComposer a) f,
@@ -4543,12 +6420,14 @@ class $$AnimeIdentitiesTableTableManager
                 Value<String> canonicalTitle = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
+                Value<int> revision = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AnimeIdentitiesCompanion(
                 identityId: identityId,
                 canonicalTitle: canonicalTitle,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                revision: revision,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4557,12 +6436,14 @@ class $$AnimeIdentitiesTableTableManager
                 Value<String> canonicalTitle = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
+                Value<int> revision = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AnimeIdentitiesCompanion.insert(
                 identityId: identityId,
                 canonicalTitle: canonicalTitle,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                revision: revision,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -4689,6 +6570,7 @@ typedef $$SourceEntitiesTableCreateCompanionBuilder =
       Value<int?> year,
       Value<int?> episodes,
       required int observedAt,
+      Value<int> revision,
       Value<int> rowid,
     });
 typedef $$SourceEntitiesTableUpdateCompanionBuilder =
@@ -4702,6 +6584,7 @@ typedef $$SourceEntitiesTableUpdateCompanionBuilder =
       Value<int?> year,
       Value<int?> episodes,
       Value<int> observedAt,
+      Value<int> revision,
       Value<int> rowid,
     });
 
@@ -4783,6 +6666,11 @@ class $$SourceEntitiesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$AnimeIdentitiesTableFilterComposer get identityId {
     final $$AnimeIdentitiesTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -4856,6 +6744,11 @@ class $$SourceEntitiesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get revision => $composableBuilder(
+    column: $table.revision,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$AnimeIdentitiesTableOrderingComposer get identityId {
     final $$AnimeIdentitiesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -4916,6 +6809,9 @@ class $$SourceEntitiesTableAnnotationComposer
     column: $table.observedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get revision =>
+      $composableBuilder(column: $table.revision, builder: (column) => column);
 
   $$AnimeIdentitiesTableAnnotationComposer get identityId {
     final $$AnimeIdentitiesTableAnnotationComposer composer = $composerBuilder(
@@ -4980,6 +6876,7 @@ class $$SourceEntitiesTableTableManager
                 Value<int?> year = const Value.absent(),
                 Value<int?> episodes = const Value.absent(),
                 Value<int> observedAt = const Value.absent(),
+                Value<int> revision = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SourceEntitiesCompanion(
                 source: source,
@@ -4991,6 +6888,7 @@ class $$SourceEntitiesTableTableManager
                 year: year,
                 episodes: episodes,
                 observedAt: observedAt,
+                revision: revision,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5004,6 +6902,7 @@ class $$SourceEntitiesTableTableManager
                 Value<int?> year = const Value.absent(),
                 Value<int?> episodes = const Value.absent(),
                 required int observedAt,
+                Value<int> revision = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SourceEntitiesCompanion.insert(
                 source: source,
@@ -5015,6 +6914,7 @@ class $$SourceEntitiesTableTableManager
                 year: year,
                 episodes: episodes,
                 observedAt: observedAt,
+                revision: revision,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -6662,6 +8562,980 @@ typedef $$ImageCacheEntriesTableProcessedTableManager =
       ImageCacheEntry,
       PrefetchHooks Function()
     >;
+typedef $$IdentityEvidenceRecordsTableCreateCompanionBuilder =
+    IdentityEvidenceRecordsCompanion Function({
+      required String evidenceId,
+      Value<String?> identityId,
+      Value<String> sourceIds,
+      required String kind,
+      required String explanation,
+      Value<int?> score,
+      required int createdAt,
+      Value<int> rowid,
+    });
+typedef $$IdentityEvidenceRecordsTableUpdateCompanionBuilder =
+    IdentityEvidenceRecordsCompanion Function({
+      Value<String> evidenceId,
+      Value<String?> identityId,
+      Value<String> sourceIds,
+      Value<String> kind,
+      Value<String> explanation,
+      Value<int?> score,
+      Value<int> createdAt,
+      Value<int> rowid,
+    });
+
+class $$IdentityEvidenceRecordsTableFilterComposer
+    extends Composer<_$MioAniDatabase, $IdentityEvidenceRecordsTable> {
+  $$IdentityEvidenceRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get evidenceId => $composableBuilder(
+    column: $table.evidenceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get identityId => $composableBuilder(
+    column: $table.identityId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceIds => $composableBuilder(
+    column: $table.sourceIds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get explanation => $composableBuilder(
+    column: $table.explanation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get score => $composableBuilder(
+    column: $table.score,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$IdentityEvidenceRecordsTableOrderingComposer
+    extends Composer<_$MioAniDatabase, $IdentityEvidenceRecordsTable> {
+  $$IdentityEvidenceRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get evidenceId => $composableBuilder(
+    column: $table.evidenceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get identityId => $composableBuilder(
+    column: $table.identityId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceIds => $composableBuilder(
+    column: $table.sourceIds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get explanation => $composableBuilder(
+    column: $table.explanation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get score => $composableBuilder(
+    column: $table.score,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$IdentityEvidenceRecordsTableAnnotationComposer
+    extends Composer<_$MioAniDatabase, $IdentityEvidenceRecordsTable> {
+  $$IdentityEvidenceRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get evidenceId => $composableBuilder(
+    column: $table.evidenceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get identityId => $composableBuilder(
+    column: $table.identityId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceIds =>
+      $composableBuilder(column: $table.sourceIds, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get explanation => $composableBuilder(
+    column: $table.explanation,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get score =>
+      $composableBuilder(column: $table.score, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$IdentityEvidenceRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$MioAniDatabase,
+          $IdentityEvidenceRecordsTable,
+          IdentityEvidenceRecord,
+          $$IdentityEvidenceRecordsTableFilterComposer,
+          $$IdentityEvidenceRecordsTableOrderingComposer,
+          $$IdentityEvidenceRecordsTableAnnotationComposer,
+          $$IdentityEvidenceRecordsTableCreateCompanionBuilder,
+          $$IdentityEvidenceRecordsTableUpdateCompanionBuilder,
+          (
+            IdentityEvidenceRecord,
+            BaseReferences<
+              _$MioAniDatabase,
+              $IdentityEvidenceRecordsTable,
+              IdentityEvidenceRecord
+            >,
+          ),
+          IdentityEvidenceRecord,
+          PrefetchHooks Function()
+        > {
+  $$IdentityEvidenceRecordsTableTableManager(
+    _$MioAniDatabase db,
+    $IdentityEvidenceRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$IdentityEvidenceRecordsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$IdentityEvidenceRecordsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$IdentityEvidenceRecordsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> evidenceId = const Value.absent(),
+                Value<String?> identityId = const Value.absent(),
+                Value<String> sourceIds = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String> explanation = const Value.absent(),
+                Value<int?> score = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => IdentityEvidenceRecordsCompanion(
+                evidenceId: evidenceId,
+                identityId: identityId,
+                sourceIds: sourceIds,
+                kind: kind,
+                explanation: explanation,
+                score: score,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String evidenceId,
+                Value<String?> identityId = const Value.absent(),
+                Value<String> sourceIds = const Value.absent(),
+                required String kind,
+                required String explanation,
+                Value<int?> score = const Value.absent(),
+                required int createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => IdentityEvidenceRecordsCompanion.insert(
+                evidenceId: evidenceId,
+                identityId: identityId,
+                sourceIds: sourceIds,
+                kind: kind,
+                explanation: explanation,
+                score: score,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$IdentityEvidenceRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$MioAniDatabase,
+      $IdentityEvidenceRecordsTable,
+      IdentityEvidenceRecord,
+      $$IdentityEvidenceRecordsTableFilterComposer,
+      $$IdentityEvidenceRecordsTableOrderingComposer,
+      $$IdentityEvidenceRecordsTableAnnotationComposer,
+      $$IdentityEvidenceRecordsTableCreateCompanionBuilder,
+      $$IdentityEvidenceRecordsTableUpdateCompanionBuilder,
+      (
+        IdentityEvidenceRecord,
+        BaseReferences<
+          _$MioAniDatabase,
+          $IdentityEvidenceRecordsTable,
+          IdentityEvidenceRecord
+        >,
+      ),
+      IdentityEvidenceRecord,
+      PrefetchHooks Function()
+    >;
+typedef $$IdentityReviewsTableCreateCompanionBuilder =
+    IdentityReviewsCompanion Function({
+      required String reviewId,
+      required String leftSourceId,
+      required String rightSourceId,
+      Value<String> status,
+      Value<String> explanation,
+      Value<int> baselineRevision,
+      required int createdAt,
+      Value<int> rowid,
+    });
+typedef $$IdentityReviewsTableUpdateCompanionBuilder =
+    IdentityReviewsCompanion Function({
+      Value<String> reviewId,
+      Value<String> leftSourceId,
+      Value<String> rightSourceId,
+      Value<String> status,
+      Value<String> explanation,
+      Value<int> baselineRevision,
+      Value<int> createdAt,
+      Value<int> rowid,
+    });
+
+class $$IdentityReviewsTableFilterComposer
+    extends Composer<_$MioAniDatabase, $IdentityReviewsTable> {
+  $$IdentityReviewsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get reviewId => $composableBuilder(
+    column: $table.reviewId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get leftSourceId => $composableBuilder(
+    column: $table.leftSourceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rightSourceId => $composableBuilder(
+    column: $table.rightSourceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get explanation => $composableBuilder(
+    column: $table.explanation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get baselineRevision => $composableBuilder(
+    column: $table.baselineRevision,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$IdentityReviewsTableOrderingComposer
+    extends Composer<_$MioAniDatabase, $IdentityReviewsTable> {
+  $$IdentityReviewsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get reviewId => $composableBuilder(
+    column: $table.reviewId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get leftSourceId => $composableBuilder(
+    column: $table.leftSourceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rightSourceId => $composableBuilder(
+    column: $table.rightSourceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get explanation => $composableBuilder(
+    column: $table.explanation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get baselineRevision => $composableBuilder(
+    column: $table.baselineRevision,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$IdentityReviewsTableAnnotationComposer
+    extends Composer<_$MioAniDatabase, $IdentityReviewsTable> {
+  $$IdentityReviewsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get reviewId =>
+      $composableBuilder(column: $table.reviewId, builder: (column) => column);
+
+  GeneratedColumn<String> get leftSourceId => $composableBuilder(
+    column: $table.leftSourceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get rightSourceId => $composableBuilder(
+    column: $table.rightSourceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get explanation => $composableBuilder(
+    column: $table.explanation,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get baselineRevision => $composableBuilder(
+    column: $table.baselineRevision,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$IdentityReviewsTableTableManager
+    extends
+        RootTableManager<
+          _$MioAniDatabase,
+          $IdentityReviewsTable,
+          IdentityReview,
+          $$IdentityReviewsTableFilterComposer,
+          $$IdentityReviewsTableOrderingComposer,
+          $$IdentityReviewsTableAnnotationComposer,
+          $$IdentityReviewsTableCreateCompanionBuilder,
+          $$IdentityReviewsTableUpdateCompanionBuilder,
+          (
+            IdentityReview,
+            BaseReferences<
+              _$MioAniDatabase,
+              $IdentityReviewsTable,
+              IdentityReview
+            >,
+          ),
+          IdentityReview,
+          PrefetchHooks Function()
+        > {
+  $$IdentityReviewsTableTableManager(
+    _$MioAniDatabase db,
+    $IdentityReviewsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$IdentityReviewsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$IdentityReviewsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$IdentityReviewsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> reviewId = const Value.absent(),
+                Value<String> leftSourceId = const Value.absent(),
+                Value<String> rightSourceId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> explanation = const Value.absent(),
+                Value<int> baselineRevision = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => IdentityReviewsCompanion(
+                reviewId: reviewId,
+                leftSourceId: leftSourceId,
+                rightSourceId: rightSourceId,
+                status: status,
+                explanation: explanation,
+                baselineRevision: baselineRevision,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String reviewId,
+                required String leftSourceId,
+                required String rightSourceId,
+                Value<String> status = const Value.absent(),
+                Value<String> explanation = const Value.absent(),
+                Value<int> baselineRevision = const Value.absent(),
+                required int createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => IdentityReviewsCompanion.insert(
+                reviewId: reviewId,
+                leftSourceId: leftSourceId,
+                rightSourceId: rightSourceId,
+                status: status,
+                explanation: explanation,
+                baselineRevision: baselineRevision,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$IdentityReviewsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$MioAniDatabase,
+      $IdentityReviewsTable,
+      IdentityReview,
+      $$IdentityReviewsTableFilterComposer,
+      $$IdentityReviewsTableOrderingComposer,
+      $$IdentityReviewsTableAnnotationComposer,
+      $$IdentityReviewsTableCreateCompanionBuilder,
+      $$IdentityReviewsTableUpdateCompanionBuilder,
+      (
+        IdentityReview,
+        BaseReferences<_$MioAniDatabase, $IdentityReviewsTable, IdentityReview>,
+      ),
+      IdentityReview,
+      PrefetchHooks Function()
+    >;
+typedef $$IdentityDecisionsTableCreateCompanionBuilder =
+    IdentityDecisionsCompanion Function({
+      required String decisionId,
+      required String reviewId,
+      required String kind,
+      Value<String> explanation,
+      required int createdAt,
+      Value<int?> undoneAt,
+      Value<int> rowid,
+    });
+typedef $$IdentityDecisionsTableUpdateCompanionBuilder =
+    IdentityDecisionsCompanion Function({
+      Value<String> decisionId,
+      Value<String> reviewId,
+      Value<String> kind,
+      Value<String> explanation,
+      Value<int> createdAt,
+      Value<int?> undoneAt,
+      Value<int> rowid,
+    });
+
+class $$IdentityDecisionsTableFilterComposer
+    extends Composer<_$MioAniDatabase, $IdentityDecisionsTable> {
+  $$IdentityDecisionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get decisionId => $composableBuilder(
+    column: $table.decisionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reviewId => $composableBuilder(
+    column: $table.reviewId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get explanation => $composableBuilder(
+    column: $table.explanation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get undoneAt => $composableBuilder(
+    column: $table.undoneAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$IdentityDecisionsTableOrderingComposer
+    extends Composer<_$MioAniDatabase, $IdentityDecisionsTable> {
+  $$IdentityDecisionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get decisionId => $composableBuilder(
+    column: $table.decisionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reviewId => $composableBuilder(
+    column: $table.reviewId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get explanation => $composableBuilder(
+    column: $table.explanation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get undoneAt => $composableBuilder(
+    column: $table.undoneAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$IdentityDecisionsTableAnnotationComposer
+    extends Composer<_$MioAniDatabase, $IdentityDecisionsTable> {
+  $$IdentityDecisionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get decisionId => $composableBuilder(
+    column: $table.decisionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reviewId =>
+      $composableBuilder(column: $table.reviewId, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get explanation => $composableBuilder(
+    column: $table.explanation,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get undoneAt =>
+      $composableBuilder(column: $table.undoneAt, builder: (column) => column);
+}
+
+class $$IdentityDecisionsTableTableManager
+    extends
+        RootTableManager<
+          _$MioAniDatabase,
+          $IdentityDecisionsTable,
+          IdentityDecision,
+          $$IdentityDecisionsTableFilterComposer,
+          $$IdentityDecisionsTableOrderingComposer,
+          $$IdentityDecisionsTableAnnotationComposer,
+          $$IdentityDecisionsTableCreateCompanionBuilder,
+          $$IdentityDecisionsTableUpdateCompanionBuilder,
+          (
+            IdentityDecision,
+            BaseReferences<
+              _$MioAniDatabase,
+              $IdentityDecisionsTable,
+              IdentityDecision
+            >,
+          ),
+          IdentityDecision,
+          PrefetchHooks Function()
+        > {
+  $$IdentityDecisionsTableTableManager(
+    _$MioAniDatabase db,
+    $IdentityDecisionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$IdentityDecisionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$IdentityDecisionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$IdentityDecisionsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> decisionId = const Value.absent(),
+                Value<String> reviewId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String> explanation = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int?> undoneAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => IdentityDecisionsCompanion(
+                decisionId: decisionId,
+                reviewId: reviewId,
+                kind: kind,
+                explanation: explanation,
+                createdAt: createdAt,
+                undoneAt: undoneAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String decisionId,
+                required String reviewId,
+                required String kind,
+                Value<String> explanation = const Value.absent(),
+                required int createdAt,
+                Value<int?> undoneAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => IdentityDecisionsCompanion.insert(
+                decisionId: decisionId,
+                reviewId: reviewId,
+                kind: kind,
+                explanation: explanation,
+                createdAt: createdAt,
+                undoneAt: undoneAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$IdentityDecisionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$MioAniDatabase,
+      $IdentityDecisionsTable,
+      IdentityDecision,
+      $$IdentityDecisionsTableFilterComposer,
+      $$IdentityDecisionsTableOrderingComposer,
+      $$IdentityDecisionsTableAnnotationComposer,
+      $$IdentityDecisionsTableCreateCompanionBuilder,
+      $$IdentityDecisionsTableUpdateCompanionBuilder,
+      (
+        IdentityDecision,
+        BaseReferences<
+          _$MioAniDatabase,
+          $IdentityDecisionsTable,
+          IdentityDecision
+        >,
+      ),
+      IdentityDecision,
+      PrefetchHooks Function()
+    >;
+typedef $$IdentityOperationLogsTableCreateCompanionBuilder =
+    IdentityOperationLogsCompanion Function({
+      required String operationId,
+      required String operationKind,
+      Value<String> payload,
+      required int createdAt,
+      Value<int?> undoneAt,
+      Value<int> rowid,
+    });
+typedef $$IdentityOperationLogsTableUpdateCompanionBuilder =
+    IdentityOperationLogsCompanion Function({
+      Value<String> operationId,
+      Value<String> operationKind,
+      Value<String> payload,
+      Value<int> createdAt,
+      Value<int?> undoneAt,
+      Value<int> rowid,
+    });
+
+class $$IdentityOperationLogsTableFilterComposer
+    extends Composer<_$MioAniDatabase, $IdentityOperationLogsTable> {
+  $$IdentityOperationLogsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get operationId => $composableBuilder(
+    column: $table.operationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get operationKind => $composableBuilder(
+    column: $table.operationKind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get undoneAt => $composableBuilder(
+    column: $table.undoneAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$IdentityOperationLogsTableOrderingComposer
+    extends Composer<_$MioAniDatabase, $IdentityOperationLogsTable> {
+  $$IdentityOperationLogsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get operationId => $composableBuilder(
+    column: $table.operationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get operationKind => $composableBuilder(
+    column: $table.operationKind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get undoneAt => $composableBuilder(
+    column: $table.undoneAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$IdentityOperationLogsTableAnnotationComposer
+    extends Composer<_$MioAniDatabase, $IdentityOperationLogsTable> {
+  $$IdentityOperationLogsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get operationId => $composableBuilder(
+    column: $table.operationId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get operationKind => $composableBuilder(
+    column: $table.operationKind,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get undoneAt =>
+      $composableBuilder(column: $table.undoneAt, builder: (column) => column);
+}
+
+class $$IdentityOperationLogsTableTableManager
+    extends
+        RootTableManager<
+          _$MioAniDatabase,
+          $IdentityOperationLogsTable,
+          IdentityOperationLog,
+          $$IdentityOperationLogsTableFilterComposer,
+          $$IdentityOperationLogsTableOrderingComposer,
+          $$IdentityOperationLogsTableAnnotationComposer,
+          $$IdentityOperationLogsTableCreateCompanionBuilder,
+          $$IdentityOperationLogsTableUpdateCompanionBuilder,
+          (
+            IdentityOperationLog,
+            BaseReferences<
+              _$MioAniDatabase,
+              $IdentityOperationLogsTable,
+              IdentityOperationLog
+            >,
+          ),
+          IdentityOperationLog,
+          PrefetchHooks Function()
+        > {
+  $$IdentityOperationLogsTableTableManager(
+    _$MioAniDatabase db,
+    $IdentityOperationLogsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$IdentityOperationLogsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$IdentityOperationLogsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$IdentityOperationLogsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> operationId = const Value.absent(),
+                Value<String> operationKind = const Value.absent(),
+                Value<String> payload = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int?> undoneAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => IdentityOperationLogsCompanion(
+                operationId: operationId,
+                operationKind: operationKind,
+                payload: payload,
+                createdAt: createdAt,
+                undoneAt: undoneAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String operationId,
+                required String operationKind,
+                Value<String> payload = const Value.absent(),
+                required int createdAt,
+                Value<int?> undoneAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => IdentityOperationLogsCompanion.insert(
+                operationId: operationId,
+                operationKind: operationKind,
+                payload: payload,
+                createdAt: createdAt,
+                undoneAt: undoneAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$IdentityOperationLogsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$MioAniDatabase,
+      $IdentityOperationLogsTable,
+      IdentityOperationLog,
+      $$IdentityOperationLogsTableFilterComposer,
+      $$IdentityOperationLogsTableOrderingComposer,
+      $$IdentityOperationLogsTableAnnotationComposer,
+      $$IdentityOperationLogsTableCreateCompanionBuilder,
+      $$IdentityOperationLogsTableUpdateCompanionBuilder,
+      (
+        IdentityOperationLog,
+        BaseReferences<
+          _$MioAniDatabase,
+          $IdentityOperationLogsTable,
+          IdentityOperationLog
+        >,
+      ),
+      IdentityOperationLog,
+      PrefetchHooks Function()
+    >;
 
 class $MioAniDatabaseManager {
   final _$MioAniDatabase _db;
@@ -6687,4 +9561,15 @@ class $MioAniDatabaseManager {
       $$MigrationLedgerTableTableManager(_db, _db.migrationLedger);
   $$ImageCacheEntriesTableTableManager get imageCacheEntries =>
       $$ImageCacheEntriesTableTableManager(_db, _db.imageCacheEntries);
+  $$IdentityEvidenceRecordsTableTableManager get identityEvidenceRecords =>
+      $$IdentityEvidenceRecordsTableTableManager(
+        _db,
+        _db.identityEvidenceRecords,
+      );
+  $$IdentityReviewsTableTableManager get identityReviews =>
+      $$IdentityReviewsTableTableManager(_db, _db.identityReviews);
+  $$IdentityDecisionsTableTableManager get identityDecisions =>
+      $$IdentityDecisionsTableTableManager(_db, _db.identityDecisions);
+  $$IdentityOperationLogsTableTableManager get identityOperationLogs =>
+      $$IdentityOperationLogsTableTableManager(_db, _db.identityOperationLogs);
 }

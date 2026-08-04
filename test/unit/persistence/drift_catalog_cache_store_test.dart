@@ -117,7 +117,7 @@ void main() {
     expect(migrated.category, 'catalog');
     expect(migrated.byteSize, 11);
     expect(migrated.lastAccessedAt, 10);
-    expect(legacyDatabase.schemaVersion, 2);
+    expect(legacyDatabase.schemaVersion, 3);
   });
 
   test(

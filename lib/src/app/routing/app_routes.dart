@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mio_ani/src/app/routing/app_paths.dart';
 import 'package:mio_ani/src/app/routing/mio_route_page.dart';
-import 'package:mio_ani/src/app/shell/foundation_pages.dart';
 import 'package:mio_ani/src/app/shell/mio_ani_shell.dart';
-import 'package:mio_ani/src/app/shell/mio_destination.dart';
 import 'package:mio_ani/src/features/anime_detail/presentation/anime_detail_page.dart';
 import 'package:mio_ani/src/features/discover/presentation/discover_page.dart';
 import 'package:mio_ani/src/features/home/presentation/home_page.dart';
+import 'package:mio_ani/src/features/library/domain/library_query.dart';
+import 'package:mio_ani/src/features/library/presentation/library_page.dart';
 import 'package:mio_ani/src/features/people/presentation/person_detail_page.dart';
 import 'package:mio_ani/src/features/schedule/application/schedule_route_intent.dart';
 import 'package:mio_ani/src/features/schedule/presentation/schedule_page.dart';
@@ -101,7 +101,7 @@ class LibraryRouteData extends GoRouteData with $LibraryRouteData {
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return const FoundationDestinationPage(destination: MioDestination.library);
+    return LibraryPage(initialQuery: LibraryQuery.fromUri(state.uri));
   }
 }
 
