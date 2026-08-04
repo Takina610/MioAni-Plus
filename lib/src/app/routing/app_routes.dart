@@ -6,6 +6,7 @@ import 'package:mio_ani/src/app/shell/foundation_pages.dart';
 import 'package:mio_ani/src/app/shell/mio_ani_shell.dart';
 import 'package:mio_ani/src/app/shell/mio_destination.dart';
 import 'package:mio_ani/src/features/anime_detail/presentation/anime_detail_page.dart';
+import 'package:mio_ani/src/features/discover/presentation/discover_page.dart';
 import 'package:mio_ani/src/features/home/presentation/home_page.dart';
 import 'package:mio_ani/src/features/schedule/application/schedule_route_intent.dart';
 import 'package:mio_ani/src/features/schedule/presentation/schedule_page.dart';
@@ -79,9 +80,7 @@ class DiscoverRouteData extends GoRouteData with $DiscoverRouteData {
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return const FoundationDestinationPage(
-      destination: MioDestination.discover,
-    );
+    return DiscoverPage(initialUri: state.uri);
   }
 }
 
