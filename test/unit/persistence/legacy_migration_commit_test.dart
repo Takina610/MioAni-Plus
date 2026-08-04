@@ -69,14 +69,13 @@ void main() {
       expect(identities.single.canonicalTitle, 'Linked Work');
 
       final sources = await database.select(database.sourceEntities).get();
-      expect(
-        sources.map((row) => row.sourceId).toList()..sort(),
-        <String>['anilist-100', 'bgm-2'],
-      );
-      expect(
-        sources.map((row) => row.identityId).toSet(),
-        <String>{plan.identities.single.identityKey},
-      );
+      expect(sources.map((row) => row.sourceId).toList()..sort(), <String>[
+        'anilist-100',
+        'bgm-2',
+      ]);
+      expect(sources.map((row) => row.identityId).toSet(), <String>{
+        plan.identities.single.identityKey,
+      });
 
       final library = await database.select(database.libraryEntries).get();
       expect(library, hasLength(1));
@@ -85,10 +84,10 @@ void main() {
       expect(library.single.updatedAt, now.millisecondsSinceEpoch);
 
       final links = await database.select(database.legacyIdentityLinks).get();
-      expect(
-        links.map((row) => row.linkedSourceId).toList()..sort(),
-        <String>['anilist-100', 'bgm-2'],
-      );
+      expect(links.map((row) => row.linkedSourceId).toList()..sort(), <String>[
+        'anilist-100',
+        'bgm-2',
+      ]);
       expect(links.every((row) => row.evidence == 'legacy_linked_ids'), isTrue);
 
       final accounts = await database.select(database.publicAccounts).get();
@@ -140,9 +139,18 @@ void main() {
       expect(second.status, LegacyMigrationCommitStatus.alreadyMigrated);
       expect(second.fingerprint, plan.fingerprint);
       expect(second.migratedEntries, 1);
-      expect(await database.select(database.animeIdentities).get(), hasLength(1));
-      expect(await database.select(database.libraryEntries).get(), hasLength(1));
-      expect(await database.select(database.migrationLedger).get(), hasLength(1));
+      expect(
+        await database.select(database.animeIdentities).get(),
+        hasLength(1),
+      );
+      expect(
+        await database.select(database.libraryEntries).get(),
+        hasLength(1),
+      );
+      expect(
+        await database.select(database.migrationLedger).get(),
+        hasLength(1),
+      );
     },
   );
 
@@ -169,16 +177,16 @@ void main() {
 
       final identityId = firstPlan.identities.single.identityKey;
       final later = now.add(const Duration(days: 1));
-      await (database.update(database.libraryEntries)
-            ..where((row) => row.identityId.equals(identityId)))
-          .write(
-            LibraryEntriesCompanion(
-              status: const Value('completed'),
-              watched: const Value(12),
-              localRevision: const Value(1),
-              updatedAt: Value(later.millisecondsSinceEpoch),
-            ),
-          );
+      await (database.update(
+        database.libraryEntries,
+      )..where((row) => row.identityId.equals(identityId))).write(
+        LibraryEntriesCompanion(
+          status: const Value('completed'),
+          watched: const Value(12),
+          localRevision: const Value(1),
+          updatedAt: Value(later.millisecondsSinceEpoch),
+        ),
+      );
 
       final secondPlan = planFrom(
         libraryJson: '''
@@ -232,10 +240,10 @@ void main() {
 
       final ledger = await database.select(database.migrationLedger).get();
       expect(ledger, hasLength(2));
-      expect(
-        ledger.map((row) => row.sourceFingerprint).toSet(),
-        <String>{firstPlan.fingerprint, secondPlan.fingerprint},
-      );
+      expect(ledger.map((row) => row.sourceFingerprint).toSet(), <String>{
+        firstPlan.fingerprint,
+        secondPlan.fingerprint,
+      });
     },
   );
 
@@ -276,7 +284,10 @@ void main() {
       expect(await database.select(database.animeIdentities).get(), isEmpty);
       expect(await database.select(database.sourceEntities).get(), isEmpty);
       expect(await database.select(database.libraryEntries).get(), isEmpty);
-      expect(await database.select(database.legacyIdentityLinks).get(), isEmpty);
+      expect(
+        await database.select(database.legacyIdentityLinks).get(),
+        isEmpty,
+      );
       expect(await database.select(database.migrationLedger).get(), isEmpty);
     },
   );
@@ -331,7 +342,10 @@ void main() {
       expect(first.fingerprint, matches(r'^mioani-vue-v1:[0-9a-f]{32}$'));
       expect(second.kind, LegacyMigrationOutcomeKind.alreadyMigrated);
       expect(second.fingerprint, first.fingerprint);
-      expect(await database.select(database.libraryEntries).get(), hasLength(1));
+      expect(
+        await database.select(database.libraryEntries).get(),
+        hasLength(1),
+      );
       expect(reader.readCount, 2);
     },
   );

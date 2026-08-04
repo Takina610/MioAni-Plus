@@ -53,8 +53,9 @@ final legacyStorageReaderProvider = Provider<LegacyStorageReader>((ref) {
   return createPlatformLegacyStorageReader();
 });
 
-final legacyMigrationOutcomeProvider =
-    FutureProvider<LegacyMigrationOutcome>((ref) async {
+final legacyMigrationOutcomeProvider = FutureProvider<LegacyMigrationOutcome>((
+  ref,
+) async {
   final reader = ref.watch(legacyStorageReaderProvider);
   final snapshot = await reader.read();
   // Native/no-op storage never needs the database; avoid opening Drift just to

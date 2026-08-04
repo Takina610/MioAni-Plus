@@ -16,24 +16,23 @@ class MioAniApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Kick the one-shot Vue migration at bootstrap and surface diagnostics only.
     // C3 does not own library UI; outcomes stay out of feature widgets.
-    ref.listen<AsyncValue<LegacyMigrationOutcome>>(
-      legacyMigrationOutcomeProvider,
-      (previous, next) {
-        final outcome = next.asData?.value;
-        if (outcome == null) return;
-        if (outcome.kind == LegacyMigrationOutcomeKind.failed) {
-          debugPrint(
-            'MioAni legacy migration failed: ${outcome.diagnosticMessage}',
-          );
-          return;
-        }
+    ref.listen<
+      AsyncValue<LegacyMigrationOutcome>
+    >(legacyMigrationOutcomeProvider, (previous, next) {
+      final outcome = next.asData?.value;
+      if (outcome == null) return;
+      if (outcome.kind == LegacyMigrationOutcomeKind.failed) {
         debugPrint(
-          'MioAni legacy migration ${outcome.kind.name}'
-          '${outcome.fingerprint == null ? '' : ' fingerprint=${outcome.fingerprint}'}'
-          ' entries=${outcome.migratedEntries}',
+          'MioAni legacy migration failed: ${outcome.diagnosticMessage}',
         );
-      },
-    );
+        return;
+      }
+      debugPrint(
+        'MioAni legacy migration ${outcome.kind.name}'
+        '${outcome.fingerprint == null ? '' : ' fingerprint=${outcome.fingerprint}'}'
+        ' entries=${outcome.migratedEntries}',
+      );
+    });
     // Ensure the FutureProvider starts even when no listener fires yet.
     ref.watch(legacyMigrationOutcomeProvider);
 

@@ -182,12 +182,7 @@ final class LegacyMigrationCommitResult {
   final int migratedEntries;
 }
 
-enum LegacyMigrationOutcomeKind {
-  notNeeded,
-  migrated,
-  alreadyMigrated,
-  failed,
-}
+enum LegacyMigrationOutcomeKind { notNeeded, migrated, alreadyMigrated, failed }
 
 final class LegacyMigrationOutcome {
   const LegacyMigrationOutcome({
@@ -360,9 +355,9 @@ final class LegacyMigrationPlanner {
 
     final groups = <String, List<LegacyLibraryRecord>>{};
     for (final record in recordsByPrimaryId.values) {
-      groups.putIfAbsent(find(record.id), () => <LegacyLibraryRecord>[]).add(
-        record,
-      );
+      groups
+          .putIfAbsent(find(record.id), () => <LegacyLibraryRecord>[])
+          .add(record);
     }
 
     final identities = <LegacyPlannedIdentity>[];
@@ -399,8 +394,7 @@ final class LegacyMigrationPlanner {
       final legacyLinkedIds = <String>{
         for (final member in members) ...member.linkedIds,
         for (final member in members) member.id,
-      }.toList()
-        ..sort();
+      }.toList()..sort();
 
       final memberIds = members.map((member) => member.id).toList()..sort();
       final identityKey =

@@ -177,14 +177,12 @@ void main() {
       expect(commit.profile?.name, 'public-user');
 
       final linked = commit.identities.singleWhere(
-        (identity) => identity.sourceEntities.any(
-          (entity) => entity.sourceId == 'bgm-2',
-        ),
+        (identity) =>
+            identity.sourceEntities.any((entity) => entity.sourceId == 'bgm-2'),
       );
       expect(linked.identityKey, matches(r'^mioani-identity-v1:[0-9a-f]{32}$'));
       expect(
-        linked.sourceEntities.map((entity) => entity.sourceId).toList()
-          ..sort(),
+        linked.sourceEntities.map((entity) => entity.sourceId).toList()..sort(),
         <String>['anilist-100', 'bgm-2'],
       );
       expect(linked.legacyLinkedIds, <String>['anilist-100', 'bgm-2']);
@@ -193,9 +191,8 @@ void main() {
       expect(linked.canonicalTitle, 'Linked Work');
 
       final unrelated = commit.identities.singleWhere(
-        (identity) => identity.sourceEntities.any(
-          (entity) => entity.sourceId == 'bgm-9',
-        ),
+        (identity) =>
+            identity.sourceEntities.any((entity) => entity.sourceId == 'bgm-9'),
       );
       expect(unrelated.identityKey, isNot(linked.identityKey));
       expect(unrelated.sourceEntities, hasLength(1));
@@ -244,11 +241,9 @@ void main() {
     );
   });
 
-  test(
-    'rejects cross-linked records with contradictory watch status',
-    () {
-      final parsed = parser.parse(
-        libraryJson: '''
+  test('rejects cross-linked records with contradictory watch status', () {
+    final parsed = parser.parse(
+      libraryJson: '''
 [
   {
     "id": "bgm-2",
@@ -272,27 +267,24 @@ void main() {
   }
 ]
 ''',
-        profileJson: null,
-      );
+      profileJson: null,
+    );
 
-      expect(
-        () => const LegacyMigrationPlanner().plan(parsed),
-        throwsA(
-          isA<LegacyMigrationConflictFailure>().having(
-            (failure) => failure.conflicts.map((conflict) => conflict.kind),
-            'conflict kinds',
-            contains(LegacyMigrationConflictKind.crossLinkedStateConflict),
-          ),
+    expect(
+      () => const LegacyMigrationPlanner().plan(parsed),
+      throwsA(
+        isA<LegacyMigrationConflictFailure>().having(
+          (failure) => failure.conflicts.map((conflict) => conflict.kind),
+          'conflict kinds',
+          contains(LegacyMigrationConflictKind.crossLinkedStateConflict),
         ),
-      );
-    },
-  );
+      ),
+    );
+  });
 
-  test(
-    'does not merge same-title records without explicit linkedIds',
-    () {
-      final parsed = parser.parse(
-        libraryJson: '''
+  test('does not merge same-title records without explicit linkedIds', () {
+    final parsed = parser.parse(
+      libraryJson: '''
 [
   {
     "id": "bgm-2",
@@ -316,15 +308,14 @@ void main() {
   }
 ]
 ''',
-        profileJson: null,
-      );
+      profileJson: null,
+    );
 
-      final commit = const LegacyMigrationPlanner().plan(parsed);
-      expect(commit.identities, hasLength(2));
-      expect(
-        commit.identities.map((identity) => identity.identityKey).toSet(),
-        hasLength(2),
-      );
-    },
-  );
+    final commit = const LegacyMigrationPlanner().plan(parsed);
+    expect(commit.identities, hasLength(2));
+    expect(
+      commit.identities.map((identity) => identity.identityKey).toSet(),
+      hasLength(2),
+    );
+  });
 }
