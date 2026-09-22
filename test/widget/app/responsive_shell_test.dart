@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mio_ani/src/app/bootstrap/mio_ani_root.dart';
 import 'package:mio_ani/src/app/routing/app_router.dart';
+import 'package:mio_ani/src/features/discover/application/discover_providers.dart';
 
+import '../../support/fake_discover_repository.dart';
 import '../../support/test_viewport.dart';
 
 void main() {
@@ -17,7 +20,7 @@ void main() {
     final router = createMioAniRouter(initialLocation: '/discover');
     addTearDown(router.dispose);
 
-    await tester.pumpWidget(MioAniRoot(router: router));
+    await tester.pumpWidget(_shell(router));
     await tester.pumpAndSettle();
 
     expect(find.byType(NavigationBar), findsOneWidget);
@@ -30,7 +33,7 @@ void main() {
     final router = createMioAniRouter(initialLocation: '/discover');
     addTearDown(router.dispose);
 
-    await tester.pumpWidget(MioAniRoot(router: router));
+    await tester.pumpWidget(_shell(router));
     await tester.pumpAndSettle();
 
     final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
@@ -45,11 +48,20 @@ void main() {
     final router = createMioAniRouter(initialLocation: '/discover');
     addTearDown(router.dispose);
 
-    await tester.pumpWidget(MioAniRoot(router: router));
+    await tester.pumpWidget(_shell(router));
     await tester.pumpAndSettle();
 
     final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
     expect(rail.extended, isTrue);
     expect(tester.takeException(), isNull);
   });
+}
+
+Widget _shell(GoRouter router) {
+  return MioAniRoot(
+    router: router,
+    providerOverrides: [
+      discoverRepositoryProvider.overrideWithValue(FakeDiscoverRepository()),
+    ],
+  );
 }

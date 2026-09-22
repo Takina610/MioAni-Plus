@@ -11,10 +11,10 @@ import 'package:mio_ani/src/features/discover/data/discover_source.dart';
 import 'package:mio_ani/src/features/discover/domain/discover_query.dart';
 
 const String discoverAniListQuery = '''
-query Discover(\$page: Int, \$perPage: Int, \$search: String, \$type: MediaType, \$season: MediaSeason, \$seasonYear: Int, \$status: MediaStatus, \$genres: [String], \$sort: [MediaSort], \$scoreGreater: Int, \$scoreLesser: Int) {
+query Discover(\$page: Int, \$perPage: Int, \$search: String, \$type: MediaType, \$formatList: [MediaFormat], \$season: MediaSeason, \$seasonYear: Int, \$status: MediaStatus, \$genres: [String], \$sort: [MediaSort], \$scoreGreater: Int, \$scoreLesser: Int) {
   Page(page: \$page, perPage: \$perPage) {
     pageInfo { hasNextPage total }
-    media(type: \$type, search: \$search, season: \$season, seasonYear: \$seasonYear, status: \$status, genre_in: \$genres, sort: \$sort, averageScore_greater: \$scoreGreater, averageScore_lesser: \$scoreLesser) {
+    media(type: \$type, format_in: \$formatList, search: \$search, season: \$season, seasonYear: \$seasonYear, status: \$status, genre_in: \$genres, sort: \$sort, averageScore_greater: \$scoreGreater, averageScore_lesser: \$scoreLesser) {
       id
       title { romaji english native }
       coverImage { large }
@@ -103,22 +103,27 @@ final class AniListDiscoverSource implements DiscoverSource {
         uri,
         data: jsonEncode(<String, Object?>{
           'query': discoverAniListQuery,
+          // AniList reads a present-but-null variable as an active filter: a
+          // null score bound is rejected outright and a null status matches
+          // nothing. Unbound arguments must therefore be left out entirely.
           'variables': <String, Object?>{
             'page': request.page,
             'perPage': query.pageSize,
-            'search': query.keyword.isEmpty ? null : query.keyword,
-            'type': _type(query.format),
-            'season': query.season?.name.toUpperCase(),
-            'seasonYear': query.year,
-            'status': _status(query.airStatus),
-            'genres': query.genres.isEmpty ? null : query.genres,
+            if (query.keyword.isNotEmpty) 'search': query.keyword,
+            'type': 'ANIME',
+            if (_formatList(query.format).isNotEmpty)
+              'formatList': _formatList(query.format),
+            if (query.season != null)
+              'season': query.season!.name.toUpperCase(),
+            if (query.year != null) 'seasonYear': query.year,
+            if (query.airStatus != DiscoverAirStatus.all)
+              'status': _status(query.airStatus),
+            if (query.genres.isNotEmpty) 'genres': query.genres,
             'sort': _sort(query.sort),
-            'scoreGreater': query.scoreMin == null
-                ? null
-                : (query.scoreMin! * 10).round(),
-            'scoreLesser': query.scoreMax == null
-                ? null
-                : (query.scoreMax! * 10).round(),
+            if (query.scoreMin != null)
+              'scoreGreater': (query.scoreMin! * 10).round(),
+            if (query.scoreMax != null)
+              'scoreLesser': (query.scoreMax! * 10).round(),
           },
         }),
         options: Options(
@@ -195,14 +200,16 @@ final class AniListDiscoverSource implements DiscoverSource {
     );
   }
 
-  static String? _type(DiscoverFormat format) => switch (format) {
-    DiscoverFormat.tv => 'TV',
-    DiscoverFormat.movie => 'MOVIE',
-    DiscoverFormat.ova => 'OVA',
-    DiscoverFormat.ona => 'ONA',
-    DiscoverFormat.special => 'SPECIAL',
-    DiscoverFormat.music => 'MUSIC',
-    _ => null,
+  /// AniList splits the two axes: `type` is anime vs manga, while TV/MOVIE/…
+  /// are [MediaFormat] values, so formats belong in `formatList`.
+  static List<String> _formatList(DiscoverFormat format) => switch (format) {
+    DiscoverFormat.tv => <String>['TV'],
+    DiscoverFormat.movie => <String>['MOVIE'],
+    DiscoverFormat.ova => <String>['OVA'],
+    DiscoverFormat.ona => <String>['ONA'],
+    DiscoverFormat.special => <String>['SPECIAL'],
+    DiscoverFormat.music => <String>['MUSIC'],
+    DiscoverFormat.all => const <String>[],
   };
 
   static String? _status(DiscoverAirStatus status) => switch (status) {

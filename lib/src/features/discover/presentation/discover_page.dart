@@ -36,6 +36,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
     super.initState();
     _query = _codec.parse(widget.initialUri);
     _keywordController = TextEditingController(text: _query.keyword);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncRouteQuery());
   }
 
   @override
@@ -48,7 +49,17 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
         text: next.keyword,
         selection: TextSelection.collapsed(offset: next.keyword.length),
       );
+      WidgetsBinding.instance.addPostFrameCallback((_) => _syncRouteQuery());
     }
+  }
+
+  /// Pushes the route query into the controller. The first call also starts the
+  /// initial load; later calls are no-ops unless the route actually moved.
+  void _syncRouteQuery() {
+    if (!mounted) return;
+    ref
+        .read(discoverControllerProvider.notifier)
+        .setQuery(_query, immediate: true);
   }
 
   @override
@@ -60,7 +71,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(discoverControllerProvider(_query));
+    final state = ref.watch(discoverControllerProvider);
     final width = MediaQuery.sizeOf(context).width;
     final windowClass = MioBreakpoints.windowClassFor(width);
     final filters = _FilterSummary(query: _query, onClear: _clearFilters);
@@ -68,7 +79,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
-            ref.read(discoverControllerProvider(_query).notifier).refresh();
+            ref.read(discoverControllerProvider.notifier).refresh();
             await Future<void>.delayed(const Duration(milliseconds: 80));
           },
           child: CustomScrollView(
@@ -92,9 +103,8 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                 SliverFillRemaining(
                   child: MioStateView.failure(
                     failure: state.failure ?? const UnknownFailure(),
-                    onRetry: () => ref
-                        .read(discoverControllerProvider(_query).notifier)
-                        .retry(),
+                    onRetry: () =>
+                        ref.read(discoverControllerProvider.notifier).retry(),
                   ),
                 )
               else if (state.items.isEmpty)
@@ -131,10 +141,10 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                   child: _LoadMore(
                     state: state,
                     onRetry: () => ref
-                        .read(discoverControllerProvider(_query).notifier)
+                        .read(discoverControllerProvider.notifier)
                         .loadMore(),
                     onLoad: () => ref
-                        .read(discoverControllerProvider(_query).notifier)
+                        .read(discoverControllerProvider.notifier)
                         .loadMore(),
                   ),
                 ),
@@ -189,8 +199,6 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
             ],
           ),
           const SizedBox(height: MioSpacing.sm),
-          const Text('基础外壳已就绪，内容将在后续纵向切片接入。'),
-          const SizedBox(height: MioSpacing.sm),
           TextField(
             controller: _keywordController,
             decoration: InputDecoration(
@@ -244,7 +252,7 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
     final uri = _codec.apply(Uri(path: '/discover'), next);
     if (GoRouterState.of(context).uri != uri) context.go(uri.toString());
     ref
-        .read(discoverControllerProvider(_query).notifier)
+        .read(discoverControllerProvider.notifier)
         .setQuery(next, immediate: immediate);
   }
 
@@ -463,12 +471,15 @@ class _AnimeCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              SizedBox(
-                height: 230,
-                width: double.infinity,
-                child: MioImage(
-                  imageUrl: anime.imageUrl,
-                  semanticLabel: anime.title,
+              // The poster absorbs the slack: score and source chips wrap onto
+              // extra rows in narrow tiles and must not overflow the card.
+              Expanded(
+                child: SizedBox(
+                  width: double.infinity,
+                  child: MioImage(
+                    imageUrl: anime.imageUrl,
+                    semanticLabel: anime.title,
+                  ),
                 ),
               ),
               Padding(

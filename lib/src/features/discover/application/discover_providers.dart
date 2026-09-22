@@ -24,9 +24,6 @@ final discoverRepositoryProvider = Provider<DiscoverRepository>((ref) {
 });
 
 final class DiscoverController extends Notifier<DiscoverState> {
-  DiscoverController(this._initialQuery);
-
-  final DiscoverQuery _initialQuery;
   Timer? _debounce;
   int _generation = 0;
   AnimeSource? _lockedSource;
@@ -35,22 +32,14 @@ final class DiscoverController extends Notifier<DiscoverState> {
   @override
   DiscoverState build() {
     ref.onDispose(() => _debounce?.cancel());
-    final query = _initialQuery.normalized();
-    _generation += 1;
-    return DiscoverState(query: query, generation: _generation);
+    return const DiscoverState();
   }
 
-  void ensureLoaded() {
-    if (_hasRequested) return;
-    _hasRequested = true;
-    _generation += 1;
-    final generation = _generation;
-    state = state.copyWith(
-      status: DiscoverStatus.loading,
-      generation: generation,
-    );
-    unawaited(_load(state.query, generation: generation));
-  }
+  /// True while this instance still owns [generation] and is not disposed.
+  ///
+  /// An in-flight load can outlive the controller when the page is left or the
+  /// query moves on; writing state after that would throw instead of updating.
+  bool _isCurrent(int generation) => ref.mounted && generation == _generation;
 
   void setKeyword(String keyword) {
     setQuery(state.query.copyWith(keyword: keyword));
@@ -58,6 +47,7 @@ final class DiscoverController extends Notifier<DiscoverState> {
 
   void setQuery(DiscoverQuery query, {bool immediate = false}) {
     final normalized = query.normalized();
+    if (normalized == state.query && _hasRequested) return;
     _debounce?.cancel();
     _hasRequested = true;
     _generation += 1;
@@ -126,12 +116,12 @@ final class DiscoverController extends Notifier<DiscoverState> {
             lockedSource: _lockedSource,
             forceRefresh: forceRefresh,
           );
-      if (generation != _generation) return;
+      if (!_isCurrent(generation)) return;
       _lockedSource ??= result.source;
       final catalog = await ref
           .read(discoverRepositoryProvider)
           .fetchFilterCatalog(query, lockedSource: result.source);
-      if (generation != _generation) return;
+      if (!_isCurrent(generation)) return;
       state = state.copyWith(
         status: result.items.isEmpty
             ? DiscoverStatus.empty
@@ -147,7 +137,7 @@ final class DiscoverController extends Notifier<DiscoverState> {
         fetchedAt: result.fetchedAt,
       );
     } on RateLimitedFailure catch (error) {
-      if (generation != _generation) return;
+      if (!_isCurrent(generation)) return;
       state = state.copyWith(
         status: state.hasContent
             ? DiscoverStatus.contentStale
@@ -158,7 +148,7 @@ final class DiscoverController extends Notifier<DiscoverState> {
         ),
       );
     } on AppFailure catch (error) {
-      if (generation != _generation) return;
+      if (!_isCurrent(generation)) return;
       state = state.copyWith(
         status: state.hasContent
             ? DiscoverStatus.contentStale
@@ -166,7 +156,7 @@ final class DiscoverController extends Notifier<DiscoverState> {
         failure: error,
       );
     } catch (_) {
-      if (generation != _generation) return;
+      if (!_isCurrent(generation)) return;
       state = state.copyWith(
         status: DiscoverStatus.firstPageError,
         failure: const UnknownFailure(),
@@ -179,7 +169,7 @@ final class DiscoverController extends Notifier<DiscoverState> {
       final result = await ref
           .read(discoverRepositoryProvider)
           .fetchPage(query, page: state.page + 1, lockedSource: _lockedSource);
-      if (generation != _generation) return;
+      if (!_isCurrent(generation)) return;
       final merged = _dedupe(<AnimeSummary>[...state.items, ...result.items]);
       state = state.copyWith(
         status: result.hasMore
@@ -192,7 +182,7 @@ final class DiscoverController extends Notifier<DiscoverState> {
         fetchedAt: result.fetchedAt,
       );
     } on RateLimitedFailure catch (error) {
-      if (generation != _generation) return;
+      if (!_isCurrent(generation)) return;
       state = state.copyWith(
         status: DiscoverStatus.loadMoreError,
         loadMoreFailure: error,
@@ -201,13 +191,13 @@ final class DiscoverController extends Notifier<DiscoverState> {
         ),
       );
     } on AppFailure catch (error) {
-      if (generation != _generation) return;
+      if (!_isCurrent(generation)) return;
       state = state.copyWith(
         status: DiscoverStatus.loadMoreError,
         loadMoreFailure: error,
       );
     } catch (_) {
-      if (generation != _generation) return;
+      if (!_isCurrent(generation)) return;
       state = state.copyWith(
         status: DiscoverStatus.loadMoreError,
         loadMoreFailure: const UnknownFailure(),
@@ -224,7 +214,10 @@ final class DiscoverController extends Notifier<DiscoverState> {
   }
 }
 
-final discoverControllerProvider = NotifierProvider.autoDispose
-    .family<DiscoverController, DiscoverState, DiscoverQuery>(
+/// One controller per Discover page. The page owns the route query and pushes
+/// it in; the controller keeps the debounce, source lock and generation state
+/// that a per-query instance could not keep alive across keystrokes.
+final discoverControllerProvider =
+    NotifierProvider.autoDispose<DiscoverController, DiscoverState>(
       DiscoverController.new,
     );

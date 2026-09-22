@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mio_ani/src/app/bootstrap/mio_ani_root.dart';
 import 'package:mio_ani/src/app/routing/app_router.dart';
+import 'package:mio_ani/src/features/discover/application/discover_providers.dart';
+
+import '../../support/fake_discover_repository.dart';
 
 void main() {
   testWidgets('bootstrap installs ProviderScope without external I/O', (
@@ -11,7 +14,16 @@ void main() {
     final router = createMioAniRouter(initialLocation: '/discover');
     addTearDown(router.dispose);
 
-    await tester.pumpWidget(MioAniRoot(router: router));
+    await tester.pumpWidget(
+      MioAniRoot(
+        router: router,
+        providerOverrides: [
+          discoverRepositoryProvider.overrideWithValue(
+            FakeDiscoverRepository(),
+          ),
+        ],
+      ),
+    );
     await tester.pump();
 
     expect(find.byType(ProviderScope), findsOneWidget);

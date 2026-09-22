@@ -74,9 +74,18 @@ final class BangumiDiscoverSource implements DiscoverSource {
   }
 
   Future<Object?> _postSearch(DiscoverPageRequest request) async {
-    final uri = NetworkUriPolicy.bangumiBaseUri.resolve('/v0/search/subjects');
-    uriPolicy.validate(NetworkSource.bangumiApi, uri);
     final query = request.query.normalized();
+    // Paging travels in the query string: the endpoint ignores page/page_size
+    // in the body, so a body-paged request repeats the first page forever.
+    final uri = NetworkUriPolicy.bangumiBaseUri
+        .resolve('/v0/search/subjects')
+        .replace(
+          queryParameters: <String, String>{
+            'limit': '${query.pageSize}',
+            'offset': '${(request.page - 1) * query.pageSize}',
+          },
+        );
+    uriPolicy.validate(NetworkSource.bangumiApi, uri);
     final filter = <String, Object?>{
       if (query.genres.isNotEmpty) 'tag': query.genres,
       if (query.year != null)
@@ -95,8 +104,6 @@ final class BangumiDiscoverSource implements DiscoverSource {
         data: <String, Object?>{
           'keyword': query.keyword,
           'sort': _bangumiSort(query.sort),
-          'page': request.page,
-          'page_size': query.pageSize,
           'filter': filter,
         },
       );
@@ -108,7 +115,9 @@ final class BangumiDiscoverSource implements DiscoverSource {
 
   DiscoverPageResult _mapResult(Object? payload, DiscoverPageRequest request) {
     if (payload is! Map<Object?, Object?>) throw const InvalidPayloadFailure();
-    final result = payload['results'];
+    // The P1 subjects search answers with `data`/`total`; `results`/`list`
+    // belongs to the legacy /search/subject endpoint and never appears here.
+    final result = payload['data'];
     if (result is! List<Object?>) throw const InvalidPayloadFailure();
     final items = <AnimeSummary>[];
     for (final value in result) {
@@ -119,7 +128,10 @@ final class BangumiDiscoverSource implements DiscoverSource {
           _string(value['name_cn']) ?? _string(value['name']) ?? '标题暂缺';
       final sourceTitle = _string(value['name']) ?? title;
       final imageUrl = _imageUrl(value['images']);
-      final airDate = DateTime.tryParse(_string(value['air_date']) ?? '');
+      // Subjects carry `date`; `air_date` only appears on calendar rows.
+      final airDate = DateTime.tryParse(
+        _string(value['date']) ?? _string(value['air_date']) ?? '',
+      );
       final rating = value['rating'];
       final score = rating is Map<Object?, Object?>
           ? _double(rating['score'])
@@ -142,7 +154,7 @@ final class BangumiDiscoverSource implements DiscoverSource {
         ),
       );
     }
-    final total = _int(payload['results_total']) ?? _int(payload['total']);
+    final total = _int(payload['total']);
     return DiscoverPageResult(
       items: items,
       page: request.page,
@@ -173,7 +185,9 @@ final class BangumiDiscoverSource implements DiscoverSource {
     DiscoverSort.relevance => 'match',
     DiscoverSort.popularity => 'heat',
     DiscoverSort.score || DiscoverSort.rank => 'rank',
-    DiscoverSort.airDate => 'date',
+    // The subjects endpoint accepts only match/heat/rank/score; asking for a
+    // date order answers 400 "sort not supported", so keep the request valid.
+    DiscoverSort.airDate => 'match',
   };
 
   static String? _string(Object? value) =>
