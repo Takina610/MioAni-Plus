@@ -8,7 +8,9 @@ import 'package:mio_ani/src/features/catalog/domain/anime_source_id.dart';
 import 'package:mio_ani/src/features/catalog/domain/anime_summary.dart';
 import 'package:mio_ani/src/features/home/application/home_providers.dart';
 import 'package:mio_ani/src/features/home/domain/home_snapshot.dart';
+import 'package:mio_ani/src/features/home/presentation/hero_louver.dart';
 import 'package:mio_ani/src/features/home/presentation/home_page.dart';
+import 'package:mio_ani/src/shared/design_system/mio_tokens.dart';
 
 import '../../support/fake_home_repository.dart';
 import '../../support/test_viewport.dart';
@@ -79,7 +81,7 @@ void main() {
     expect(repository.calls, 2);
   });
 
-  testWidgets('hero louver fans out one card between two slats', (
+  testWidgets('hero louver fans one card out between two slat windows', (
     tester,
   ) async {
     await configureTestViewport(tester, size: const Size(390, 844));
@@ -93,23 +95,63 @@ void main() {
     expect(find.byIcon(Icons.pause), findsNothing);
     expect(find.byIcon(Icons.play_arrow), findsNothing);
 
-    final cards = _heroCards(tester);
-    final center = tester.getCenter(find.byType(PageView)).dx;
-    final fanned = cards.singleWhere(
-      (rect) => rect.left <= center && rect.right >= center,
-    );
-    final slat = cards.singleWhere((rect) => rect.left > fanned.right);
+    final metrics = HeroLouverMetrics.forWidth(390 - 2 * MioSpacing.lg);
+    final boxes = _heroBoxes(tester);
+    expect(boxes, isNotEmpty);
+    // Every card keeps the reference card size; only its window narrows, so the
+    // slats stay slats of the same card instead of shrunken copies of it.
+    for (final box in boxes) {
+      expect(box.width, closeTo(metrics.cardWidth, 0.5));
+      expect(box.height, closeTo(metrics.cardHeight, 0.5));
+    }
 
-    expect(fanned.width, lessThan(390));
-    expect(fanned.left, greaterThan(0));
-    expect(slat.left, greaterThan(fanned.right));
-    // The slat is a window onto a full-size card, cut off by the window edge.
-    expect(slat.width, closeTo(fanned.width, 0.5));
-    expect(slat.right, greaterThan(390));
-    expect(slat.top, fanned.top);
+    final windows = _heroWindows(tester);
+    final centre = tester.getCenter(find.byType(PageView)).dx;
+    final fanned = windows.singleWhere(
+      (window) => (window.width - metrics.cardWidth).abs() < 0.5,
+    );
+    expect(fanned.width, greaterThan(fanned.height));
+    expect(fanned.center.dx, closeTo(centre, 0.5));
+
+    // The neighbours are slat-width windows flush with the strip edges, and as
+    // tall as the card they show through.
+    final slats = windows
+        .where((window) => (window.width - metrics.slatWidth).abs() < 0.5)
+        .toList();
+    expect(slats, isNotEmpty);
+    final stripLeft = MioSpacing.lg;
+    final stripRight = 390 - MioSpacing.lg;
+    for (final slat in slats) {
+      expect(slat.width, closeTo(metrics.slatWidth, 0.5));
+      expect(slat.top, closeTo(fanned.top, 0.5));
+      expect(slat.bottom, closeTo(fanned.bottom, 0.5));
+      final flushLeft = (slat.left - stripLeft).abs() < 0.5;
+      final flushRight = (slat.right - stripRight).abs() < 0.5;
+      expect(
+        flushLeft || flushRight,
+        isTrue,
+        reason: 'slat $slat does not sit flush with a strip edge',
+      );
+    }
+    expect(slats.any((slat) => (slat.left - stripLeft).abs() < 0.5), isTrue);
+    expect(slats.any((slat) => (slat.right - stripRight).abs() < 0.5), isTrue);
+
+    // Only the centred card carries a readable title; the slats show art alone
+    // rather than a fragment of a title their window cuts off.
+    final labelOpacities = tester
+        .widgetList<Opacity>(
+          find.descendant(
+            of: find.byType(PageView),
+            matching: find.byType(Opacity),
+          ),
+        )
+        .map((opacity) => opacity.opacity)
+        .toList();
+    expect(labelOpacities.where((opacity) => opacity == 1), hasLength(1));
+    expect(labelOpacities.where((opacity) => opacity == 0), isNotEmpty);
   });
 
-  testWidgets('hero louver auto-advances', (tester) async {
+  testWidgets('hero louver auto-advances after its dwell', (tester) async {
     await configureTestViewport(tester, size: const Size(390, 844));
 
     await _pumpHome(tester, _readyRepository());
@@ -119,7 +161,7 @@ void main() {
         .controller!;
     final start = controller.page!.round();
 
-    await tester.pump(const Duration(seconds: 5));
+    await tester.pump(const Duration(seconds: 3));
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(controller.page!.round(), start + 1);
@@ -230,16 +272,39 @@ FakeHomeRepository _readyRepository() {
   return FakeHomeRepository(watchFactory: () => Stream.value(_readySnapshot()));
 }
 
-List<Rect> _heroCards(WidgetTester tester) {
-  final finder = find.descendant(
-    of: find.byType(PageView),
-    matching: find.byType(Card),
-  );
+List<Rect> _heroBoxes(WidgetTester tester) {
+  final finder = _heroWindowFinder;
   return <Rect>[
     for (var index = 0; index < finder.evaluate().length; index += 1)
       tester.getRect(finder.at(index)),
   ];
 }
+
+/// The window each hero card is painted through, in screen coordinates.
+List<Rect> _heroWindows(WidgetTester tester) {
+  final finder = _heroWindowFinder;
+  return <Rect>[
+    for (var index = 0; index < finder.evaluate().length; index += 1)
+      _heroWindow(tester, finder.at(index)),
+  ];
+}
+
+Rect _heroWindow(WidgetTester tester, Finder finder) {
+  final box = tester.getRect(finder);
+  final clipper =
+      tester.widget<ClipRRect>(finder).clipper! as HeroWindowClipper;
+  final clip = clipper.getClip(box.size);
+  return Rect.fromLTWH(
+    box.left + clip.left,
+    box.top + clip.top,
+    clip.width,
+    clip.height,
+  );
+}
+
+final Finder _heroWindowFinder = find.byWidgetPredicate(
+  (widget) => widget is ClipRRect && widget.clipper is HeroWindowClipper,
+);
 
 List<Rect> _posterRects(WidgetTester tester, {required int count}) {
   final finder = find.descendant(

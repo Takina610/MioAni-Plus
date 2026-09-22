@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +9,7 @@ import 'package:mio_ani/src/features/catalog/application/catalog_providers.dart'
 import 'package:mio_ani/src/features/catalog/domain/anime_summary.dart';
 import 'package:mio_ani/src/features/home/application/home_providers.dart';
 import 'package:mio_ani/src/features/home/domain/home_snapshot.dart';
+import 'package:mio_ani/src/features/home/presentation/hero_louver.dart';
 import 'package:mio_ani/src/features/home/presentation/hero_prefetch.dart';
 import 'package:mio_ani/src/shared/design_system/mio_breakpoints.dart';
 import 'package:mio_ani/src/shared/design_system/mio_state_view.dart';
@@ -187,7 +187,7 @@ class _InlineNotice extends StatelessWidget {
 }
 
 /// Louver ("百叶窗") hero: one fanned-out poster whose neighbours stay visible as
-/// narrow slats on both sides.
+/// narrow slats on both sides, the way the reference home carousel draws them.
 class _HeroLouverSection extends ConsumerStatefulWidget {
   const _HeroLouverSection({required this.hero, required this.status});
 
@@ -199,7 +199,9 @@ class _HeroLouverSection extends ConsumerStatefulWidget {
 }
 
 class _HeroLouverSectionState extends ConsumerState<_HeroLouverSection> {
-  static const Duration _autoAdvance = Duration(seconds: 5);
+  /// Dwell between two slides, as in the reference carousel. It is measured
+  /// from the end of the last scroll, so a swipe never cuts the next one short.
+  static const Duration _autoAdvance = Duration(seconds: 3);
 
   /// Heroes live inside a long looping page list: every position then keeps a
   /// slat on both sides, and auto-advance walks forward instead of rewinding
@@ -216,14 +218,14 @@ class _HeroLouverSectionState extends ConsumerState<_HeroLouverSection> {
   @override
   void initState() {
     super.initState();
-    _focusNode.addListener(_syncTimer);
+    _focusNode.addListener(_restartAutoAdvance);
     _prefetch();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _syncTimer();
+    _restartAutoAdvance();
     _prefetch();
   }
 
@@ -245,24 +247,45 @@ class _HeroLouverSectionState extends ConsumerState<_HeroLouverSection> {
     return route == null || route.isCurrent;
   }
 
-  void _syncTimer() {
+  /// Arms the dwell up to the next slide, replacing one already running.
+  void _restartAutoAdvance() {
     _timer?.cancel();
     _timer = null;
     if (!_shouldAutoPlay) return;
-    _timer = Timer.periodic(_autoAdvance, (_) {
-      if (!mounted || !_shouldAutoPlay) return;
-      _advance();
-    });
+    _timer = Timer(_autoAdvance, _advanceIfDue);
+  }
+
+  /// Holds the louver still while it is moving, whether under a finger or in
+  /// the previous advance, the way the reference carousel does.
+  void _pauseAutoAdvance() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
+  void _advanceIfDue() {
+    if (!mounted || !_shouldAutoPlay) return;
+    _advance();
   }
 
   void _advance() {
     final page = _controller.page;
     if (page == null) return;
-    _controller.animateToPage(
-      page.round() + 1,
-      duration: MioDurations.long,
-      curve: Curves.easeOutCubic,
+    unawaited(
+      _controller.animateToPage(
+        page.round() + 1,
+        duration: MioDurations.long,
+        curve: Curves.easeOutCubic,
+      ),
     );
+  }
+
+  bool _onScroll(ScrollNotification notification) {
+    if (notification is ScrollStartNotification) {
+      _pauseAutoAdvance();
+    } else if (notification is ScrollEndNotification) {
+      _restartAutoAdvance();
+    }
+    return false;
   }
 
   void _prefetch() {
@@ -277,7 +300,7 @@ class _HeroLouverSectionState extends ConsumerState<_HeroLouverSection> {
   /// controller is replaced whenever that width turns into another slot
   /// fraction. The retired controller is still attached to the PageView of the
   /// frame being built, so it is released once that frame is done.
-  PageController _controllerFor(_LouverMetrics metrics) {
+  PageController _controllerFor(HeroLouverMetrics metrics) {
     if (_controllerFraction == metrics.viewportFraction) return _controller;
     final previous = _controller;
     final page = previous.hasClients ? previous.page : null;
@@ -297,156 +320,194 @@ class _HeroLouverSectionState extends ConsumerState<_HeroLouverSection> {
     }
     return Padding(
       padding: const EdgeInsets.only(bottom: MioSpacing.xl),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final metrics = _LouverMetrics.forWidth(constraints.maxWidth);
-          return Focus(
-            focusNode: _focusNode,
-            child: Center(
-              child: SizedBox(
-                width: metrics.pageWidth,
-                height: metrics.cardHeight,
-                child: PageView.builder(
-                  controller: _controllerFor(metrics),
-                  itemCount: widget.hero.length == 1 ? 1 : null,
-                  onPageChanged: (index) {
-                    setState(() => _current = index % widget.hero.length);
-                    _prefetch();
-                  },
-                  itemBuilder: (context, index) {
-                    final anime = widget.hero[index % widget.hero.length];
-                    return _HeroSlide(
-                      anime: anime,
-                      innerPadding: metrics.innerPadding,
-                      onTap: () {
-                        unawaited(
-                          AnimeDetailRouteData(
-                            id: anime.id.value,
-                          ).push<void>(context),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: MioSpacing.lg),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final metrics = HeroLouverMetrics.forWidth(constraints.maxWidth);
+            final controller = _controllerFor(metrics);
+            return Focus(
+              focusNode: _focusNode,
+              child: Center(
+                child: SizedBox(
+                  width: metrics.pageWidth,
+                  height: metrics.cardHeight,
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: _onScroll,
+                    child: PageView.builder(
+                      controller: controller,
+                      itemCount: widget.hero.length == 1 ? 1 : null,
+                      onPageChanged: (index) {
+                        setState(() => _current = index % widget.hero.length);
+                        _prefetch();
+                      },
+                      itemBuilder: (context, index) {
+                        final anime = widget.hero[index % widget.hero.length];
+                        return _HeroSlide(
+                          anime: anime,
+                          index: index,
+                          controller: controller,
+                          metrics: metrics,
+                          onTap: () {
+                            unawaited(
+                              AnimeDetailRouteData(
+                                id: anime.id.value,
+                              ).push<void>(context),
+                            );
+                          },
                         );
                       },
-                    );
-                  },
+                    ),
+                  ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
 }
 
-/// Size of the fanned-out card, the slats flanking it and the page slot the
-/// carousel snaps to. Slat and gap stay proportional to the card, so the louver
-/// keeps one silhouette from compact phones up to tablets; on wide windows the
-/// whole strip is centred instead of stretching the card any further.
-final class _LouverMetrics {
-  const _LouverMetrics({
-    required this.cardHeight,
-    required this.innerPadding,
-    required this.pageWidth,
-    required this.viewportFraction,
-  });
-
-  factory _LouverMetrics.forWidth(double available) {
-    final cardWidth = (available * _cardWidthFraction).clamp(
-      _minimumCardWidth,
-      _maximumCardWidth,
-    );
-    final gap = cardWidth * _gapRatio;
-    final strip = cardWidth * (1 + 2 * _gapRatio + 2 * _slatRatio);
-    final pageWidth = math.min(strip, available);
-    return _LouverMetrics(
-      cardHeight: cardWidth / _cardAspectRatio,
-      innerPadding: gap / 2,
-      pageWidth: pageWidth,
-      viewportFraction: (cardWidth + gap) / pageWidth,
-    );
-  }
-
-  /// Share of the window the fanned-out card takes.
-  static const double _cardWidthFraction = 0.7;
-  static const double _minimumCardWidth = 180;
-  static const double _maximumCardWidth = 420;
-
-  /// Visible neighbour slat and the gap between cards, both relative to the
-  /// fanned-out card width.
-  static const double _slatRatio = 0.19;
-  static const double _gapRatio = 0.045;
-
-  /// Card width over its height: the near-square silhouette of the reference
-  /// louver.
-  static const double _cardAspectRatio = 0.98;
-
-  final double cardHeight;
-
-  /// Space each side of a card inside its page slot, which is the half gap
-  /// between two neighbouring cards.
-  final double innerPadding;
-  final double pageWidth;
-  final double viewportFraction;
-}
-
 class _HeroSlide extends StatelessWidget {
   const _HeroSlide({
     required this.anime,
-    required this.innerPadding,
+    required this.index,
+    required this.controller,
+    required this.metrics,
     required this.onTap,
   });
 
   final AnimeSummary anime;
-  final double innerPadding;
+  final int index;
+  final PageController controller;
+  final HeroLouverMetrics metrics;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final title = anime.title.isEmpty ? '标题暂缺' : anime.title;
-    final radius = BorderRadius.circular(MioRadii.lg);
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: innerPadding),
-      child: Semantics(
-        button: true,
-        label: '查看 $title 详情',
-        child: Card(
-          clipBehavior: Clip.antiAlias,
-          color: MioColors.surface,
-          shape: RoundedRectangleBorder(borderRadius: radius),
-          child: InkWell(
-            onTap: onTap,
-            child: Stack(
-              fit: StackFit.expand,
-              children: <Widget>[
-                MioImage(
-                  imageUrl: anime.imageUrl,
-                  semanticLabel: '$title 海报',
-                  borderRadius: MioRadii.lg,
+    // Rebuilt on every scroll frame of the strip, so the poster art is handed
+    // over as the cached child: only the window, the position and the title
+    // follow the drag.
+    return AnimatedBuilder(
+      animation: controller,
+      child: _HeroPoster(anime: anime),
+      builder: (context, poster) {
+        final distance =
+            index - (controller.page ?? controller.initialPage.toDouble());
+        return Transform.translate(
+          offset: Offset(metrics.slotOffsetFor(distance), 0),
+          child: Center(
+            child: SizedBox(
+              width: metrics.cardWidth,
+              height: metrics.cardHeight,
+              child: ClipRRect(
+                clipper: HeroWindowClipper(
+                  windowWidth: metrics.windowWidthFor(distance),
+                  radius: MioRadii.lg,
                 ),
-                const DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: <Color>[Colors.transparent, Color(0xB3000000)],
-                    ),
-                  ),
+                child: _HeroCard(
+                  poster: poster!,
+                  title: title,
+                  focus: metrics.focusFor(distance),
+                  onTap: onTap,
                 ),
-                Positioned(
-                  left: MioSpacing.md,
-                  right: MioSpacing.md,
-                  bottom: MioSpacing.md,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Poster art and scrim of a hero card, drawn at the full card size the way the
+/// reference carousel composes every item.
+class _HeroPoster extends StatelessWidget {
+  const _HeroPoster({required this.anime});
+
+  final AnimeSummary anime;
+
+  /// Scrim of the reference carousel: the art stays clean down to the middle,
+  /// then darkens under the title.
+  static const Color _scrim = Color(0x9C000000);
+
+  @override
+  Widget build(BuildContext context) {
+    final title = anime.title.isEmpty ? '标题暂缺' : anime.title;
+    return Stack(
+      fit: StackFit.expand,
+      children: <Widget>[
+        MioImage(
+          imageUrl: anime.imageUrl,
+          semanticLabel: '$title 海报',
+          borderRadius: MioRadii.lg,
+        ),
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: <Color>[Colors.transparent, Colors.transparent, _scrim],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The card a hero slide shows through its window: the poster under the title
+/// the centred card carries.
+class _HeroCard extends StatelessWidget {
+  const _HeroCard({
+    required this.poster,
+    required this.title,
+    required this.focus,
+    required this.onTap,
+  });
+
+  final Widget poster;
+  final String title;
+
+  /// Share of the window that is open on this card; the title rides with it, so
+  /// a slat never shows a fragment of a title cut off by its window.
+  final double focus;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: '查看 $title 详情',
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        color: MioColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(MioRadii.lg),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          child: Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              poster,
+              Positioned(
+                left: MioSpacing.md,
+                right: MioSpacing.md,
+                bottom: MioSpacing.md,
+                child: Opacity(
+                  opacity: focus,
                   child: Text(
                     title,
-                    textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: MioColors.textPrimary,
-                    ),
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
