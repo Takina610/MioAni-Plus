@@ -9,13 +9,9 @@ import 'package:mio_ani/src/features/home/domain/home_snapshot.dart';
 void main() {
   final codec = const HomeCacheCodec();
 
-  test('round-trips hero/recommended/trending sections', () {
+  test('round-trips hero/trending sections', () {
     final content = HomeCatalogContent(
       hero: <AnimeSummary>[_anime(1, '首推', score: 9.0)],
-      recommended: <AnimeSummary>[
-        _anime(1, '首推', score: 9.0),
-        _anime(2, '次推', score: 8.0),
-      ],
       trending: <AnimeSummary>[_anime(3, '热门', popularity: 100)],
     );
 
@@ -23,8 +19,25 @@ void main() {
 
     expect(decoded.hero.single.title, '首推');
     expect(decoded.hero.single.id, AnimeSourceId.fromBangumiId(1));
-    expect(decoded.recommended, hasLength(2));
     expect(decoded.trending.single.popularity, 100);
+  });
+
+  test('ignores the retired recommended rail in older caches', () {
+    final decoded = codec.decodeSections(
+      jsonEncode(<String, Object?>{
+        'hero': <Object?>[
+          <String, Object?>{'id': 'bgm-1', 'title': '首推'},
+        ],
+        'recommended': <Object?>[
+          <String, Object?>{'id': 'bgm-1', 'title': '首推'},
+          <String, Object?>{'id': 'bgm-2', 'title': '次推'},
+        ],
+        'trending': <Object?>[],
+      }),
+    );
+
+    expect(decoded.hero.single.title, '首推');
+    expect(decoded.trending, isEmpty);
   });
 
   test('rejects malformed section payloads', () {
@@ -34,7 +47,6 @@ void main() {
           'hero': <Object?>[
             <String, Object?>{'id': 'bad-id'},
           ],
-          'recommended': <Object?>[],
           'trending': <Object?>[],
         }),
       ),
@@ -42,10 +54,7 @@ void main() {
     );
     expect(
       () => codec.decodeSections(
-        jsonEncode(<String, Object?>{
-          'hero': <Object?>[],
-          'recommended': <Object?>[],
-        }),
+        jsonEncode(<String, Object?>{'hero': <Object?>[]}),
       ),
       throwsFormatException,
     );

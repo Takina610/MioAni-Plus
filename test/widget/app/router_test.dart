@@ -8,11 +8,13 @@ import 'package:mio_ani/src/app/routing/app_router.dart';
 import 'package:mio_ani/src/app/routing/app_routes.dart';
 import 'package:mio_ani/src/app/routing/mio_back_shortcuts.dart';
 import 'package:mio_ani/src/features/catalog/application/catalog_providers.dart';
+import 'package:mio_ani/src/features/discover/application/discover_providers.dart';
 import 'package:mio_ani/src/features/home/application/home_providers.dart';
 import 'package:mio_ani/src/features/schedule/application/schedule_providers.dart';
 import 'package:mio_ani/src/features/schedule/domain/schedule_builder.dart';
 
 import '../../support/fake_catalog_repository.dart';
+import '../../support/fake_discover_repository.dart';
 import '../../support/fake_home_repository.dart';
 import '../../support/fake_schedule_repository.dart';
 import '../../support/test_viewport.dart';
@@ -57,6 +59,9 @@ void main() {
             FakeScheduleRepository(),
           ),
           homeRepositoryProvider.overrideWithValue(FakeHomeRepository()),
+          discoverRepositoryProvider.overrideWithValue(
+            FakeDiscoverRepository(),
+          ),
         ],
       ),
     );
@@ -79,6 +84,36 @@ void main() {
     expect(router.routeInformationProvider.value.uri.path, '/library');
   });
 
+  testWidgets('home schedule shortcut switches to the schedule branch', (
+    tester,
+  ) async {
+    await configureTestViewport(tester, size: const Size(390, 844));
+    final router = createMioAniRouter(initialLocation: '/');
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      MioAniRoot(
+        router: router,
+        providerOverrides: [
+          catalogRepositoryProvider.overrideWithValue(FakeCatalogRepository()),
+          scheduleRepositoryProvider.overrideWithValue(
+            FakeScheduleRepository(),
+          ),
+          homeRepositoryProvider.overrideWithValue(FakeHomeRepository()),
+          discoverRepositoryProvider.overrideWithValue(
+            FakeDiscoverRepository(),
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('新番时间表'));
+    await tester.pumpAndSettle();
+
+    expect(router.routeInformationProvider.value.uri.path, '/schedule');
+  });
+
   testWidgets('detail route pushes above a branch and pops back to it', (
     tester,
   ) async {
@@ -96,15 +131,18 @@ void main() {
             FakeScheduleRepository(),
           ),
           homeRepositoryProvider.overrideWithValue(FakeHomeRepository()),
+          discoverRepositoryProvider.overrideWithValue(
+            FakeDiscoverRepository(),
+          ),
         ],
       ),
     );
     await tester.pumpAndSettle();
 
     unawaited(
-      AnimeDetailRouteData(id: 'bgm-1').push<void>(
-        tester.element(find.text('基础外壳已就绪，内容将在后续纵向切片接入。').hitTestable()),
-      ),
+      AnimeDetailRouteData(
+        id: 'bgm-1',
+      ).push<void>(tester.element(find.byType(TextField).hitTestable())),
     );
     await tester.pumpAndSettle();
 

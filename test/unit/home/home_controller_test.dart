@@ -5,10 +5,9 @@ import 'package:mio_ani/src/features/catalog/domain/anime_summary.dart';
 import 'package:mio_ani/src/features/home/application/home_providers.dart';
 import 'package:mio_ani/src/features/home/data/home_repository.dart';
 import 'package:mio_ani/src/features/home/domain/home_snapshot.dart';
-import 'package:mio_ani/src/features/schedule/domain/broadcast_schedule.dart';
 
 void main() {
-  test('controller exposes partition-ready content', () async {
+  test('controller exposes ready content', () async {
     final repository = FakeHomeRepository();
     final container = ProviderContainer(
       overrides: [homeRepositoryProvider.overrideWithValue(repository)],
@@ -27,7 +26,6 @@ void main() {
     final last = states.last;
     expect(last.catalog.status, HomeSectionStatus.ready);
     expect(last.catalog.value!.hero.single.title, '首推');
-    expect(last.schedule.status, HomeSectionStatus.ready);
   });
 
   test('refresh bumps the home generation', () async {
@@ -67,19 +65,12 @@ final class FakeHomeRepository implements HomeRepository {
           sourceTitle: '',
         ),
       ],
-      recommended: const <AnimeSummary>[],
       trending: const <AnimeSummary>[],
     );
     return Stream<HomeSnapshot>.fromIterable(<HomeSnapshot>[
       const HomeSnapshot(),
-      const HomeSnapshot().copyWith(
+      HomeSnapshot(
         catalog: HomeSection<HomeCatalogContent>.ready(value: content),
-        schedule: const HomeSection<HomeScheduleContent>.ready(
-          value: HomeScheduleContent(
-            recent: <ScheduleItem>[],
-            days: <ScheduleDay>[],
-          ),
-        ),
       ),
     ]);
   }

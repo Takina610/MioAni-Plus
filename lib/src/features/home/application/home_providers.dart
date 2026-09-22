@@ -5,7 +5,6 @@ import 'package:mio_ani/src/features/home/data/drift_home_cache_store.dart';
 import 'package:mio_ani/src/features/home/data/home_repository.dart';
 import 'package:mio_ani/src/features/home/data/home_repository_impl.dart';
 import 'package:mio_ani/src/features/home/domain/home_snapshot.dart';
-import 'package:mio_ani/src/features/schedule/application/schedule_providers.dart';
 import 'package:mio_ani/src/features/schedule/data/bangumi_calendar_source.dart';
 
 final homeRepositoryProvider = Provider<HomeRepository>((ref) {
@@ -14,7 +13,6 @@ final homeRepositoryProvider = Provider<HomeRepository>((ref) {
       dio: ref.watch(dioProvider),
       coordinator: ref.watch(requestCoordinatorProvider),
     ),
-    scheduleRepository: ref.watch(scheduleRepositoryProvider),
     cache: DriftHomeCacheStore(database: ref.watch(catalogDatabaseProvider)),
     now: DateTime.now,
   );

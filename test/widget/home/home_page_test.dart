@@ -3,15 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mio_ani/src/app/bootstrap/mio_ani_root.dart';
 import 'package:mio_ani/src/core/failures/app_failure.dart';
+import 'package:mio_ani/src/core/image/mio_image.dart';
 import 'package:mio_ani/src/features/catalog/domain/anime_source_id.dart';
 import 'package:mio_ani/src/features/catalog/domain/anime_summary.dart';
 import 'package:mio_ani/src/features/home/application/home_providers.dart';
 import 'package:mio_ani/src/features/home/domain/home_snapshot.dart';
 import 'package:mio_ani/src/features/home/presentation/home_page.dart';
-import 'package:mio_ani/src/features/schedule/domain/broadcast_schedule.dart';
-import 'package:mio_ani/src/features/schedule/domain/schedule_builder.dart';
-import 'package:mio_ani/src/features/schedule/domain/schedule_time.dart';
-import 'package:mio_ani/src/features/schedule/domain/schedule_weekday.dart';
 
 import '../../support/fake_home_repository.dart';
 import '../../support/test_viewport.dart';
@@ -19,34 +16,27 @@ import '../../support/test_viewport.dart';
 void main() {
   testWidgets('renders brand hero and all ready sections', (tester) async {
     await configureTestViewport(tester, size: const Size(800, 2400));
-    final repository = FakeHomeRepository(
-      watchFactory: () => Stream.value(_readySnapshot()),
-    );
 
-    await _pumpHome(tester, repository);
+    await _pumpHome(tester, _readyRepository());
     await tester.pump();
 
     expect(find.text('MioAni'), findsOneWidget);
+    expect(find.text('新番时间表'), findsOneWidget);
     expect(find.text('本季推荐'), findsOneWidget);
-    expect(find.text('热门动画'), findsOneWidget);
-    expect(find.text('最近更新'), findsOneWidget);
-    expect(find.text('放送预览'), findsOneWidget);
     expect(find.text('首推动画'), findsWidgets);
-    expect(find.text('热门动画A'), findsWidgets);
+    expect(find.text('海报一'), findsOneWidget);
+    // The schedule preview block now lives only on the schedule branch.
+    expect(find.text('最近更新'), findsNothing);
+    expect(find.text('放送预览'), findsNothing);
+    expect(find.text('查看完整日程'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('catalog failure does not block the schedule section', (
+  testWidgets('catalog failure keeps the brand shell and its shortcut', (
     tester,
   ) async {
     final snapshot = HomeSnapshot(
       catalog: const HomeSection<HomeCatalogContent>.failed(OfflineFailure()),
-      schedule: const HomeSection<HomeScheduleContent>.ready(
-        value: HomeScheduleContent(
-          recent: <ScheduleItem>[],
-          days: <ScheduleDay>[],
-        ),
-      ),
     );
     final repository = FakeHomeRepository(
       watchFactory: () => Stream.value(snapshot),
@@ -56,8 +46,8 @@ void main() {
     await tester.pump();
 
     expect(find.text('当前处于离线状态'), findsOneWidget);
-    expect(find.text('放送预览'), findsOneWidget);
-    expect(find.text('查看完整日程'), findsOneWidget);
+    expect(find.text('新番时间表'), findsOneWidget);
+    expect(find.text('本季推荐'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -68,7 +58,6 @@ void main() {
           catalog: HomeSection<HomeCatalogContent>.ready(
             value: const HomeCatalogContent(
               hero: <AnimeSummary>[],
-              recommended: <AnimeSummary>[],
               trending: <AnimeSummary>[],
             ),
             isStale: true,
@@ -90,54 +79,104 @@ void main() {
     expect(repository.calls, 2);
   });
 
-  testWidgets('hero carousel auto-advances and pauses on demand', (
+  testWidgets('hero louver fans out one card between two slats', (
     tester,
   ) async {
-    final hero = <AnimeSummary>[_anime(1, '首推动画'), _anime(2, '第二部')];
-    final repository = FakeHomeRepository(
-      watchFactory: () => Stream.value(
-        testHomeSnapshot(
-          catalog: HomeSection<HomeCatalogContent>.ready(
-            value: HomeCatalogContent(
-              hero: hero,
-              recommended: hero,
-              trending: hero,
-            ),
-          ),
-        ),
-      ),
-    );
+    await configureTestViewport(tester, size: const Size(390, 844));
 
-    await _pumpHome(tester, repository);
+    await _pumpHome(tester, _readyRepository());
     await tester.pump();
+
     final pageView = tester.widget<PageView>(find.byType(PageView));
-    expect(pageView.controller!.page, 0);
+    expect(pageView.controller!.viewportFraction, lessThan(1));
+    // The dots and the pause control of the old carousel are gone.
+    expect(find.byIcon(Icons.pause), findsNothing);
+    expect(find.byIcon(Icons.play_arrow), findsNothing);
 
-    await tester.pump(const Duration(seconds: 5));
-    await tester.pump(const Duration(milliseconds: 350));
-    expect(pageView.controller!.page, closeTo(1, 0.01));
+    final cards = _heroCards(tester);
+    final center = tester.getCenter(find.byType(PageView)).dx;
+    final fanned = cards.singleWhere(
+      (rect) => rect.left <= center && rect.right >= center,
+    );
+    final slat = cards.singleWhere((rect) => rect.left > fanned.right);
 
-    await tester.tap(find.byIcon(Icons.pause));
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 12));
-    expect(pageView.controller!.page, closeTo(1, 0.01));
+    expect(fanned.width, lessThan(390));
+    expect(fanned.left, greaterThan(0));
+    expect(slat.left, greaterThan(fanned.right));
+    // The slat is a window onto a full-size card, cut off by the window edge.
+    expect(slat.width, closeTo(fanned.width, 0.5));
+    expect(slat.right, greaterThan(390));
+    expect(slat.top, fanned.top);
   });
 
-  testWidgets('reduced motion keeps the carousel static', (tester) async {
+  testWidgets('hero louver auto-advances', (tester) async {
+    await configureTestViewport(tester, size: const Size(390, 844));
+
+    await _pumpHome(tester, _readyRepository());
+    await tester.pump();
+    final controller = tester
+        .widget<PageView>(find.byType(PageView))
+        .controller!;
+    final start = controller.page!.round();
+
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(controller.page!.round(), start + 1);
+  });
+
+  testWidgets('reduced motion keeps the louver static', (tester) async {
     tester.platformDispatcher.accessibilityFeaturesTestValue =
         const FakeAccessibilityFeatures(disableAnimations: true);
     addTearDown(
       () => tester.platformDispatcher.clearAccessibilityFeaturesTestValue(),
     );
-    final hero = <AnimeSummary>[_anime(1, '首推动画'), _anime(2, '第二部')];
+
+    await _pumpHome(tester, _readyRepository());
+    await tester.pump();
+    final controller = tester
+        .widget<PageView>(find.byType(PageView))
+        .controller!;
+    final start = controller.page!.round();
+
+    await tester.pump(const Duration(seconds: 12));
+
+    expect(controller.page!.round(), start);
+  });
+
+  testWidgets('season posters wrap three per row in portrait tiles', (
+    tester,
+  ) async {
+    await configureTestViewport(tester, size: const Size(390, 2400));
+
+    await _pumpHome(tester, _readyRepository());
+    await tester.pump();
+
+    final posters = _posterRects(tester, count: 4);
+    expect(posters[0].top, posters[1].top);
+    expect(posters[1].top, posters[2].top);
+    expect(posters[3].top, greaterThan(posters[2].top));
+    expect(posters[0].left, lessThan(posters[1].left));
+    expect(posters[1].left, lessThan(posters[2].left));
+    expect(posters.first.height, greaterThan(posters.first.width));
+  });
+
+  testWidgets('a row shares one poster height whatever the title length', (
+    tester,
+  ) async {
+    await configureTestViewport(tester, size: const Size(390, 2400));
+    final posters = <AnimeSummary>[
+      _anime(11, '短标题'),
+      _anime(12, '很长很长的动画标题需要换成两行才能完整显示'),
+      _anime(13, '中等长度的标题'),
+    ];
     final repository = FakeHomeRepository(
       watchFactory: () => Stream.value(
         testHomeSnapshot(
           catalog: HomeSection<HomeCatalogContent>.ready(
             value: HomeCatalogContent(
-              hero: hero,
-              recommended: hero,
-              trending: hero,
+              hero: const <AnimeSummary>[],
+              trending: posters,
             ),
           ),
         ),
@@ -146,9 +185,16 @@ void main() {
 
     await _pumpHome(tester, repository);
     await tester.pump();
-    final pageView = tester.widget<PageView>(find.byType(PageView));
-    await tester.pump(const Duration(seconds: 12));
-    expect(pageView.controller!.page, 0);
+
+    final rects = _posterRects(tester, count: 3);
+    // A one-line title leaves its second line reserved instead of growing the
+    // poster, so all three tiles keep the same height and poster band.
+    expect(rects[0].height, closeTo(rects[1].height, 0.01));
+    expect(rects[1].height, closeTo(rects[2].height, 0.01));
+    expect(rects[0].top, closeTo(rects[1].top, 0.01));
+    expect(rects[0].bottom, closeTo(rects[1].bottom, 0.01));
+    expect(rects[0].width, closeTo(rects[1].width, 0.01));
+    expect(tester.takeException(), isNull);
   });
 
   for (final size in <Size>[
@@ -160,11 +206,8 @@ void main() {
       tester,
     ) async {
       await configureTestViewport(tester, size: size, textScaleFactor: 2);
-      final repository = FakeHomeRepository(
-        watchFactory: () => Stream.value(_readySnapshot()),
-      );
 
-      await _pumpHome(tester, repository);
+      await _pumpHome(tester, _readyRepository());
       await tester.pump();
 
       expect(find.text('本季推荐'), findsOneWidget);
@@ -183,26 +226,43 @@ Future<void> _pumpHome(WidgetTester tester, FakeHomeRepository repository) {
   );
 }
 
+FakeHomeRepository _readyRepository() {
+  return FakeHomeRepository(watchFactory: () => Stream.value(_readySnapshot()));
+}
+
+List<Rect> _heroCards(WidgetTester tester) {
+  final finder = find.descendant(
+    of: find.byType(PageView),
+    matching: find.byType(Card),
+  );
+  return <Rect>[
+    for (var index = 0; index < finder.evaluate().length; index += 1)
+      tester.getRect(finder.at(index)),
+  ];
+}
+
+List<Rect> _posterRects(WidgetTester tester, {required int count}) {
+  final finder = find.descendant(
+    of: find.byType(GridView),
+    matching: find.byType(MioImage),
+  );
+  return <Rect>[
+    for (var index = 0; index < count; index += 1)
+      tester.getRect(finder.at(index)),
+  ];
+}
+
 HomeSnapshot _readySnapshot() {
-  final anime = <AnimeSummary>[_anime(1, '首推动画'), _anime(2, '热门动画A')];
-  final days = buildWeekSchedule(<ScheduleSourceItem>[
-    ScheduleSourceItem(
-      anime: _anime(3, '周三动画'),
-      weekday: ScheduleWeekday.wednesday,
-      airTime: ScheduleTime.fromHourMinute(22, 30),
-    ),
-  ], DateTime(2026, 8, 4));
-  final recent = flattenRecentSchedule(days, 10);
+  final hero = <AnimeSummary>[_anime(1, '首推动画'), _anime(2, '第二部动画')];
+  final posters = <AnimeSummary>[
+    _anime(11, '海报一'),
+    _anime(12, '海报二'),
+    _anime(13, '海报三'),
+    _anime(14, '海报四'),
+  ];
   return testHomeSnapshot(
     catalog: HomeSection<HomeCatalogContent>.ready(
-      value: HomeCatalogContent(
-        hero: anime,
-        recommended: anime,
-        trending: anime,
-      ),
-    ),
-    schedule: HomeSection<HomeScheduleContent>.ready(
-      value: HomeScheduleContent(recent: recent, days: days),
+      value: HomeCatalogContent(hero: hero, trending: posters),
     ),
   );
 }

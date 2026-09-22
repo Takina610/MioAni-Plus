@@ -43,7 +43,6 @@ void main() {
           catalog: HomeSection<HomeCatalogContent>.ready(
             value: HomeCatalogContent(
               hero: <AnimeSummary>[testAnimeSummary],
-              recommended: <AnimeSummary>[testAnimeSummary],
               trending: <AnimeSummary>[testAnimeSummary],
             ),
           ),
@@ -65,7 +64,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Home renders the catalog-derived hero/recommended content.
+    // Home renders the catalog-derived hero and season posters.
     expect(find.text('本季推荐'), findsOneWidget);
     expect(find.text('测试动画'), findsWidgets);
     expect(router.routeInformationProvider.value.uri.path, '/');
