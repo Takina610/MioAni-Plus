@@ -143,30 +143,8 @@ class _CatalogHeader extends StatelessWidget {
           '来自 Bangumi 的公开数据 · ${snapshot.value.length} 部作品',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
-        if (snapshot.isStale) ...<Widget>[
-          const SizedBox(height: MioSpacing.md),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(MioSpacing.sm),
-            decoration: BoxDecoration(
-              color: MioColors.surfaceHigh,
-              borderRadius: BorderRadius.circular(MioRadii.sm),
-            ),
-            child: Text(
-              snapshot.refreshFailure == null
-                  ? '正在更新缓存内容…'
-                  : '当前显示离线缓存，内容更新时间：${_formatTime(snapshot.fetchedAt)}',
-            ),
-          ),
-        ],
       ],
     );
-  }
-
-  String _formatTime(DateTime value) {
-    final local = value.toLocal();
-    return '${local.year}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')} '
-        '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
   }
 }
 
@@ -199,7 +177,7 @@ class AnimeCatalogCard extends StatelessWidget {
                   child: SizedBox(
                     width: double.infinity,
                     child: MioImage(
-                      imageUrl: anime.imageUrl,
+                      imageUrl: anime.thumbnailUrl ?? anime.imageUrl,
                       semanticLabel: '$displayTitle 海报',
                     ),
                   ),

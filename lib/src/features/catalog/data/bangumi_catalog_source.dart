@@ -4,6 +4,7 @@ import 'package:mio_ani/src/core/network/dio_failure_mapper.dart';
 import 'package:mio_ani/src/core/network/network_uri_policy.dart';
 import 'package:mio_ani/src/core/network/request_coordinator.dart';
 import 'package:mio_ani/src/features/catalog/data/bangumi_dto.dart';
+import 'package:mio_ani/src/features/catalog/data/bangumi_infobox.dart';
 import 'package:mio_ani/src/features/catalog/data/bangumi_mapper.dart';
 import 'package:mio_ani/src/features/catalog/data/catalog_source.dart';
 import 'package:mio_ani/src/features/catalog/domain/anime_source_id.dart';
@@ -68,7 +69,12 @@ final class BangumiCatalogSource implements CatalogSource {
           throw const InvalidPayloadFailure();
         }
         try {
-          final detail = mapBangumiDetail(BangumiSubjectDto.fromJson(payload));
+          final detail = mapBangumiDetail(
+            BangumiSubjectDto.fromJson(payload),
+            // The mapped detail is what gets cached, so the facts have to come
+            // across with it or the rail would empty out on the next visit.
+            facts: BangumiSubjectFacts.fromInfobox(payload['infobox']),
+          );
           if (detail.id != id) throw const InvalidPayloadFailure();
           return detail;
         } on AppFailure {

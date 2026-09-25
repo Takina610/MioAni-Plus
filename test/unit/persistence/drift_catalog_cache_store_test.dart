@@ -54,6 +54,15 @@ void main() {
     expect(detail?.value.title, testAnimeDetail.title);
     expect(detail?.value.episodes, testAnimeDetail.episodes);
     expect(detail?.value.tags, testAnimeDetail.tags);
+    // The country the source files a work under has to survive the cache, or
+    // the second visit to a page knows less than the first: a Japanese work
+    // whose title is written in kanji alone would lose its translation offer,
+    // and a Chinese work written in those same characters would keep looking
+    // like a candidate for one.
+    expect(detail?.value.origin, testAnimeDetail.origin);
+    expect(detail?.value.studio, testAnimeDetail.studio);
+    expect(detail?.value.sourceMaterial, testAnimeDetail.sourceMaterial);
+    expect(detail?.value.durationMinutes, testAnimeDetail.durationMinutes);
   });
 
   test('removes only the corrupted cache key', () async {

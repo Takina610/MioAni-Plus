@@ -3,6 +3,19 @@ import 'dart:convert';
 import 'package:mio_ani/src/features/catalog/data/anime_summary_codec.dart';
 import 'package:mio_ani/src/features/catalog/domain/anime_summary.dart';
 
+/// The stored name of a [WorkOrigin], back as the value it names.
+///
+/// An unknown or absent name is null rather than a guess: a cache written by a
+/// build that did not record this says nothing about where the work is from,
+/// and the page falls back to reading the text.
+WorkOrigin? _origin(Object? value) {
+  return switch (value) {
+    'japan' => WorkOrigin.japan,
+    'china' => WorkOrigin.china,
+    _ => null,
+  };
+}
+
 final class CatalogCacheCodec {
   const CatalogCacheCodec({this.summaryCodec = const AnimeSummaryCodec()});
 
@@ -33,6 +46,10 @@ final class CatalogCacheCodec {
       'scoreCount': detail.scoreCount,
       'format': detail.format,
       'tags': detail.tags,
+      'origin': detail.origin?.name,
+      'studio': detail.studio,
+      'sourceMaterial': detail.sourceMaterial,
+      'durationMinutes': detail.durationMinutes,
     });
   }
 
@@ -68,6 +85,10 @@ final class CatalogCacheCodec {
       scoreCount: summaryCodec.nullableInt(map['scoreCount']),
       format: summaryCodec.nullableString(map['format']),
       tags: tags,
+      origin: _origin(map['origin']),
+      studio: summaryCodec.nullableString(map['studio']),
+      sourceMaterial: summaryCodec.nullableString(map['sourceMaterial']),
+      durationMinutes: summaryCodec.nullableInt(map['durationMinutes']),
     );
   }
 }

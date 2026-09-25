@@ -27,6 +27,10 @@ final testAnimeDetail = AnimeDetail(
   scoreCount: 1000,
   format: 'TV',
   tags: const <String>['日常', '奇幻'],
+  origin: WorkOrigin.japan,
+  studio: '测试制作',
+  sourceMaterial: '测试原作',
+  durationMinutes: 24,
 );
 
 CatalogSnapshot<T> testSnapshot<T>(

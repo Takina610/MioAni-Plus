@@ -10,6 +10,7 @@ BangumiCalendarDayDto _$BangumiCalendarDayDtoFromJson(
   Map<String, dynamic> json,
 ) => $checkedCreate('BangumiCalendarDayDto', json, ($checkedConvert) {
   final val = BangumiCalendarDayDto(
+    weekdayId: $checkedConvert('weekday', (v) => _weekdayId(v)),
     items: $checkedConvert(
       'items',
       (v) =>
@@ -22,11 +23,11 @@ BangumiCalendarDayDto _$BangumiCalendarDayDtoFromJson(
     ),
   );
   return val;
-});
+}, fieldKeyMap: const {'weekdayId': 'weekday'});
 
 Map<String, dynamic> _$BangumiCalendarDayDtoToJson(
   BangumiCalendarDayDto instance,
-) => <String, dynamic>{'items': instance.items};
+) => <String, dynamic>{'weekday': instance.weekdayId, 'items': instance.items};
 
 BangumiSubjectDto _$BangumiSubjectDtoFromJson(
   Map<String, dynamic> json,
@@ -63,6 +64,7 @@ BangumiSubjectDto _$BangumiSubjectDtoFromJson(
             ? null
             : BangumiCollectionDto.fromJson(v as Map<String, dynamic>),
       ),
+      nsfw: $checkedConvert('nsfw', (v) => v == null ? false : _flag(v)),
       tags: $checkedConvert(
         'tags',
         (v) =>
@@ -101,6 +103,7 @@ Map<String, dynamic> _$BangumiSubjectDtoToJson(BangumiSubjectDto instance) =>
       'rating': instance.rating,
       'rank': instance.rank,
       'collection': instance.collection,
+      'nsfw': instance.nsfw,
       'tags': instance.tags,
       'meta_tags': instance.metaTags,
     };
@@ -110,12 +113,21 @@ BangumiImagesDto _$BangumiImagesDtoFromJson(Map<String, dynamic> json) =>
       final val = BangumiImagesDto(
         large: $checkedConvert('large', (v) => v as String?),
         common: $checkedConvert('common', (v) => v as String?),
+        medium: $checkedConvert('medium', (v) => v as String?),
+        grid: $checkedConvert('grid', (v) => v as String?),
+        small: $checkedConvert('small', (v) => v as String?),
       );
       return val;
     });
 
 Map<String, dynamic> _$BangumiImagesDtoToJson(BangumiImagesDto instance) =>
-    <String, dynamic>{'large': instance.large, 'common': instance.common};
+    <String, dynamic>{
+      'large': instance.large,
+      'common': instance.common,
+      'medium': instance.medium,
+      'grid': instance.grid,
+      'small': instance.small,
+    };
 
 BangumiRatingDto _$BangumiRatingDtoFromJson(Map<String, dynamic> json) =>
     $checkedCreate('BangumiRatingDto', json, ($checkedConvert) {

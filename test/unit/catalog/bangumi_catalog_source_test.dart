@@ -28,6 +28,11 @@ void main() {
     expect(catalog.map((item) => item.id.value), <String>['bgm-2']);
     expect(detail.id.value, 'bgm-2');
     expect(detail.title, isNotEmpty);
+    // The studio and the adapted work only ever come from the subject's
+    // infobox, which sits beside the mapped fields in the same payload.
+    expect(detail.studio, 'feel.');
+    expect(detail.sourceMaterial, 'CIRCUS');
+    expect(detail.durationMinutes, 24);
   });
 
   test('rejects invalid payloads and redirects as platform failures', () async {

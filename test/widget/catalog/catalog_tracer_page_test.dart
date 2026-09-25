@@ -14,9 +14,7 @@ import '../../support/fake_catalog_repository.dart';
 import '../../support/test_viewport.dart';
 
 void main() {
-  testWidgets('renders loading, content and stale cache states', (
-    tester,
-  ) async {
+  testWidgets('renders loading and content states', (tester) async {
     final controller = StreamController<CatalogSnapshot<List<AnimeSummary>>>();
     addTearDown(controller.close);
     final repository = FakeCatalogRepository(catalog: controller.stream);
@@ -35,7 +33,9 @@ void main() {
 
     expect(find.text('本周动画目录'), findsOneWidget);
     expect(find.text('测试动画'), findsOneWidget);
-    expect(find.textContaining('当前显示离线缓存'), findsOneWidget);
+    // A stale cache and a fresh one draw the same page: see
+    // `no_cache_notices_test.dart` for the rule.
+    expect(find.textContaining('缓存'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

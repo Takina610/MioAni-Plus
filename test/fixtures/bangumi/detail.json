@@ -11,10 +11,60 @@
   "images": {
     "large": "http://lain.bgm.tv/pic/cover/l/example.jpg"
   },
-  "rating": {"rank": 4567, "total": 1380, "score": 6.5},
+  "rating": {
+    "rank": 4567,
+    "total": 1380,
+    "score": 6.5
+  },
   "tags": [
-    {"name": "恋爱", "count": 120},
-    {"name": "校园", "count": 90}
+    {
+      "name": "恋爱",
+      "count": 120
+    },
+    {
+      "name": "校园",
+      "count": 90
+    }
   ],
-  "meta_tags": ["TV", "日本"]
+  "meta_tags": [
+    "TV",
+    "日本"
+  ],
+  "infobox": [
+    {
+      "key": "中文名",
+      "value": "初音岛 S.S."
+    },
+    {
+      "key": "别名",
+      "value": [
+        {
+          "v": "D.C.S.S."
+        },
+        {
+          "v": "ダ・カーポ セカンドシーズン"
+        }
+      ]
+    },
+    {
+      "key": "话数",
+      "value": "26"
+    },
+    {
+      "key": "放送开始",
+      "value": "2005年7月2日"
+    },
+    {
+      "key": "单集时长",
+      "value": "24分钟"
+    },
+    {
+      "key": "原作",
+      "value": "CIRCUS"
+    },
+    {
+      "key": "动画制作",
+      "value": "feel."
+    }
+  ]
 }
