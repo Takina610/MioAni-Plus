@@ -2,13 +2,19 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'anilist_dto.g.dart';
 
-/// Root of the AniList `Page.media` season query. Parsed without a generic
-/// GraphQL client so a checked, hand-written contract owns every field C4
-/// consumes (title, cover, episodes, score, popularity and next airing).
+/// Root of the AniList `Page.media` query. Parsed without a generic GraphQL
+/// client so a checked, hand-written contract owns every field the schedule and
+/// the home lineups consume (title, cover, episodes, score, popularity, next
+/// airing and page position).
 final class AniListPageResponse {
-  const AniListPageResponse(this.media);
+  const AniListPageResponse(this.media, {this.hasNextPage = false});
 
   final List<AniListMediaDto> media;
+
+  /// Whether the source reported another page behind this one. A query that
+  /// does not select `pageInfo` — the airing schedule does not — leaves this
+  /// false rather than guessing, so only a paged caller may read it.
+  final bool hasNextPage;
 
   factory AniListPageResponse.fromJson(Object? json) {
     final root = _object(json, 'AniList root');
@@ -22,9 +28,16 @@ final class AniListPageResponse {
       throw const FormatException('AniList payload is missing Page');
     }
     final pageMap = _object(pageObject, 'AniList Page');
+    final info = pageMap['pageInfo'];
+    final hasNextPage = info is Map<Object?, Object?>
+        ? info['hasNextPage'] == true
+        : false;
     final rawMedia = pageMap['media'];
     if (rawMedia == null) {
-      return const AniListPageResponse(<AniListMediaDto>[]);
+      return AniListPageResponse(
+        const <AniListMediaDto>[],
+        hasNextPage: hasNextPage,
+      );
     }
     if (rawMedia is! List<Object?>) {
       throw const FormatException('AniList media must be a list');
@@ -36,6 +49,7 @@ final class AniListPageResponse {
             return AniListMediaDto.fromJson(map);
           })
           .toList(growable: false),
+      hasNextPage: hasNextPage,
     );
   }
 

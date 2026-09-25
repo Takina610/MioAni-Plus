@@ -41,17 +41,11 @@ final scheduleWeekStreamProvider = StreamProvider.autoDispose
 /// Immutable schedule page state. The date is the normalized route fact;
 /// `snapshot` carries freshness/refresh failures from the repository.
 final class ScheduleState {
-  const ScheduleState({
-    required this.localDate,
-    this.snapshot,
-    this.failure,
-    this.initialLoading = false,
-  });
+  const ScheduleState({required this.localDate, this.snapshot, this.failure});
 
   final DateTime localDate;
   final CatalogSnapshot<BroadcastSchedule>? snapshot;
   final AppFailure? failure;
-  final bool initialLoading;
 
   bool get hasContent => snapshot != null;
 }
@@ -74,7 +68,8 @@ final class ScheduleController extends Notifier<ScheduleState> {
         localDate: normalized,
         failure: error is AppFailure ? error : const UnknownFailure(),
       ),
-      _ => ScheduleState(localDate: normalized, initialLoading: true),
+      // Nothing yet and nothing wrong with it: the week is being read.
+      _ => ScheduleState(localDate: normalized),
     };
   }
 

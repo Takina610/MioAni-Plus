@@ -23,13 +23,16 @@ void main() {
         (_, next) => states.add(next),
         fireImmediately: true,
       );
-      expect(states.first.initialLoading, isTrue);
+      // A week being read is a week with no answer and nothing wrong with it,
+      // which is what the page lays out as the week it will be.
+      expect(states.first.snapshot, isNull);
+      expect(states.first.failure, isNull);
 
       await container.read(scheduleWeekStreamProvider(date).future);
       await pumpEventQueue();
 
       final state = states.last;
-      expect(state.initialLoading, isFalse);
+      expect(state.failure, isNull);
       expect(state.localDate, DateTime(2026, 8, 4));
       expect(state.hasContent, isTrue);
       expect(state.snapshot!.value.days, hasLength(7));

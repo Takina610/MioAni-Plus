@@ -5,9 +5,8 @@ import 'package:mio_ani/src/core/failures/app_failure.dart';
 import 'package:mio_ani/src/core/network/dio_failure_mapper.dart';
 import 'package:mio_ani/src/core/network/network_uri_policy.dart';
 import 'package:mio_ani/src/core/network/request_coordinator.dart';
-import 'package:mio_ani/src/features/catalog/domain/anime_source_id.dart';
-import 'package:mio_ani/src/features/catalog/domain/anime_summary.dart';
 import 'package:mio_ani/src/features/schedule/data/anilist_dto.dart';
+import 'package:mio_ani/src/features/schedule/data/anilist_media_mapper.dart';
 import 'package:mio_ani/src/features/schedule/data/schedule_sources.dart';
 import 'package:mio_ani/src/features/schedule/domain/schedule_merger.dart';
 
@@ -121,7 +120,7 @@ final class AniListScheduleSource implements AniListAiringSource {
             for (final dto in media)
               if (dto.nextAiringEpisode case final airing?)
                 AniListAiringEntry(
-                  anime: _summary(dto),
+                  anime: anilistMediaSummary(dto),
                   airingAt: DateTime.fromMillisecondsSinceEpoch(
                     airing.airingAt * 1000,
                   ),
@@ -134,27 +133,5 @@ final class AniListScheduleSource implements AniListAiringSource {
         }
       },
     );
-  }
-
-  AnimeSummary _summary(AniListMediaDto dto) {
-    final title = dto.title;
-    final display = title?.romaji ?? title?.english ?? title?.native ?? '';
-    final source = title?.native ?? title?.english ?? '';
-    return AnimeSummary(
-      id: AnimeSourceId.fromAniListId(dto.id),
-      title: display,
-      sourceTitle: source == display ? '' : source,
-      imageUrl: _httpsUri(dto.coverImage?.large),
-      score: dto.averageScore == null ? null : dto.averageScore! / 10,
-      episodes: dto.episodes,
-      popularity: dto.popularity,
-    );
-  }
-
-  Uri? _httpsUri(String? value) {
-    if (value == null) return null;
-    final uri = Uri.tryParse(value);
-    if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) return null;
-    return uri;
   }
 }

@@ -1,13 +1,13 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mio_ani/src/app/routing/anime_detail_navigation.dart';
 import 'package:mio_ani/src/app/routing/app_routes.dart';
-import 'package:mio_ani/src/features/catalog/domain/catalog_snapshot.dart';
 import 'package:mio_ani/src/features/schedule/application/schedule_providers.dart';
 import 'package:mio_ani/src/features/schedule/domain/broadcast_schedule.dart';
 import 'package:mio_ani/src/features/schedule/domain/schedule_builder.dart';
+import 'package:mio_ani/src/features/schedule/domain/schedule_weekday.dart';
 import 'package:mio_ani/src/shared/design_system/mio_breakpoints.dart';
+import 'package:mio_ani/src/shared/design_system/mio_placeholder.dart';
 import 'package:mio_ani/src/shared/design_system/mio_state_view.dart';
 import 'package:mio_ani/src/shared/design_system/mio_tokens.dart';
 
@@ -24,6 +24,8 @@ class SchedulePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(scheduleControllerProvider(initialDate));
     return Scaffold(
+      // The brand backdrop belongs to the shell, behind every branch.
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: const Text('放送日程')),
       body: SafeArea(
         child: state.failure != null
@@ -31,9 +33,7 @@ class SchedulePage extends ConsumerWidget {
                 failure: state.failure!,
                 onRetry: () => _refresh(ref),
               )
-            : state.initialLoading
-            ? const MioStateView.loading(label: '正在加载放送日程')
-            : _ScheduleContent(state: state, onRefresh: () => _refresh(ref)),
+            : _ScheduleContent(state: state),
       ),
     );
   }
@@ -44,16 +44,16 @@ class SchedulePage extends ConsumerWidget {
 }
 
 class _ScheduleContent extends StatelessWidget {
-  const _ScheduleContent({required this.state, required this.onRefresh});
+  const _ScheduleContent({required this.state});
 
   final ScheduleState state;
-  final VoidCallback onRefresh;
 
   @override
   Widget build(BuildContext context) {
     final weekStart = mondayOfWeek(state.localDate);
     final dates = sliceScheduleWindow(weekStart, 7);
     final today = startOfLocalDay(DateTime.now());
+    final snapshot = state.snapshot;
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact =
@@ -72,65 +72,33 @@ class _ScheduleContent extends StatelessWidget {
               onNext: () => _goToDate(context, addLocalDays(weekStart, 7)),
               onToday: () => _goToDate(context, today),
             ),
-            if (state.snapshot case final snapshot?) ...<Widget>[
-              if (snapshot.isStale)
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: MioSpacing.lg,
-                  ),
-                  child: _StaleBanner(snapshot: snapshot, onRetry: onRefresh),
-                ),
-              const SizedBox(height: MioSpacing.sm),
-              Expanded(
-                child: compact
-                    ? ListView.separated(
-                        key: SchedulePage.pageStorageKey,
-                        padding: const EdgeInsets.all(MioSpacing.lg),
-                        itemCount: dates.length,
-                        separatorBuilder: (_, _) =>
-                            const SizedBox(height: MioSpacing.md),
-                        itemBuilder: (context, index) {
-                          return _DayCard(
-                            date: dates[index],
-                            day: snapshot.value.days[index],
-                            isToday:
-                                localDateKey(dates[index]) ==
-                                localDateKey(today),
-                          );
-                        },
-                      )
-                    : SingleChildScrollView(
-                        key: SchedulePage.pageStorageKey,
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.all(MioSpacing.lg),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            for (
-                              var index = 0;
-                              index < dates.length;
-                              index += 1
-                            )
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  right: MioSpacing.md,
-                                ),
-                                child: SizedBox(
-                                  width: largeText ? 340 : 230,
-                                  child: _DayCard(
-                                    date: dates[index],
-                                    day: snapshot.value.days[index],
-                                    isToday:
-                                        localDateKey(dates[index]) ==
-                                        localDateKey(today),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
+            const SizedBox(height: MioSpacing.sm),
+            // The week is the route's, not the answer's: the seven days and
+            // their names are known before the schedule is, so a week still
+            // being read is drawn as the week it will be, with the rows that are
+            // still coming standing empty in place. Nothing on the page moves
+            // when the answer lands, and no day is a spinner.
+            Expanded(
+              child: _ScheduleWindow(
+                dates: dates,
+                compact: compact,
+                largeText: largeText,
+                today: today,
+                dayBuilder: (context, index, isToday) {
+                  final day = snapshot?.value.days[index];
+                  return day == null
+                      ? _DayCardPlaceholder(
+                          date: dates[index],
+                          isToday: isToday,
+                        )
+                      : _DayCard(
+                          date: dates[index],
+                          day: day,
+                          isToday: isToday,
+                        );
+                },
               ),
-            ],
+            ),
           ],
         );
       },
@@ -139,6 +107,59 @@ class _ScheduleContent extends StatelessWidget {
 
   void _goToDate(BuildContext context, DateTime date) {
     ScheduleRouteData(date: localDateKey(date)).go(context);
+  }
+}
+
+/// The week's own arrangement: one day per row on a phone, the seven days side
+/// by side on a wide window. Every state of the page is laid out through it, so
+/// a week being read and a week already read stand the same way.
+class _ScheduleWindow extends StatelessWidget {
+  const _ScheduleWindow({
+    required this.dates,
+    required this.compact,
+    required this.largeText,
+    required this.today,
+    required this.dayBuilder,
+  });
+
+  final List<DateTime> dates;
+  final bool compact;
+  final bool largeText;
+  final DateTime today;
+  final Widget Function(BuildContext context, int index, bool isToday)
+  dayBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    bool isToday(DateTime date) => localDateKey(date) == localDateKey(today);
+    if (compact) {
+      return ListView.separated(
+        key: SchedulePage.pageStorageKey,
+        padding: const EdgeInsets.all(MioSpacing.lg),
+        itemCount: dates.length,
+        separatorBuilder: (_, _) => const SizedBox(height: MioSpacing.md),
+        itemBuilder: (context, index) =>
+            dayBuilder(context, index, isToday(dates[index])),
+      );
+    }
+    return SingleChildScrollView(
+      key: SchedulePage.pageStorageKey,
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.all(MioSpacing.lg),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          for (var index = 0; index < dates.length; index += 1)
+            Padding(
+              padding: const EdgeInsets.only(right: MioSpacing.md),
+              child: SizedBox(
+                width: largeText ? 340 : 230,
+                child: dayBuilder(context, index, isToday(dates[index])),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }
 
@@ -209,48 +230,6 @@ class _WeekNavigator extends StatelessWidget {
     final jan1 = DateTime(date.year, 1, 1);
     final days = date.difference(jan1).inDays;
     return ((days + jan1.weekday - 1) ~/ 7) + 1;
-  }
-}
-
-class _StaleBanner extends StatelessWidget {
-  const _StaleBanner({required this.snapshot, required this.onRetry});
-
-  final CatalogSnapshot<BroadcastSchedule> snapshot;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final failure = snapshot.refreshFailure;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(MioSpacing.sm),
-      decoration: BoxDecoration(
-        color: MioColors.surfaceHigh,
-        borderRadius: BorderRadius.circular(MioRadii.sm),
-      ),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            child: Text(
-              failure == null
-                  ? '正在更新缓存内容…'
-                  : '当前显示离线缓存，内容更新时间：${_formatTime(snapshot.fetchedAt)}',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ),
-          if (failure != null)
-            TextButton(onPressed: onRetry, child: const Text('重试更新')),
-        ],
-      ),
-    );
-  }
-
-  String _formatTime(DateTime value) {
-    final local = value.toLocal();
-    return '${local.year}-${local.month.toString().padLeft(2, '0')}-'
-        '${local.day.toString().padLeft(2, '0')} '
-        '${local.hour.toString().padLeft(2, '0')}:'
-        '${local.minute.toString().padLeft(2, '0')}';
   }
 }
 
@@ -327,13 +306,92 @@ class _DayCard extends StatelessWidget {
   }
 }
 
-class _ScheduleItemRow extends StatelessWidget {
+/// One day of a week that is still being read.
+///
+/// The day itself is not in question — it is the date the reader is looking at,
+/// down to its name and whether it is today — so the card keeps its heading and
+/// stands [rows] empty rows where the day's shows will go. Each row is drawn as
+/// the row it replaces, a card of its own, so a placeholder on today's card
+/// stands out the way the real pile of shows will.
+class _DayCardPlaceholder extends StatelessWidget {
+  const _DayCardPlaceholder({required this.date, required this.isToday});
+
+  final DateTime date;
+  final bool isToday;
+
+  /// Rows of the shape [_ScheduleItemRow] takes: a time, a title, a chevron.
+  static const int rows = 3;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: isToday ? MioColors.surfaceHigh : MioColors.surface,
+      child: Padding(
+        padding: const EdgeInsets.all(MioSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                Text(
+                  ScheduleWeekday.fromLocalDate(date).label,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(width: MioSpacing.sm),
+                Text(
+                  '${date.month}/${date.day}',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+            const SizedBox(height: MioSpacing.sm),
+            for (var row = 0; row < rows; row += 1)
+              Card(
+                margin: const EdgeInsets.only(bottom: MioSpacing.xs),
+                color: MioColors.surface,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: MioSpacing.sm,
+                    vertical: MioSpacing.xs,
+                  ),
+                  child: Row(
+                    children: <Widget>[
+                      const SizedBox(
+                        width: 48,
+                        child: MioPlaceholder(
+                          width: 40,
+                          height: 16,
+                          radius: MioRadii.sm,
+                        ),
+                      ),
+                      const SizedBox(width: MioSpacing.xs),
+                      const Expanded(
+                        child: MioPlaceholder(height: 20, radius: MioRadii.sm),
+                      ),
+                      const SizedBox(width: MioSpacing.xs),
+                      const MioPlaceholder(
+                        width: 20,
+                        height: 20,
+                        radius: MioRadii.sm,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ScheduleItemRow extends ConsumerWidget {
   const _ScheduleItemRow({required this.item});
 
   final ScheduleItem item;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final anime = item.anime;
     final title = anime.title.isEmpty ? '标题暂缺' : anime.title;
     return Card(
@@ -341,11 +399,7 @@ class _ScheduleItemRow extends StatelessWidget {
       color: MioColors.surface,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () {
-          unawaited(
-            AnimeDetailRouteData(id: anime.id.value).push<void>(context),
-          );
-        },
+        onTap: () => openAnimeDetail(context, ref, anime),
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: MioSpacing.sm,

@@ -29,8 +29,8 @@ void main() {
     expect(entries, hasLength(1));
     final entry = entries.single;
     expect(entry.anime.id, AnimeSourceId.fromAniListId(141391));
-    expect(entry.anime.title, 'D.C.S.S. ~Da Capo Second Season~');
-    expect(entry.anime.sourceTitle, contains('ダ・カーポ'));
+    expect(entry.anime.title, contains('ダ・カーポ'));
+    expect(entry.anime.sourceTitle, 'D.C.S.S. ~Da Capo Second Season~');
     expect(entry.anime.score, 6.5);
     expect(entry.anime.popularity, 4321);
     expect(entry.anime.episodes, 26);

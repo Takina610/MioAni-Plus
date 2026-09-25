@@ -3,9 +3,8 @@ import 'package:mio_ani/src/core/failures/app_failure.dart';
 import 'package:mio_ani/src/core/network/dio_failure_mapper.dart';
 import 'package:mio_ani/src/core/network/network_uri_policy.dart';
 import 'package:mio_ani/src/core/network/request_coordinator.dart';
-import 'package:mio_ani/src/features/catalog/domain/anime_source_id.dart';
-import 'package:mio_ani/src/features/catalog/domain/anime_summary.dart';
-import 'package:mio_ani/src/features/schedule/data/bangumi_calendar_dto.dart';
+import 'package:mio_ani/src/features/catalog/data/bangumi_dto.dart';
+import 'package:mio_ani/src/features/catalog/data/bangumi_mapper.dart';
 import 'package:mio_ani/src/features/schedule/data/schedule_sources.dart';
 import 'package:mio_ani/src/features/schedule/domain/schedule_builder.dart';
 import 'package:mio_ani/src/features/schedule/domain/schedule_weekday.dart';
@@ -49,12 +48,17 @@ final class BangumiCalendarSource implements ScheduleCalendarSource {
         }
 
         try {
-          final response = BangumiCalendarResponseDto.fromJson(payload);
+          final response = BangumiCalendarResponse.fromJson(payload);
           return <ScheduleSourceItem>[
             for (final day in response.days)
               for (final subject in day.items)
                 ScheduleSourceItem(
-                  anime: _summary(subject),
+                  // The catalogue's own mapper, so a calendar row is the same
+                  // summary every other Bangumi list carries — including which
+                  // cover a tile should ask for. It used to build its own, and
+                  // the home page's poster grid read this one: a second mapper
+                  // is a second answer to the same question.
+                  anime: mapBangumiSummary(subject),
                   weekday: ScheduleWeekday.fromBangumiId(day.weekdayId),
                 ),
           ];
@@ -65,52 +69,5 @@ final class BangumiCalendarSource implements ScheduleCalendarSource {
         }
       },
     );
-  }
-
-  AnimeSummary _summary(BangumiCalendarSubjectDto dto) {
-    final title = _firstText(<String?>[dto.nameCn, dto.name]) ?? '';
-    final sourceTitle = _firstText(<String?>[dto.name, dto.nameCn]) ?? '';
-    return AnimeSummary(
-      id: AnimeSourceId.fromBangumiId(dto.id),
-      title: title,
-      sourceTitle: sourceTitle == title ? '' : sourceTitle,
-      imageUrl: _imageUri(dto.images?.large ?? dto.images?.common),
-      score: dto.rating?.score,
-      airDate: _date(dto.airDate ?? dto.date),
-      summary: _cleanText(dto.summary),
-      episodes: dto.eps ?? dto.totalEpisodes,
-      popularity: dto.collection?.doing,
-    );
-  }
-
-  String? _firstText(Iterable<String?> values) {
-    for (final value in values) {
-      final trimmed = value?.trim();
-      if (trimmed != null && trimmed.isNotEmpty) return trimmed;
-    }
-    return null;
-  }
-
-  String? _cleanText(String? value) {
-    if (value == null) return null;
-    final cleaned = value
-        .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), ' ')
-        .replaceAll(RegExp('<[^>]+>'), '')
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .trim();
-    return cleaned.isEmpty ? null : cleaned;
-  }
-
-  DateTime? _date(String? value) {
-    if (value == null || value.trim().isEmpty) return null;
-    return DateTime.tryParse(value.trim());
-  }
-
-  Uri? _imageUri(String? value) {
-    if (value == null || value.trim().isEmpty) return null;
-    final upgraded = value.trim().replaceFirst(RegExp(r'^http://'), 'https://');
-    final uri = Uri.tryParse(upgraded);
-    if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) return null;
-    return uri;
   }
 }
