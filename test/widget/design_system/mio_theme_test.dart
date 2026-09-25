@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mio_ani/src/app/theme/mio_ani_theme.dart';
+import 'package:mio_ani/src/shared/design_system/mio_backdrop.dart';
 import 'package:mio_ani/src/shared/design_system/mio_motion.dart';
 import 'package:mio_ani/src/shared/design_system/mio_tokens.dart';
 
@@ -38,6 +39,42 @@ void main() {
       contrastRatio(MioColors.onAccent, MioColors.accent),
       greaterThanOrEqualTo(4.5),
     );
+  });
+
+  test('the canvas is a dark brand colour rather than a neutral black', () {
+    final background = MioColors.background;
+
+    // Still a background: dark enough to sit under text without glow.
+    expect(background.computeLuminance(), lessThan(0.02));
+    // But a colour, not a shade of black: it carries the accent's green.
+    expect(background.g, greaterThan(background.r));
+    expect(background.g, greaterThan(background.b));
+    expect(background.g - background.b, greaterThan(0.02));
+  });
+
+  testWidgets('the brand backdrop washes the accent over the canvas', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: MioBackdrop(child: SizedBox.expand())),
+    );
+
+    final box = tester.widget<DecoratedBox>(
+      find
+          .descendant(
+            of: find.byType(MioBackdrop),
+            matching: find.byType(DecoratedBox),
+          )
+          .first,
+    );
+    final decoration = box.decoration as BoxDecoration;
+    expect(decoration.color, MioColors.background);
+    final gradient = decoration.gradient! as RadialGradient;
+    expect(gradient.colors.first, MioColors.backdropGlow);
+    // The halo fades out in its own hue, never towards black.
+    expect(gradient.colors.last.a, 0);
+    expect(gradient.colors.last.r, gradient.colors.first.r);
+    expect(gradient.colors.last.g, gradient.colors.first.g);
   });
 
   testWidgets('non-essential motion becomes immediate when disabled', (

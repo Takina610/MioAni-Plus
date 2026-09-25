@@ -6,6 +6,7 @@ import 'package:mio_ani/src/app/theme/mio_ani_theme.dart';
 import 'package:mio_ani/src/core/config/app_config.dart';
 import 'package:mio_ani/src/core/persistence/legacy_migration.dart';
 import 'package:mio_ani/src/features/catalog/application/catalog_providers.dart';
+import 'package:mio_ani/src/shared/design_system/mio_placeholder.dart';
 
 class MioAniApp extends ConsumerWidget {
   const MioAniApp({required this.router, super.key});
@@ -44,7 +45,10 @@ class MioAniApp extends ConsumerWidget {
       builder: (context, child) {
         return MioBackShortcuts(
           router: router,
-          child: child ?? const SizedBox.shrink(),
+          // The shimmer every skeleton block on every screen shares, installed
+          // once here: a screen draws its placeholders without owning an
+          // animation, and the app never has more than one running.
+          child: MioSkeletonScope(child: child ?? const SizedBox.shrink()),
         );
       },
     );

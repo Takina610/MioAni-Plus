@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mio_ani/src/app/bootstrap/mio_ani_root.dart';
 import 'package:mio_ani/src/app/routing/app_router.dart';
 import 'package:mio_ani/src/features/discover/application/discover_providers.dart';
+import 'package:mio_ani/src/shared/design_system/mio_backdrop.dart';
 
 import '../../support/fake_discover_repository.dart';
 import '../../support/test_viewport.dart';
@@ -25,6 +26,9 @@ void main() {
 
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.byType(NavigationRail), findsNothing);
+    // The branch paints on the shell's brand backdrop rather than on a scaffold
+    // of its own, so every destination shares one themed canvas.
+    expect(find.byType(MioBackdrop), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

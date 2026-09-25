@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mio_ani/src/app/shell/mio_destination.dart';
+import 'package:mio_ani/src/shared/design_system/mio_backdrop.dart';
 import 'package:mio_ani/src/shared/design_system/mio_breakpoints.dart';
 import 'package:mio_ani/src/shared/design_system/mio_tokens.dart';
 
+/// Brand canvas of every shell branch. The branches keep their own `Scaffold`
+/// (each one owns its app bar and snack bars) but paint nothing on it, so this
+/// one backdrop sits behind all four and the halo never restarts on a switch.
 class MioAniShell extends StatelessWidget {
   const MioAniShell({required this.navigationShell, super.key});
 
@@ -23,7 +27,7 @@ class MioAniShell extends StatelessWidget {
         final windowClass = MioBreakpoints.windowClassFor(constraints.maxWidth);
         if (windowClass == MioWindowClass.compact) {
           return Scaffold(
-            body: navigationShell,
+            body: MioBackdrop(child: navigationShell),
             bottomNavigationBar: NavigationBar(
               selectedIndex: navigationShell.currentIndex,
               onDestinationSelected: _selectDestination,
@@ -67,7 +71,7 @@ class MioAniShell extends StatelessWidget {
                 ],
               ),
               const VerticalDivider(width: 1),
-              Expanded(child: navigationShell),
+              Expanded(child: MioBackdrop(child: navigationShell)),
             ],
           ),
         );

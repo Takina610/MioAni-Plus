@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mio_ani/src/core/failures/app_failure.dart';
+import 'package:mio_ani/src/shared/design_system/mio_placeholder.dart';
 import 'package:mio_ani/src/shared/design_system/mio_tokens.dart';
 
 enum MioStateKind { loading, empty, failure, retry, notFound }
@@ -96,10 +97,11 @@ class MioStateView extends StatelessWidget {
       MioStateKind.retry => Icons.refresh,
       MioStateKind.notFound => Icons.explore_off_outlined,
     };
+    final loading = kind == MioStateKind.loading;
 
     return Semantics(
       container: true,
-      liveRegion: kind == MioStateKind.loading || kind == MioStateKind.failure,
+      liveRegion: loading || kind == MioStateKind.failure,
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 480),
@@ -108,11 +110,21 @@ class MioStateView extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (kind == MioStateKind.loading)
-                  const CircularProgressIndicator()
-                else
+                // Still being read: blocks in the shape of the lines that are
+                // coming, then the label naming what they are. Screen states
+                // that know their own layout draw it themselves; this is the
+                // generic fallback and loads the same way.
+                if (loading) ...<Widget>[
+                  const MioPlaceholderLines(
+                    lines: 3,
+                    lineHeight: 16,
+                    spacing: MioSpacing.sm,
+                  ),
+                  const SizedBox(height: MioSpacing.lg),
+                ] else ...<Widget>[
                   Icon(icon, size: 36),
-                const SizedBox(height: MioSpacing.md),
+                  const SizedBox(height: MioSpacing.md),
+                ],
                 Text(
                   title,
                   textAlign: TextAlign.center,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mio_ani/src/core/failures/app_failure.dart';
+import 'package:mio_ani/src/shared/design_system/mio_placeholder.dart';
 import 'package:mio_ani/src/shared/design_system/mio_state_view.dart';
 
 void main() {
@@ -12,7 +13,10 @@ void main() {
     tester,
   ) async {
     await pumpState(tester, const MioStateView.loading(label: '正在加载目录'));
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    // A state that is still filling in shows blocks of the shape its lines will
+    // take, under the label naming what they are. Nothing in the app spins.
+    expect(find.byType(MioPlaceholder), findsWidgets);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
     expect(find.text('正在加载目录'), findsOneWidget);
 
     await pumpState(
