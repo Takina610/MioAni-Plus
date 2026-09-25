@@ -1,4 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Every screen in this app reads from a source on the network: the
+         catalogue, the schedule, the covers and the translation service. The
+         Flutter template declares this permission in the debug and profile
+         manifests only, which is enough for development and leaves the release
+         build with no network at all - it built, installed and answered every
+         screen with "offline" until this was declared here. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="MioAni"
         android:name="${applicationName}"
