@@ -7,6 +7,8 @@ import 'package:mio_ani/src/features/library/application/library_providers.dart'
 import 'package:mio_ani/src/features/library/data/library_repository.dart';
 import 'package:mio_ani/src/features/library/domain/library_models.dart';
 import 'package:mio_ani/src/features/library/domain/library_query.dart';
+import 'package:mio_ani/src/shared/design_system/mio_placeholder.dart';
+import 'package:mio_ani/src/shared/design_system/mio_tokens.dart';
 
 final class LibraryPage extends ConsumerStatefulWidget {
   const LibraryPage({super.key, this.initialQuery = const LibraryQuery()});
@@ -36,6 +38,8 @@ final class _LibraryPageState extends ConsumerState<LibraryPage> {
     final repository = ref.watch(libraryRepositoryProvider);
     final controller = ref.read(libraryControllerProvider(_query).notifier);
     return Scaffold(
+      // The brand backdrop belongs to the shell, behind every branch.
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('我的追番库'),
         actions: <Widget>[
@@ -91,7 +95,15 @@ final class _LibraryPageState extends ConsumerState<LibraryPage> {
           ),
           Expanded(
             child: async.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              // The shelf before it has been read: rows of the shape a record
+              // takes, so the list does not appear out of an empty screen.
+              loading: () => ListView.separated(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                itemCount: _LibraryCardPlaceholder.rows,
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
+                itemBuilder: (context, index) =>
+                    const _LibraryCardPlaceholder(),
+              ),
               error: (error, _) => Center(child: Text('读取追番库失败：$error')),
               data: (records) => records.isEmpty
                   ? const _EmptyLibrary()
@@ -268,6 +280,57 @@ final class _GroupBar extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(children: chips),
+    );
+  }
+}
+
+/// A shelf row before the library has answered: the title, the source chips and
+/// the progress controls, in the blocks they will fill — so the list stands up
+/// the way the records will land in it.
+final class _LibraryCardPlaceholder extends StatelessWidget {
+  const _LibraryCardPlaceholder();
+
+  /// Rows drawn while the shelf is being read: enough to fill a phone screen.
+  static const int rows = 5;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(MioSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            const MioPlaceholder(width: 200, height: 20, radius: MioRadii.sm),
+            const SizedBox(height: MioSpacing.sm),
+            const Row(
+              children: <Widget>[
+                MioPlaceholder(width: 76, height: 28, radius: 14),
+                SizedBox(width: MioSpacing.xs),
+                MioPlaceholder(width: 76, height: 28, radius: 14),
+              ],
+            ),
+            const SizedBox(height: MioSpacing.sm),
+            Row(
+              children: <Widget>[
+                const MioPlaceholder(width: 88, height: 28, radius: 14),
+                const SizedBox(width: MioSpacing.sm),
+                const MioPlaceholder(
+                  width: 56,
+                  height: 20,
+                  radius: MioRadii.sm,
+                ),
+                const Spacer(),
+                const MioPlaceholder(
+                  width: 24,
+                  height: 24,
+                  radius: MioRadii.sm,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
