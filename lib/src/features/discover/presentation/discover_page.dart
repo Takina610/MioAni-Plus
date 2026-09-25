@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mio_ani/src/app/routing/app_routes.dart';
+import 'package:mio_ani/src/app/routing/anime_detail_navigation.dart';
 import 'package:mio_ani/src/core/failures/app_failure.dart';
 import 'package:mio_ani/src/core/image/mio_image.dart';
 import 'package:mio_ani/src/features/catalog/domain/anime_summary.dart';
@@ -12,6 +12,7 @@ import 'package:mio_ani/src/features/discover/domain/discover_query.dart';
 import 'package:mio_ani/src/features/discover/domain/discover_query_codec.dart';
 import 'package:mio_ani/src/features/discover/domain/discover_state.dart';
 import 'package:mio_ani/src/shared/design_system/mio_breakpoints.dart';
+import 'package:mio_ani/src/shared/design_system/mio_placeholder.dart';
 import 'package:mio_ani/src/shared/design_system/mio_state_view.dart';
 import 'package:mio_ani/src/shared/design_system/mio_tokens.dart';
 
@@ -76,6 +77,8 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
     final windowClass = MioBreakpoints.windowClassFor(width);
     final filters = _FilterSummary(query: _query, onClear: _clearFilters);
     return Scaffold(
+      // The brand backdrop belongs to the shell, behind every branch.
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
@@ -95,9 +98,10 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                   ),
                 ),
               if (state.status == DiscoverStatus.loading && state.items.isEmpty)
-                const SliverFillRemaining(
-                  child: MioStateView.loading(label: '正在搜索…'),
-                )
+                // A search that has not answered yet stands up as the grid it
+                // will be: cards of the same size in the same places, so the
+                // results land in a page that is already there.
+                _skeletonGrid(windowClass)
               else if (state.status == DiscoverStatus.firstPageError &&
                   state.items.isEmpty)
                 SliverFillRemaining(
@@ -124,17 +128,18 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
                   ),
                   sliver: SliverGrid(
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) => _AnimeCard(anime: state.items[index]),
-                      childCount: state.items.length,
+                      (context, index) => index < state.items.length
+                          ? _AnimeCard(anime: state.items[index])
+                          : const _AnimeCardPlaceholder(),
+                      // A page on its way is drawn as the cards it will bring,
+                      // in the grid they will land in.
+                      childCount:
+                          state.items.length +
+                          (state.status == DiscoverStatus.loadingMore
+                              ? _pendingCards
+                              : 0),
                     ),
-                    gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: windowClass == MioWindowClass.expanded
-                          ? 220
-                          : 180,
-                      mainAxisExtent: 350,
-                      crossAxisSpacing: MioSpacing.md,
-                      mainAxisSpacing: MioSpacing.md,
-                    ),
+                    gridDelegate: _gridDelegate(windowClass),
                   ),
                 ),
                 SliverToBoxAdapter(
@@ -453,18 +458,104 @@ class _FilterPanelState extends State<_FilterPanel> {
   }
 }
 
-class _AnimeCard extends StatelessWidget {
+/// How many cards a search that has not answered stands up: enough to fill a
+/// phone screen of the smallest tiles; a wide window simply shows the same
+/// shape more times.
+const int _skeletonCards = 6;
+
+/// How many cards stand in for a page whose results are on their way, inside
+/// the grid those results will land in.
+const int _pendingCards = 3;
+
+/// Geometry of the results grid, shared by the results and by the cards drawn
+/// while they are still being read — so a skeleton tile is exactly as big as
+/// the card that replaces it.
+SliverGridDelegate _gridDelegate(MioWindowClass windowClass) {
+  return SliverGridDelegateWithMaxCrossAxisExtent(
+    maxCrossAxisExtent: windowClass == MioWindowClass.expanded ? 220 : 180,
+    mainAxisExtent: 350,
+    crossAxisSpacing: MioSpacing.md,
+    mainAxisSpacing: MioSpacing.md,
+  );
+}
+
+/// The results grid before the first page of results is known.
+SliverPadding _skeletonGrid(MioWindowClass windowClass) {
+  return SliverPadding(
+    padding: const EdgeInsets.fromLTRB(
+      MioSpacing.lg,
+      MioSpacing.md,
+      MioSpacing.lg,
+      MioSpacing.lg,
+    ),
+    sliver: SliverGrid(
+      gridDelegate: _gridDelegate(windowClass),
+      delegate: SliverChildBuilderDelegate(
+        (context, index) => const _AnimeCardPlaceholder(),
+        childCount: _skeletonCards,
+      ),
+    ),
+  );
+}
+
+/// A result card before its anime is known: the same poster box, the same two
+/// title lines and the same chip row, so the results land in a grid that is
+/// already standing.
+class _AnimeCardPlaceholder extends StatelessWidget {
+  const _AnimeCardPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const Expanded(
+            child: SizedBox(
+              width: double.infinity,
+              child: MioPlaceholder(radius: 0),
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(
+              MioSpacing.sm,
+              MioSpacing.sm,
+              MioSpacing.sm,
+              MioSpacing.xs,
+            ),
+            child: MioPlaceholderLines(lines: 2, lineHeight: 16),
+          ),
+          // A Wrap, like the chips it stands for: in a narrow tile the real
+          // chips take a second row, and the placeholder has to be able to.
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: MioSpacing.sm),
+            child: Wrap(
+              spacing: MioSpacing.xs,
+              runSpacing: MioSpacing.xxs,
+              children: <Widget>[
+                MioPlaceholder(width: 56, height: 32, radius: 16),
+                MioPlaceholder(width: 84, height: 32, radius: 16),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AnimeCard extends ConsumerWidget {
   const _AnimeCard({required this.anime});
   final AnimeSummary anime;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Semantics(
       button: true,
       label: anime.title,
       child: InkWell(
-        onTap: () =>
-            AnimeDetailRouteData(id: anime.id.value).push<void>(context),
+        onTap: () => openAnimeDetail(context, ref, anime),
         borderRadius: BorderRadius.circular(MioRadii.md),
         child: Card(
           clipBehavior: Clip.antiAlias,
@@ -477,7 +568,7 @@ class _AnimeCard extends StatelessWidget {
                 child: SizedBox(
                   width: double.infinity,
                   child: MioImage(
-                    imageUrl: anime.imageUrl,
+                    imageUrl: anime.thumbnailUrl ?? anime.imageUrl,
                     semanticLabel: anime.title,
                   ),
                 ),
@@ -528,9 +619,13 @@ class _LoadMore extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (state.status == DiscoverStatus.loadingMore) {
-      return const Padding(
-        padding: EdgeInsets.all(MioSpacing.lg),
-        child: Center(child: CircularProgressIndicator()),
+      // The cards themselves are drawn by the grid above; this is the line that
+      // names what they are waiting for.
+      return Padding(
+        padding: const EdgeInsets.only(bottom: MioSpacing.lg),
+        child: Center(
+          child: Text('正在加载更多…', style: Theme.of(context).textTheme.bodyMedium),
+        ),
       );
     }
     if (state.status == DiscoverStatus.loadMoreError) {

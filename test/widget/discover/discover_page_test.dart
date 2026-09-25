@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,6 +8,7 @@ import 'package:mio_ani/src/app/bootstrap/mio_ani_root.dart';
 import 'package:mio_ani/src/core/failures/app_failure.dart';
 import 'package:mio_ani/src/features/discover/application/discover_providers.dart';
 import 'package:mio_ani/src/features/discover/presentation/discover_page.dart';
+import 'package:mio_ani/src/shared/design_system/mio_placeholder.dart';
 
 import '../../support/fake_discover_repository.dart';
 
@@ -50,6 +53,60 @@ void main() {
 
     expect(find.text('没有找到作品'), findsNothing);
     expect(find.text('重试'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a search in flight stands up as the grid it will be', (
+    tester,
+  ) async {
+    final gate = Completer<void>();
+    final repository = FakeDiscoverRepository(pageGate: gate);
+
+    await _pumpDiscoverPage(tester, repository);
+    await tester.pump();
+
+    // Nothing spins while the search runs: the results grid is already there,
+    // holding the shape of the cards that are coming.
+    expect(find.byType(MioPlaceholder), findsWidgets);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.textContaining('正在搜索'), findsNothing);
+
+    gate.complete();
+    await tester.pumpAndSettle();
+
+    expect(find.text('测试动画'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(GridView),
+        matching: find.byType(MioPlaceholder),
+      ),
+      findsNothing,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a page on its way is drawn as the cards it will bring', (
+    tester,
+  ) async {
+    final repository = FakeDiscoverRepository(hasMore: true);
+
+    await _pumpDiscoverPage(tester, repository);
+    await tester.pumpAndSettle();
+    expect(find.text('测试动画'), findsOneWidget);
+
+    // The second page is held open, so the grid has to stand for it.
+    repository.pageGate = Completer<void>();
+    await tester.ensureVisible(find.text('加载更多'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('加载更多'));
+    await tester.pump();
+
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.text('正在加载更多…'), findsOneWidget);
+    expect(find.byType(MioPlaceholder), findsWidgets);
+
+    repository.pageGate!.complete();
+    await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
 }

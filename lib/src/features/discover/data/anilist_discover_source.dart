@@ -157,13 +157,16 @@ final class AniListDiscoverSource implements DiscoverSource {
       final id = _int(value['id']);
       if (id == null || id <= 0) continue;
       final titles = value['title'];
+      // Native first: AniList publishes `romaji` first, but a transliteration
+      // is not the title anyone reads, so it is the fallback here the way it is
+      // for every other AniList-backed list in the app.
       final title = titles is Map<Object?, Object?>
-          ? _string(titles['romaji']) ??
-                _string(titles['english']) ??
-                _string(titles['native'])
+          ? _string(titles['native']) ??
+                _string(titles['romaji']) ??
+                _string(titles['english'])
           : null;
       final sourceTitle = titles is Map<Object?, Object?>
-          ? _string(titles['native']) ?? ''
+          ? _string(titles['romaji']) ?? ''
           : '';
       final date = value['startDate'];
       final airDate = date is Map<Object?, Object?>
