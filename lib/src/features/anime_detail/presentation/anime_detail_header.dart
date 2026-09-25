@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:mio_ani/src/core/image/mio_cover_flight.dart';
 import 'package:mio_ani/src/core/image/mio_image.dart';
+import 'package:mio_ani/src/features/anime_detail/presentation/anime_detail_drawer.dart';
 import 'package:mio_ani/src/features/anime_detail/presentation/anime_detail_style.dart';
 import 'package:mio_ani/src/features/catalog/domain/anime_summary.dart';
 import 'package:mio_ani/src/features/translation/domain/translation_candidate.dart';
@@ -95,13 +97,18 @@ class AnimeDetailHeader extends StatelessWidget {
       builder: (context, constraints) {
         final metrics = DetailHeaderMetrics.of(context, constraints.maxWidth);
         return Stack(
+          // The head arrives from below, so its pieces are drawn outside the box
+          // they are laid out in on their way up. Nothing here paints past its
+          // own bounds otherwise, so leaving the head unclipped costs nothing and
+          // is what lets the whole head — art band first — come up together.
+          clipBehavior: Clip.none,
           children: <Widget>[
             Positioned(
               top: 0,
               left: 0,
               right: 0,
               height: metrics.bannerHeight,
-              child: _DetailBanner(anime: anime),
+              child: AnimeDetailDrawerGroup(child: _DetailBanner(anime: anime)),
             ),
             Padding(
               padding: EdgeInsets.fromLTRB(
@@ -123,55 +130,57 @@ class AnimeDetailHeader extends StatelessWidget {
 
   Widget _head(BuildContext context, DetailHeaderMetrics metrics) {
     final title = anime.title.isEmpty ? '标题暂缺' : anime.title;
-    final text = Column(
-      crossAxisAlignment: metrics.stacked
-          ? CrossAxisAlignment.center
-          : CrossAxisAlignment.start,
-      children: <Widget>[
-        DetailMicroLabel(
-          '${anime.sourceLabel.toUpperCase()} · ${anime.id.rawId}',
-        ),
-        const SizedBox(height: MioSpacing.xs),
-        Text(
-          title,
-          textAlign: metrics.stacked ? TextAlign.center : TextAlign.start,
-          style: TextStyle(
-            color: MioColors.textPrimary,
-            fontSize: metrics.titleSize,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.8,
-            height: 1.12,
+    final text = AnimeDetailDrawerGroup(
+      child: Column(
+        crossAxisAlignment: metrics.stacked
+            ? CrossAxisAlignment.center
+            : CrossAxisAlignment.start,
+        children: <Widget>[
+          DetailMicroLabel(
+            '${anime.sourceLabel.toUpperCase()} · ${anime.id.rawId}',
           ),
-        ),
-        if (anime.sourceTitle.isNotEmpty &&
-            anime.sourceTitle != anime.title) ...[
           const SizedBox(height: MioSpacing.xs),
           Text(
-            anime.sourceTitle,
+            title,
             textAlign: metrics.stacked ? TextAlign.center : TextAlign.start,
-            style: Theme.of(context).textTheme.bodyMedium,
+            style: TextStyle(
+              color: MioColors.textPrimary,
+              fontSize: metrics.titleSize,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.8,
+              height: 1.12,
+            ),
           ),
+          if (anime.sourceTitle.isNotEmpty &&
+              anime.sourceTitle != anime.title) ...[
+            const SizedBox(height: MioSpacing.xs),
+            Text(
+              anime.sourceTitle,
+              textAlign: metrics.stacked ? TextAlign.center : TextAlign.start,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+          // A work whose Chinese name the source never filled in is the whole
+          // reason this page has a Japanese title, so the offer is made on the
+          // title itself and its answer lands directly under it. A title is the
+          // one text on the page whose language the source has already settled —
+          // see [workTitleReadsForeign] — so it does not have to be guessed at.
+          MioTranslateAction(
+            source: title,
+            variant: TranslationVariant.title,
+            offered: workTitleReadsForeign(
+              title: anime.title,
+              sourceTitle: anime.sourceTitle,
+              origin: anime.origin,
+            ),
+            alignment: metrics.stacked
+                ? CrossAxisAlignment.center
+                : CrossAxisAlignment.start,
+          ),
+          const SizedBox(height: MioSpacing.md),
+          _lead(context, metrics),
         ],
-        // A work whose Chinese name the source never filled in is the whole
-        // reason this page has a Japanese title, so the offer is made on the
-        // title itself and its answer lands directly under it. A title is the
-        // one text on the page whose language the source has already settled —
-        // see [workTitleReadsForeign] — so it does not have to be guessed at.
-        MioTranslateAction(
-          source: title,
-          variant: TranslationVariant.title,
-          offered: workTitleReadsForeign(
-            title: anime.title,
-            sourceTitle: anime.sourceTitle,
-            origin: anime.origin,
-          ),
-          alignment: metrics.stacked
-              ? CrossAxisAlignment.center
-              : CrossAxisAlignment.start,
-        ),
-        const SizedBox(height: MioSpacing.md),
-        _lead(context, metrics),
-      ],
+      ),
     );
 
     final poster = _poster(context, metrics);
@@ -196,31 +205,50 @@ class AnimeDetailHeader extends StatelessWidget {
     );
   }
 
+  /// The work's poster, and the frame it is set in.
+  ///
+  /// It is also where a cover tapped on a list lands: the picture the reader
+  /// was looking at flies from that card into this frame, and on the way back
+  /// out it flies home. The frame itself does not move on the way in — only the
+  /// picture inside it — so the flight has one still target to aim at, and on
+  /// the way out the whole frame leaves with the page it belongs to.
+  ///
+  /// The rendition a list draws stands in until the full-size cover is on hand,
+  /// which matters most in the frame the flight lands in: the picture arriving
+  /// and the picture on screen are the same one, and a poster that emptied
+  /// itself at the moment of landing would throw that away.
   Widget _poster(BuildContext context, DetailHeaderMetrics metrics) {
     final width = metrics.posterWidth;
     final height = width * 1.5;
     final title = anime.title.isEmpty ? '标题暂缺' : anime.title;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(MioRadii.md),
-        border: Border.all(color: MioColors.outline.withValues(alpha: 0.28)),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 40,
-            offset: const Offset(0, 18),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(MioRadii.md),
-        child: SizedBox(
-          width: width,
-          height: height,
-          child: MioImage(
-            imageUrl: anime.imageUrl,
-            semanticLabel: '$title 海报',
-            borderRadius: 0,
+    return AnimeDetailDrawerHold(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(MioRadii.md),
+          border: Border.all(color: MioColors.outline.withValues(alpha: 0.28)),
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 40,
+              offset: const Offset(0, 18),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(MioRadii.md),
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: AnimeCoverDestination(
+              animeId: anime.id.value,
+              radius: MioRadii.md,
+              child: MioImage(
+                imageUrl: anime.imageUrl,
+                previewUrl: anime.thumbnailUrl,
+                semanticLabel: '$title 海报',
+                borderRadius: 0,
+              ),
+            ),
           ),
         ),
       ),
@@ -266,7 +294,9 @@ class AnimeDetailHeader extends StatelessWidget {
 /// The source publishes one picture per work — a portrait cover — so the band
 /// takes its top edge, which is where a cover puts its subject, and the two
 /// gradients do the rest: the mask fades the art out, and the shade walks the
-/// page's own colour back in underneath the title.
+/// page's own colour back in underneath the title. The band stands on that
+/// cover's own colour while the cover itself is on its way, and the rendition
+/// the list already drew is what says what that colour is.
 class _DetailBanner extends StatelessWidget {
   const _DetailBanner({required this.anime});
 
@@ -298,6 +328,7 @@ class _DetailBanner extends StatelessWidget {
             opacity: 0.5,
             child: MioImageBackdrop(
               imageUrl: anime.imageUrl,
+              previewUrl: anime.thumbnailUrl,
               alignment: Alignment.topCenter,
             ),
           ),

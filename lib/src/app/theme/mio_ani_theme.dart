@@ -25,6 +25,21 @@ abstract final class MioAniTheme {
       focusColor: MioColors.focus,
       materialTapTargetSize: MaterialTapTargetSize.padded,
       visualDensity: VisualDensity.standard,
+      // A page opens over the one it was opened from and does not transition
+      // into place: what a reader watches is the page they opened arriving, and
+      // the list they opened it from staying exactly as they left it.
+      //
+      // Material's own Android transition would do neither: it shrinks and dims
+      // the page underneath while fading the new one up, which puts two pictures
+      // of the app on screen at once at half strength. The app draws its own way
+      // of arriving — the detail page comes up from the bottom edge, around the
+      // frame the tapped picture is landing in — and this is where the framework
+      // is told not to add a second one.
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: <TargetPlatform, PageTransitionsBuilder>{
+          TargetPlatform.android: _StillPages(),
+        },
+      ),
       textTheme: const TextTheme(
         headlineLarge: TextStyle(
           color: MioColors.textPrimary,
@@ -74,5 +89,26 @@ abstract final class MioAniTheme {
         ),
       ),
     );
+  }
+}
+
+/// Pages that do not move: the page below stays where it is, and the page above
+/// is drawn as it is.
+///
+/// Marking a route as opaque is what keeps the list behind it from being drawn
+/// at all once the page has settled; this only decides what happens on the way
+/// there, and on the way there the app wants nothing but its own motion.
+class _StillPages extends PageTransitionsBuilder {
+  const _StillPages();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return child;
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mio_ani/src/core/failures/app_failure.dart';
 import 'package:mio_ani/src/features/anime_detail/application/anime_preview_store.dart';
+import 'package:mio_ani/src/features/anime_detail/presentation/anime_detail_drawer.dart';
 import 'package:mio_ani/src/features/anime_detail/presentation/anime_detail_header.dart';
 import 'package:mio_ani/src/features/anime_detail/presentation/anime_detail_meta_board.dart';
 import 'package:mio_ani/src/features/anime_detail/presentation/anime_detail_sections.dart';
@@ -11,7 +12,6 @@ import 'package:mio_ani/src/features/anime_detail/presentation/anime_detail_styl
 import 'package:mio_ani/src/features/catalog/application/catalog_providers.dart';
 import 'package:mio_ani/src/features/catalog/domain/anime_source_id.dart';
 import 'package:mio_ani/src/features/catalog/domain/anime_summary.dart';
-import 'package:mio_ani/src/shared/design_system/mio_backdrop.dart';
 import 'package:mio_ani/src/shared/design_system/mio_breakpoints.dart';
 import 'package:mio_ani/src/shared/design_system/mio_placeholder.dart';
 import 'package:mio_ani/src/shared/design_system/mio_state_view.dart';
@@ -36,24 +36,31 @@ class AnimeDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final id = AnimeSourceId.tryParse(sourceId);
     return _DetailScaffold(
+      // A page with nothing to draw still arrives the way a page does, so the
+      // reader is never shown two different ways for this page to open.
       child: switch (id) {
-        null => MioStateView.notFound(message: '无法识别动画 ID：$sourceId'),
-        final id when id.source != AnimeSource.bangumi => MioStateView.notFound(
-          message: '该来源的动画详情将在后续版本提供',
+        null => AnimeDetailDrawerGroup(
+          child: MioStateView.notFound(message: '无法识别动画 ID：$sourceId'),
         ),
+        final id when id.source != AnimeSource.bangumi =>
+          AnimeDetailDrawerGroup(
+            child: MioStateView.notFound(message: '该来源的动画详情将在后续版本提供'),
+          ),
         final id =>
           ref
               .watch(animeDetailStreamProvider(id))
               .when(
                 loading: () => _loading(ref, id),
-                error: (error, _) => error is NotFoundFailure
-                    ? MioStateView.notFound(message: 'Bangumi 中不存在该动画')
-                    : MioStateView.failure(
-                        failure: error is AppFailure
-                            ? error
-                            : const UnknownFailure(),
-                        onRetry: () => _requestRefresh(ref, id),
-                      ),
+                error: (error, _) => AnimeDetailDrawerGroup(
+                  child: error is NotFoundFailure
+                      ? MioStateView.notFound(message: 'Bangumi 中不存在该动画')
+                      : MioStateView.failure(
+                          failure: error is AppFailure
+                              ? error
+                              : const UnknownFailure(),
+                          onRetry: () => _requestRefresh(ref, id),
+                        ),
+                ),
                 // A page that has a detail to draw draws it. Whether it came off
                 // the network this second or off the cache a while ago is not
                 // something the reader is told about: a work a reader tapped is
@@ -85,11 +92,14 @@ class AnimeDetailPage extends ConsumerWidget {
 /// What every state of the page stands on: the brand canvas, and the way back
 /// out of the page over it.
 ///
-/// The page is opened over the shell rather than inside it, so it paints its
-/// own canvas, and it keeps the canvas under the status bar: the art behind its
-/// head runs to the top edge, and only the content is pushed clear of it. There
-/// is no app bar for the same reason — the work's own name is the title here,
-/// and a band of chrome would sit between the two.
+/// The page is opened over the shell rather than inside it, so it paints its own
+/// canvas — and paints it as the drawer the page arrives on, so the canvas comes
+/// up over the list with the page's words instead of being handed to the reader
+/// as a swap. It keeps the canvas under the status bar for the same reason it
+/// always did: the art behind its head runs to the top edge, and only the
+/// content is pushed clear of it. There is no app bar for the same reason — the
+/// work's own name is the title here, and a band of chrome would sit between the
+/// two.
 class _DetailScaffold extends StatelessWidget {
   const _DetailScaffold({required this.child});
 
@@ -99,10 +109,13 @@ class _DetailScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: MioBackdrop(
+      body: AnimeDetailDrawer(
         child: Stack(
           children: <Widget>[
             Positioned.fill(child: child),
+            // The way out is not part of the drawer. A reader who wants to leave
+            // should not have to catch a moving button, and the one control this
+            // page keeps over its own art is the one that least wants to be.
             const _BackButton(),
           ],
         ),
@@ -113,6 +126,10 @@ class _DetailScaffold extends StatelessWidget {
 
 /// The way back, drawn over the art in the corner: the reference's glass pill,
 /// as tall as a touch target is wide.
+///
+/// It holds its place while the page arrives — a reader reaching for a control
+/// is owed one that is where they are reaching — and leaves with the page when
+/// the page goes, rather than hanging over the list on its own.
 class _BackButton extends StatelessWidget {
   const _BackButton();
 
@@ -123,41 +140,43 @@ class _BackButton extends StatelessWidget {
     return Positioned(
       top: math.max(MioSpacing.sm, MediaQuery.paddingOf(context).top),
       left: MioSpacing.sm,
-      child: Semantics(
-        button: true,
-        label: '返回',
-        child: Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-            onTap: () => Navigator.maybePop(context),
-            borderRadius: BorderRadius.circular(999),
-            child: Container(
-              height: _height,
-              padding: const EdgeInsets.symmetric(horizontal: MioSpacing.sm),
-              decoration: BoxDecoration(
-                color: MioColors.surface.withValues(alpha: 0.62),
-                border: Border.all(
-                  color: MioColors.outline.withValues(alpha: 0.28),
+      child: AnimeDetailDrawerHold(
+        child: Semantics(
+          button: true,
+          label: '返回',
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: () => Navigator.maybePop(context),
+              borderRadius: BorderRadius.circular(999),
+              child: Container(
+                height: _height,
+                padding: const EdgeInsets.symmetric(horizontal: MioSpacing.sm),
+                decoration: BoxDecoration(
+                  color: MioColors.surface.withValues(alpha: 0.62),
+                  border: Border.all(
+                    color: MioColors.outline.withValues(alpha: 0.28),
+                  ),
+                  borderRadius: BorderRadius.circular(999),
                 ),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Row(
-                children: <Widget>[
-                  const Icon(
-                    Icons.arrow_back,
-                    size: 18,
-                    color: MioColors.textPrimary,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '返回',
-                    style: TextStyle(
+                child: Row(
+                  children: <Widget>[
+                    const Icon(
+                      Icons.arrow_back,
+                      size: 18,
                       color: MioColors.textPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 6),
+                    Text(
+                      '返回',
+                      style: TextStyle(
+                        color: MioColors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -208,40 +227,42 @@ class _AnimeDetailView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   AnimeDetailHeader(anime: anime, complete: complete),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: header.sidePadding,
-                    ),
-                    child: sideBySide
-                        ? Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              SizedBox(
-                                width: windowClass == MioWindowClass.expanded
-                                    ? 240
-                                    : 200,
-                                child: record,
-                              ),
-                              const SizedBox(width: _columnGap),
-                              Expanded(
-                                child: AnimeDetailSections(
+                  AnimeDetailDrawerGroup(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: header.sidePadding,
+                      ),
+                      child: sideBySide
+                          ? Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                SizedBox(
+                                  width: windowClass == MioWindowClass.expanded
+                                      ? 240
+                                      : 200,
+                                  child: record,
+                                ),
+                                const SizedBox(width: _columnGap),
+                                Expanded(
+                                  child: AnimeDetailSections(
+                                    anime: anime,
+                                    complete: complete,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                record,
+                                const SizedBox(height: _stackGap),
+                                AnimeDetailSections(
                                   anime: anime,
                                   complete: complete,
                                 ),
-                              ),
-                            ],
-                          )
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              record,
-                              const SizedBox(height: _stackGap),
-                              AnimeDetailSections(
-                                anime: anime,
-                                complete: complete,
-                              ),
-                            ],
-                          ),
+                              ],
+                            ),
+                    ),
                   ),
                   SizedBox(
                     height:
@@ -290,30 +311,32 @@ class _AnimeDetailSkeleton extends StatelessWidget {
                     ),
                     child: _headSkeleton(context, header),
                   ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: header.sidePadding,
+                  AnimeDetailDrawerGroup(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: header.sidePadding,
+                      ),
+                      child: sideBySide
+                          ? const Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                SizedBox(
+                                  width: 200,
+                                  child: _RecordSkeleton(count: 2),
+                                ),
+                                SizedBox(width: _AnimeDetailView._columnGap),
+                                Expanded(child: _SectionsSkeleton()),
+                              ],
+                            )
+                          : const Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                _RecordSkeleton(count: 0),
+                                SizedBox(height: _AnimeDetailView._stackGap),
+                                _SectionsSkeleton(),
+                              ],
+                            ),
                     ),
-                    child: sideBySide
-                        ? const Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              SizedBox(
-                                width: 200,
-                                child: _RecordSkeleton(count: 2),
-                              ),
-                              SizedBox(width: _AnimeDetailView._columnGap),
-                              Expanded(child: _SectionsSkeleton()),
-                            ],
-                          )
-                        : const Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              _RecordSkeleton(count: 0),
-                              SizedBox(height: _AnimeDetailView._stackGap),
-                              _SectionsSkeleton(),
-                            ],
-                          ),
                   ),
                 ],
               ),
@@ -330,24 +353,32 @@ class _AnimeDetailSkeleton extends StatelessWidget {
       height: header.titleSize,
       radius: MioRadii.sm,
     );
-    final text = Column(
-      crossAxisAlignment: header.stacked
-          ? CrossAxisAlignment.center
-          : CrossAxisAlignment.start,
-      children: <Widget>[
-        const MioPlaceholder(width: 96, height: 12, radius: MioRadii.sm),
-        const SizedBox(height: MioSpacing.sm),
-        title,
-        const SizedBox(height: MioSpacing.sm),
-        const MioPlaceholder(width: 140, height: 14, radius: MioRadii.sm),
-        const SizedBox(height: MioSpacing.md),
-        const MioPlaceholderLines(lines: 4, lineHeight: 16),
-      ],
+    final text = AnimeDetailDrawerGroup(
+      child: Column(
+        crossAxisAlignment: header.stacked
+            ? CrossAxisAlignment.center
+            : CrossAxisAlignment.start,
+        children: <Widget>[
+          const MioPlaceholder(width: 96, height: 12, radius: MioRadii.sm),
+          const SizedBox(height: MioSpacing.sm),
+          title,
+          const SizedBox(height: MioSpacing.sm),
+          const MioPlaceholder(width: 140, height: 14, radius: MioRadii.sm),
+          const SizedBox(height: MioSpacing.md),
+          const MioPlaceholderLines(lines: 4, lineHeight: 16),
+        ],
+      ),
     );
-    final poster = MioPlaceholder(
-      width: header.posterWidth,
-      height: header.posterWidth * 1.5,
-      radius: MioRadii.md,
+    // The blocks stand where the pieces they stand in for will land, and the
+    // head's poster block is where a tapped picture lands: it is drawn in the
+    // same shape as the poster, so it holds its place and leaves with the page
+    // for the same reasons the poster does.
+    final poster = AnimeDetailDrawerHold(
+      child: MioPlaceholder(
+        width: header.posterWidth,
+        height: header.posterWidth * 1.5,
+        radius: MioRadii.md,
+      ),
     );
     if (!header.stacked) {
       return Row(

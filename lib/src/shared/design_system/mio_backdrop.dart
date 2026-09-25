@@ -4,9 +4,18 @@ import 'package:mio_ani/src/shared/design_system/mio_tokens.dart';
 /// The brand canvas a screen is painted on: [MioColors.background] with the
 /// accent's own hue washed across the top.
 ///
-/// It is one flat decoration, so it costs a single paint and never rebuilds
-/// while the content above it scrolls. Screens either paint it themselves or
-/// leave their `Scaffold` transparent and let the shell's copy show through.
+/// The floor and the wash are two paints, and the floor is opaque: a canvas is
+/// what everything else on the screen stands on, so a screen that moves its
+/// canvas over another screen — the detail page arriving as a drawer over the
+/// list — has to be bringing a floor with it, not a wash with the list showing
+/// through. (One [BoxDecoration] carrying both would not do: a gradient is a
+/// paint shader, and a paint with a shader ignores its own colour, so the canvas
+/// would be exactly as solid as its transparent-to-almost-nothing wash.)
+///
+/// It is still flat and still free to rebuild: two paints, drawn once, and
+/// nothing here reads anything that scrolls under it. Screens either paint it
+/// themselves or leave their `Scaffold` transparent and let the shell's copy
+/// show through.
 class MioBackdrop extends StatelessWidget {
   const MioBackdrop({required this.child, super.key});
 
@@ -23,12 +32,12 @@ class MioBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: MioColors.background,
-        gradient: _halo,
+    return ColoredBox(
+      color: MioColors.background,
+      child: DecoratedBox(
+        decoration: const BoxDecoration(gradient: _halo),
+        child: child,
       ),
-      child: child,
     );
   }
 }

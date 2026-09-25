@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:mio_ani/src/core/image/image_byte_store_factory.dart';
 import 'package:mio_ani/src/core/image/image_memory_cache.dart';
 import 'package:mio_ani/src/core/image/image_pipeline.dart';
+import 'package:mio_ani/src/core/image/mio_cover_colour.dart';
 import 'package:mio_ani/src/core/network/network_uri_policy.dart';
 import 'package:mio_ani/src/core/network/request_coordinator.dart';
 import 'package:mio_ani/src/core/persistence/catalog_database.dart';
@@ -138,4 +140,28 @@ final imageBytesProvider = FutureProvider.autoDispose.family<Uint8List, Uri>((
   uri,
 ) {
   return ref.watch(imagePipelineProvider).load(uri);
+});
+
+/// The colour the cover at [uri] is: one colour that stands for the whole
+/// picture, read from the bytes the app already has for it.
+///
+/// A band drawn behind a page's head can be painted in it before the cover
+/// itself arrives, and the cover then resolves into a colour that was already
+/// the work's own. Reading it costs one decode of sixteen pixels across, and
+/// the answer is kept for as long as something is asking for it.
+///
+/// A cover that cannot be read has no colour to give, and says so by answering
+/// null: this is a question about decoration, and the widget drawing the cover
+/// itself is where a reader is told the picture did not arrive.
+final coverColourProvider = FutureProvider.autoDispose.family<Color?, Uri>((
+  ref,
+  uri,
+) async {
+  final Uint8List bytes;
+  try {
+    bytes = await ref.watch(imageBytesProvider(uri).future);
+  } on Object catch (_) {
+    return null;
+  }
+  return MioCoverColour.of(bytes);
 });

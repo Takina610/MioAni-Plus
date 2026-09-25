@@ -39,6 +39,7 @@ class MioImage extends ConsumerWidget {
   const MioImage({
     required this.imageUrl,
     required this.semanticLabel,
+    this.previewUrl,
     this.fit = BoxFit.cover,
     this.alignment = Alignment.center,
     this.borderRadius = MioRadii.md,
@@ -47,6 +48,17 @@ class MioImage extends ConsumerWidget {
 
   final Uri? imageUrl;
   final String semanticLabel;
+
+  /// A smaller rendition of the same picture, drawn while [imageUrl] is not yet
+  /// on hand.
+  ///
+  /// A page a reader came from a list has the list's rendition of that work
+  /// already — that is the picture they tapped — so drawing it keeps the
+  /// picture on screen rather than emptying the frame the full cover is about
+  /// to fill. It is the same picture at fewer pixels, and the full cover
+  /// replaces it in place; null when the caller has no such rendition to offer.
+  final Uri? previewUrl;
+
   final BoxFit fit;
 
   /// Which part of the cover the box keeps when the two do not share a shape.
@@ -96,7 +108,8 @@ class MioImage extends ConsumerWidget {
   }) {
     // Read without watching: the bytes are the same list the pipeline handed
     // out, and the tile that has them needs nothing from the provider.
-    final held = ref.watch(imageMemoryCacheProvider).read(uri);
+    final cache = ref.watch(imageMemoryCacheProvider);
+    final held = cache.read(uri);
     if (held != null) {
       return _ImageBytes(
         bytes: held,
@@ -106,39 +119,51 @@ class MioImage extends ConsumerWidget {
         decodedWidth: decodedWidth,
       );
     }
-    return ref
-        .watch(imageBytesProvider(uri))
-        .when(
-          data: (bytes) => _ImageBytes(
-            bytes: bytes,
-            fit: fit,
-            alignment: alignment,
-            semanticLabel: semanticLabel,
-            decodedWidth: decodedWidth,
-            // The cover was read for the first time in this widget's life, so
-            // it arrives rather than appears. A cover the cache already held
-            // took the branch above and is painted outright.
-            fadeIn: true,
-          ),
-          loading: () => _ImageSkeleton(semanticLabel: semanticLabel),
-          error: (error, _) =>
-              shouldUseWebDirectImageFallback(
-                isWeb: kIsWeb,
-                uri: uri,
-                error: error,
-              )
-              ? _WebDirectImageFallback(
-                  uri: uri,
-                  fit: fit,
-                  alignment: alignment,
-                  semanticLabel: semanticLabel,
-                  decodedWidth: decodedWidth,
-                )
-              : _ImageFallback(
-                  icon: Icons.broken_image_outlined,
-                  label: '$semanticLabel：图片加载失败',
-                ),
-        );
+    final cover = ref.watch(imageBytesProvider(uri));
+    final renditionUri = previewUrl;
+    // Asked for as well, so that a cover still on its way can be drawn as the
+    // rendition the caller offered instead of as the block the rest of the app
+    // loads with.
+    final rendition = renditionUri == null
+        ? null
+        : ref.watch(imageBytesProvider(renditionUri));
+    final bytes =
+        cover.value ??
+        (renditionUri == null ? null : cache.read(renditionUri)) ??
+        rendition?.value;
+    if (bytes != null) {
+      return _ImageBytes(
+        bytes: bytes,
+        fit: fit,
+        alignment: alignment,
+        semanticLabel: semanticLabel,
+        decodedWidth: decodedWidth,
+        // A cover being read for the first time arrives rather than appears —
+        // unless a rendition stood in for it, which is the same picture already
+        // on screen and nothing a fade would announce.
+        fadeIn: renditionUri == null,
+      );
+    }
+    if (cover.hasError && (rendition == null || rendition.hasError)) {
+      final error = cover.error!;
+      return shouldUseWebDirectImageFallback(
+            isWeb: kIsWeb,
+            uri: uri,
+            error: error,
+          )
+          ? _WebDirectImageFallback(
+              uri: uri,
+              fit: fit,
+              alignment: alignment,
+              semanticLabel: semanticLabel,
+              decodedWidth: decodedWidth,
+            )
+          : _ImageFallback(
+              icon: Icons.broken_image_outlined,
+              label: '$semanticLabel：图片加载失败',
+            );
+    }
+    return _ImageSkeleton(semanticLabel: semanticLabel);
   }
 
   /// Physical width to decode at, from the box the cover is being given: the
@@ -151,43 +176,125 @@ class MioImage extends ConsumerWidget {
     if (physical <= 0) return null;
     return physical.clamp(_minimumDecodedWidth, _maximumDecodedWidth);
   }
+
+  /// Physical width to decode at for a cover drawn in a box [width] logical
+  /// pixels wide, which is what [MioImage] works out for itself from the box it
+  /// is given. A widget drawing a cover outside a box of its own — a picture
+  /// being flown between two pages, sized by the animation rather than by a
+  /// layout — asks with the widest box the cover will be seen in.
+  static int? decodeWidthFor(BuildContext context, double width) {
+    return _decodedWidth(context, BoxConstraints.tightFor(width: width));
+  }
 }
 
 /// A cover drawn as the page's own backdrop rather than as a picture of
 /// something: the same bytes as [MioImage], painted wide and quiet behind a
 /// screen's content.
 ///
-/// A backdrop is decoration, so it waits the way decoration should: nothing is
-/// painted until the bytes are on hand — the canvas behind it is already the
-/// right colour — and a cover that cannot be read leaves no mark at all. A
-/// skeleton block here would read as content that failed to arrive, and an
-/// error icon would be the only thing on the screen shouting.
-class MioImageBackdrop extends ConsumerWidget {
-  const MioImageBackdrop({required this.imageUrl, this.alignment, super.key});
+/// A backdrop is decoration, so it waits the way decoration should: while the
+/// cover is not on hand the band stands on the work's own colour, read from a
+/// rendition the app already has — the one a list drew, by way of [previewUrl] —
+/// and the cover then resolves into a colour that was already its own instead of
+/// appearing out of the page. A cover that cannot be read leaves that colour and
+/// nothing else: a skeleton block here would read as content that failed to
+/// arrive, and an error icon would be the only thing on the screen shouting.
+class MioImageBackdrop extends ConsumerStatefulWidget {
+  const MioImageBackdrop({
+    required this.imageUrl,
+    this.previewUrl,
+    this.alignment,
+    super.key,
+  });
 
   final Uri? imageUrl;
+
+  /// A rendition of the same picture already on hand elsewhere, which is what
+  /// says which colour the band stands on while the cover is on its way. Null
+  /// when the caller has no such rendition to offer, in which case the cover
+  /// itself is what the colour is read from.
+  final Uri? previewUrl;
 
   /// Which band of the cover the box keeps. Null takes the middle; a page
   /// header usually wants the top, where the cover's subject is.
   final Alignment? alignment;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final uri = imageUrl;
+  ConsumerState<MioImageBackdrop> createState() => _MioImageBackdropState();
+}
+
+class _MioImageBackdropState extends ConsumerState<MioImageBackdrop> {
+  /// Whether the cover was on hand the first time this band was drawn. A band
+  /// whose cover is already there is simply there, arriving with the page it
+  /// belongs to; one that is given its cover later is a cover arriving.
+  bool? _coverWasOnHand;
+
+  @override
+  Widget build(BuildContext context) {
+    final uri = widget.imageUrl;
     if (uri == null) return const SizedBox.shrink();
     final bytes =
         ref.watch(imageMemoryCacheProvider).read(uri) ??
         ref.watch(imageBytesProvider(uri)).value;
-    if (bytes == null) return const SizedBox.shrink();
+    _coverWasOnHand ??= bytes != null;
     return LayoutBuilder(
-      builder: (context, constraints) => Image.memory(
-        bytes,
-        fit: BoxFit.cover,
-        alignment: alignment ?? Alignment.center,
-        cacheWidth: MioImage._decodedWidth(context, constraints),
-        gaplessPlayback: true,
-        excludeFromSemantics: true,
-      ),
+      builder: (context, constraints) {
+        final art = bytes == null
+            ? null
+            : Image.memory(
+                bytes,
+                fit: BoxFit.cover,
+                alignment: widget.alignment ?? Alignment.center,
+                cacheWidth: MioImage._decodedWidth(context, constraints),
+                gaplessPlayback: true,
+                excludeFromSemantics: true,
+              );
+        return Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
+            // The work's own colour, so that a band whose art is still on its
+            // way is painted rather than being a hole where the art will go.
+            _BackdropColour(uri: widget.previewUrl ?? uri),
+            // A cover that was not there when the band was first drawn arrives
+            // over that colour, rather than appearing out of the page a whole
+            // band at a time.
+            if (art != null) _coverWasOnHand! ? art : _FadeIn(child: art),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// The colour of the cover at [uri], as the floor of the band drawn over it: the
+/// work's own colour, so that a band whose art is still on its way is painted
+/// rather than being a hole where the art will go.
+class _BackdropColour extends ConsumerWidget {
+  const _BackdropColour({required this.uri});
+
+  final Uri uri;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colour = ref.watch(coverColourProvider(uri)).value;
+    return colour == null ? const SizedBox.shrink() : ColoredBox(color: colour);
+  }
+}
+
+/// [child] arriving over whatever is already drawn, rather than appearing.
+class _FadeIn extends StatelessWidget {
+  const _FadeIn({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: MioMotion.resolve(context, MioDurations.short),
+      curve: Curves.easeOut,
+      builder: (context, opacity, child) =>
+          Opacity(opacity: opacity, child: child),
+      child: child,
     );
   }
 }
@@ -276,14 +383,7 @@ class _ImageBytes extends StatelessWidget {
       ),
     );
     if (!fadeIn) return image;
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0, end: 1),
-      duration: MioMotion.resolve(context, MioDurations.short),
-      curve: Curves.easeOut,
-      builder: (context, opacity, child) =>
-          Opacity(opacity: opacity, child: child),
-      child: image,
-    );
+    return _FadeIn(child: image);
   }
 }
 

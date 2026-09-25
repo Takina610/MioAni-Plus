@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mio_ani/src/app/routing/anime_detail_navigation.dart';
 import 'package:mio_ani/src/app/routing/app_routes.dart';
 import 'package:mio_ani/src/core/failures/app_failure.dart';
-import 'package:mio_ani/src/core/image/mio_image.dart';
+import 'package:mio_ani/src/core/image/mio_cover_flight.dart';
 import 'package:mio_ani/src/features/catalog/application/catalog_providers.dart';
 import 'package:mio_ani/src/features/catalog/domain/anime_summary.dart';
 import 'package:mio_ani/src/features/home/application/home_providers.dart';
@@ -389,6 +389,12 @@ class _HeroLouverSectionState extends ConsumerState<_HeroLouverSection>
   Widget _slide(BuildContext context, HeroLouverMetrics metrics, int index) {
     final anime = widget.hero[_indexOf(index)];
     final distance = index - _page;
+    // The picture the strip is offering, which is the one a tap on this slide
+    // sends to the detail page.
+    final cover = AnimeCoverFlight.cover(
+      anime: anime,
+      place: AnimeCoverPlace.homeHero,
+    );
     return Positioned(
       // A window is the middle of its card, so putting the window's centre on
       // the slide's slice puts the card where the strip wants it.
@@ -407,10 +413,10 @@ class _HeroLouverSectionState extends ConsumerState<_HeroLouverSection>
             radius: MioRadii.lg,
           ),
           child: _HeroCard(
-            poster: _HeroPoster(anime: anime),
+            poster: _HeroPoster(anime: anime, cover: cover),
             title: anime.title.isEmpty ? '标题暂缺' : anime.title,
             focus: metrics.focusFor(distance),
-            onTap: () => openAnimeDetail(context, ref, anime),
+            onTap: () => openAnimeDetail(context, ref, anime, cover: cover),
           ),
         ),
       ),
@@ -421,9 +427,13 @@ class _HeroLouverSectionState extends ConsumerState<_HeroLouverSection>
 /// Poster art and scrim of a hero card, drawn at the full card size the way the
 /// reference carousel composes every item.
 class _HeroPoster extends StatelessWidget {
-  const _HeroPoster({required this.anime});
+  const _HeroPoster({required this.anime, required this.cover});
 
   final AnimeSummary anime;
+
+  /// The work's picture as this strip is showing it, which is also the picture
+  /// a tap on this slide flies to the detail page.
+  final AnimeCoverFlight cover;
 
   /// Scrim of the reference carousel: the art stays clean down to the middle,
   /// then darkens under the title.
@@ -435,11 +445,7 @@ class _HeroPoster extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: <Widget>[
-        MioImage(
-          imageUrl: anime.imageUrl,
-          semanticLabel: '$title 海报',
-          borderRadius: MioRadii.lg,
-        ),
+        AnimeCoverSource(flight: cover, semanticLabel: '$title 海报'),
         const DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -599,6 +605,11 @@ class _PosterGrid extends StatelessWidget {
   /// Rows of poster blocks a waiting grid stands for.
   static const int _skeletonRows = 2;
 
+  /// Where this grid's tiles stand. The feed below it draws the same tiles, and
+  /// the two can be showing one work at once, so a tap has to say which of them
+  /// the reader was looking at — see [AnimeCoverPlace].
+  static const String _place = AnimeCoverPlace.homeSeason;
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -614,7 +625,11 @@ class _PosterGrid extends StatelessWidget {
           gridDelegate: metrics.delegate,
           itemCount: items.length + placeholderCount,
           itemBuilder: (context, index) => index < items.length
-              ? _PosterCard(anime: items[index], metrics: metrics)
+              ? _PosterCard(
+                  anime: items[index],
+                  metrics: metrics,
+                  place: _place,
+                )
               : _PosterPlaceholder(metrics: metrics),
         );
       },
@@ -720,10 +735,17 @@ final class _PosterGridMetrics {
 }
 
 class _PosterCard extends ConsumerWidget {
-  const _PosterCard({required this.anime, required this.metrics});
+  const _PosterCard({
+    required this.anime,
+    required this.metrics,
+    required this.place,
+  });
 
   final AnimeSummary anime;
   final _PosterGridMetrics metrics;
+
+  /// Where the tile is standing, which is half of what its tag says.
+  final String place;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -732,11 +754,15 @@ class _PosterCard extends ConsumerWidget {
       if (anime.score case final score?) '★ ${score.toStringAsFixed(1)}',
       anime.sourceLabel,
     ].join(' · ');
+    // The tile, not the hero: the picture a list draws is the rendition the
+    // source publishes for lists, and it is the one a tap sends to the detail
+    // page's poster.
+    final cover = AnimeCoverFlight.tile(anime: anime, place: place);
     return Semantics(
       button: true,
       label: '查看 $title 详情',
       child: InkWell(
-        onTap: () => openAnimeDetail(context, ref, anime),
+        onTap: () => openAnimeDetail(context, ref, anime, cover: cover),
         borderRadius: BorderRadius.circular(MioRadii.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -747,10 +773,8 @@ class _PosterCard extends ConsumerWidget {
             Expanded(
               child: SizedBox(
                 width: double.infinity,
-                child: MioImage(
-                  // The tile, not the hero: the list rendition if the source
-                  // publishes one.
-                  imageUrl: anime.thumbnailUrl ?? anime.imageUrl,
+                child: AnimeCoverSource(
+                  flight: cover,
                   semanticLabel: '$title 海报',
                 ),
               ),
@@ -946,7 +970,11 @@ class _ExploreSectionState extends ConsumerState<_ExploreSection> {
               gridDelegate: metrics.delegate,
               delegate: SliverChildBuilderDelegate(
                 (context, index) => index < state.items.length
-                    ? _PosterCard(anime: state.items[index], metrics: metrics)
+                    ? _PosterCard(
+                        anime: state.items[index],
+                        metrics: metrics,
+                        place: AnimeCoverPlace.homeExplore,
+                      )
                     : _PosterPlaceholder(metrics: metrics),
                 childCount: state.items.length + pending,
               ),

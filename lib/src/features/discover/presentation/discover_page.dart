@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mio_ani/src/app/routing/anime_detail_navigation.dart';
 import 'package:mio_ani/src/core/failures/app_failure.dart';
-import 'package:mio_ani/src/core/image/mio_image.dart';
+import 'package:mio_ani/src/core/image/mio_cover_flight.dart';
 import 'package:mio_ani/src/features/catalog/domain/anime_summary.dart';
 import 'package:mio_ani/src/features/discover/application/discover_providers.dart';
 import 'package:mio_ani/src/features/discover/domain/discover_query.dart';
@@ -551,11 +551,18 @@ class _AnimeCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // The result's picture, and the one a tap sends to the detail page's
+    // poster. The discover page is a list of its own, so its cards carry their
+    // own place in the tag even for a work the home page is showing too.
+    final cover = AnimeCoverFlight.tile(
+      anime: anime,
+      place: AnimeCoverPlace.discover,
+    );
     return Semantics(
       button: true,
       label: anime.title,
       child: InkWell(
-        onTap: () => openAnimeDetail(context, ref, anime),
+        onTap: () => openAnimeDetail(context, ref, anime, cover: cover),
         borderRadius: BorderRadius.circular(MioRadii.md),
         child: Card(
           clipBehavior: Clip.antiAlias,
@@ -567,8 +574,8 @@ class _AnimeCard extends ConsumerWidget {
               Expanded(
                 child: SizedBox(
                   width: double.infinity,
-                  child: MioImage(
-                    imageUrl: anime.thumbnailUrl ?? anime.imageUrl,
+                  child: AnimeCoverSource(
+                    flight: cover,
                     semanticLabel: anime.title,
                   ),
                 ),
