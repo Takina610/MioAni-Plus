@@ -1,17 +1,22 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mio_ani/src/app/routing/anime_detail_navigation.dart';
 import 'package:mio_ani/src/app/routing/app_routes.dart';
 import 'package:mio_ani/src/core/failures/app_failure.dart';
 import 'package:mio_ani/src/core/image/mio_image.dart';
 import 'package:mio_ani/src/features/catalog/application/catalog_providers.dart';
 import 'package:mio_ani/src/features/catalog/domain/anime_summary.dart';
 import 'package:mio_ani/src/features/home/application/home_providers.dart';
+import 'package:mio_ani/src/features/home/domain/home_explore.dart';
 import 'package:mio_ani/src/features/home/domain/home_snapshot.dart';
 import 'package:mio_ani/src/features/home/presentation/hero_louver.dart';
 import 'package:mio_ani/src/features/home/presentation/hero_prefetch.dart';
 import 'package:mio_ani/src/shared/design_system/mio_breakpoints.dart';
+import 'package:mio_ani/src/shared/design_system/mio_motion.dart';
+import 'package:mio_ani/src/shared/design_system/mio_placeholder.dart';
 import 'package:mio_ani/src/shared/design_system/mio_state_view.dart';
 import 'package:mio_ani/src/shared/design_system/mio_tokens.dart';
 
@@ -26,21 +31,18 @@ class HomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final snapshot = ref.watch(homeControllerProvider);
     return Scaffold(
+      // The brand backdrop belongs to the shell, behind every branch.
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
-            ref.read(homeControllerProvider.notifier).refresh();
+            _requestRefresh(ref);
             await ref.read(homeStreamProvider.future);
           },
           child: CustomScrollView(
             key: pageStorageKey,
             slivers: <Widget>[
-              SliverToBoxAdapter(
-                child: _HomeHeader(
-                  snapshot: snapshot,
-                  onRetry: () => _requestRefresh(ref),
-                ),
-              ),
+              const SliverToBoxAdapter(child: _HomeHeader()),
               if (snapshot.catalog.value?.hero case final hero?
                   when hero.isNotEmpty)
                 SliverToBoxAdapter(
@@ -55,6 +57,7 @@ class HomePage extends ConsumerWidget {
                   onRetry: () => _requestRefresh(ref),
                 ),
               ),
+              const _ExploreSection(),
               const SliverToBoxAdapter(child: SizedBox(height: MioSpacing.xl)),
             ],
           ),
@@ -63,16 +66,23 @@ class HomePage extends ConsumerWidget {
     );
   }
 
+  /// A pull on the page is one gesture from the user, so everything on it is
+  /// read again: the season grid, the explore ranking behind it, and the
+  /// posters themselves.
   void _requestRefresh(WidgetRef ref) {
     ref.read(homeControllerProvider.notifier).refresh();
+    ref.read(homeExploreControllerProvider.notifier).refresh();
+    // A cover whose download failed is only asked for again when its tile is
+    // built afresh, which a reader has no way to do from here. Dropping the
+    // image providers re-reads every poster on screen: one this run has already
+    // read is answered from the in-memory covers, so this costs a frame and not
+    // a download, and it is the only way a failed cover gets another try.
+    ref.invalidate(imageBytesProvider);
   }
 }
 
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({required this.snapshot, required this.onRetry});
-
-  final HomeSnapshot snapshot;
-  final VoidCallback onRetry;
+  const _HomeHeader();
 
   @override
   Widget build(BuildContext context) {
@@ -102,42 +112,9 @@ class _HomeHeader extends StatelessWidget {
           ),
           const SizedBox(height: MioSpacing.xs),
           Text('本季动画与放送日程', style: Theme.of(context).textTheme.bodyLarge),
-          if (_staleBanners(context).isNotEmpty) ...<Widget>[
-            const SizedBox(height: MioSpacing.md),
-            for (final banner in _staleBanners(context)) banner,
-          ],
         ],
       ),
     );
-  }
-
-  List<Widget> _staleBanners(BuildContext context) {
-    final banners = <Widget>[];
-    void add<T>(HomeSection<T> section) {
-      if (!section.isStale) return;
-      final failure = section.refreshFailure;
-      final message = failure == null
-          ? '正在更新缓存内容…'
-          : '当前显示离线缓存，内容更新时间：${_formatTime(section.fetchedAt)}';
-      banners.add(
-        _InlineNotice(
-          message: message,
-          onRetry: failure == null ? null : onRetry,
-        ),
-      );
-    }
-
-    add(snapshot.catalog);
-    return banners;
-  }
-
-  String _formatTime(DateTime? value) {
-    if (value == null) return '未知';
-    final local = value.toLocal();
-    return '${local.year}-${local.month.toString().padLeft(2, '0')}-'
-        '${local.day.toString().padLeft(2, '0')} '
-        '${local.hour.toString().padLeft(2, '0')}:'
-        '${local.minute.toString().padLeft(2, '0')}';
   }
 }
 
@@ -179,7 +156,7 @@ class _InlineNotice extends StatelessWidget {
             child: Text(message, style: Theme.of(context).textTheme.bodyMedium),
           ),
           if (onRetry != null)
-            TextButton(onPressed: onRetry, child: const Text('重试更新')),
+            TextButton(onPressed: onRetry, child: const Text('重试')),
         ],
       ),
     );
@@ -198,26 +175,34 @@ class _HeroLouverSection extends ConsumerStatefulWidget {
   ConsumerState<_HeroLouverSection> createState() => _HeroLouverSectionState();
 }
 
-class _HeroLouverSectionState extends ConsumerState<_HeroLouverSection> {
+class _HeroLouverSectionState extends ConsumerState<_HeroLouverSection>
+    with SingleTickerProviderStateMixin {
   /// Dwell between two slides, as in the reference carousel. It is measured
   /// from the end of the last scroll, so a swipe never cuts the next one short.
   static const Duration _autoAdvance = Duration(seconds: 3);
 
-  /// Heroes live inside a long looping page list: every position then keeps a
-  /// slat on both sides, and auto-advance walks forward instead of rewinding
-  /// across the whole strip on wrap-around.
-  static const int _loopOrigin = 1000;
+  /// Slides per second a flick has to carry to count as one the user meant,
+  /// rather than a nudge that settles back where it started.
+  static const double _decisiveFlick = 2;
+
+  /// Slides the strip keeps laid out around the centred one. Two each way
+  /// covers the widest reach of a slide that is still on the strip.
+  static const int _laidOutAround = 2;
 
   final HeroImagePrefetcher _prefetcher = HeroImagePrefetcher();
   final FocusNode _focusNode = FocusNode();
-  PageController _controller = PageController();
-  double? _controllerFraction;
+  late final AnimationController _settle = AnimationController.unbounded(
+    vsync: this,
+  );
   Timer? _timer;
+  double _page = 0;
+  HeroLouverMetrics? _metrics;
   int _current = 0;
 
   @override
   void initState() {
     super.initState();
+    _settle.addListener(_followSettle);
     _focusNode.addListener(_restartAutoAdvance);
     _prefetch();
   }
@@ -233,8 +218,12 @@ class _HeroLouverSectionState extends ConsumerState<_HeroLouverSection> {
   void dispose() {
     _timer?.cancel();
     _prefetcher.clear();
+    // The section can be torn down mid-slide, when the branch changes or the
+    // snapshot goes away. Stopping first cancels the settle's future, so it
+    // cannot come back to arm a dwell on a section that is gone.
+    _settle.stop();
+    _settle.dispose();
     _focusNode.dispose();
-    _controller.dispose();
     super.dispose();
   }
 
@@ -255,8 +244,8 @@ class _HeroLouverSectionState extends ConsumerState<_HeroLouverSection> {
     _timer = Timer(_autoAdvance, _advanceIfDue);
   }
 
-  /// Holds the louver still while it is moving, whether under a finger or in
-  /// the previous advance, the way the reference carousel does.
+  /// Holds the louver still while it is moving, the way the reference carousel
+  /// does: no dwell runs while a finger is down or a slide is still settling.
   void _pauseAutoAdvance() {
     _timer?.cancel();
     _timer = null;
@@ -264,28 +253,73 @@ class _HeroLouverSectionState extends ConsumerState<_HeroLouverSection> {
 
   void _advanceIfDue() {
     if (!mounted || !_shouldAutoPlay) return;
-    _advance();
+    _settleOn(_roundedPage + 1);
   }
 
-  void _advance() {
-    final page = _controller.page;
-    if (page == null) return;
-    unawaited(
-      _controller.animateToPage(
-        page.round() + 1,
-        duration: MioDurations.long,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+  /// Carries the strip to [target], a whole slide, and arms the next dwell once
+  /// it gets there.
+  ///
+  /// The animation runs on the strip's own position, so a settle that starts
+  /// from a half-dragged strip carries on from there rather than from wherever
+  /// the last one left off.
+  void _settleOn(int target) {
+    _settle.value = _page;
+    _settle
+        .animateTo(
+          target.toDouble(),
+          duration: MioMotion.resolve(context, MioDurations.long),
+          curve: Curves.easeOutCubic,
+        )
+        .whenComplete(() {
+          if (mounted) _restartAutoAdvance();
+        });
   }
 
-  bool _onScroll(ScrollNotification notification) {
-    if (notification is ScrollStartNotification) {
-      _pauseAutoAdvance();
-    } else if (notification is ScrollEndNotification) {
-      _restartAutoAdvance();
+  /// Draws every frame of the settle, so the strip slides rather than jumps.
+  void _followSettle() {
+    if (!mounted) return;
+    _moveTo(_settle.value);
+  }
+
+  void _moveTo(double page) {
+    final previous = _roundedPage;
+    setState(() => _page = page);
+    if (_roundedPage != previous) {
+      _current = _indexOf(_roundedPage);
+      _prefetch();
     }
-    return false;
+  }
+
+  int get _roundedPage => _page.round();
+
+  int _indexOf(int page) {
+    final length = widget.hero.length;
+    return ((page % length) + length) % length;
+  }
+
+  void _startDrag(DragStartDetails details) {
+    _pauseAutoAdvance();
+    _settle.stop();
+  }
+
+  void _dragBy(DragUpdateDetails details) {
+    final metrics = _metrics;
+    if (metrics == null) return;
+    _moveTo(_page - details.delta.dx / metrics.sliceSpacing);
+  }
+
+  /// Settles on whichever slide the strip is closest to once the finger lifts.
+  /// A flick decisive enough to mean it carries the strip half a slide further
+  /// before the rounding, so it always lands one on and never skips one.
+  void _endDrag(DragEndDetails details) {
+    final metrics = _metrics;
+    if (metrics == null) return;
+    final slidesPerSecond =
+        -details.velocity.pixelsPerSecond.dx / metrics.sliceSpacing;
+    final carried = slidesPerSecond.abs() >= _decisiveFlick
+        ? slidesPerSecond.sign * 0.5
+        : 0.0;
+    _settleOn((_page + carried).round());
   }
 
   void _prefetch() {
@@ -296,128 +330,90 @@ class _HeroLouverSectionState extends ConsumerState<_HeroLouverSection> {
     );
   }
 
-  /// The page slot follows the width the section actually receives, so the
-  /// controller is replaced whenever that width turns into another slot
-  /// fraction. The retired controller is still attached to the PageView of the
-  /// frame being built, so it is released once that frame is done.
-  PageController _controllerFor(HeroLouverMetrics metrics) {
-    if (_controllerFraction == metrics.viewportFraction) return _controller;
-    final previous = _controller;
-    final page = previous.hasClients ? previous.page : null;
-    _controller = PageController(
-      initialPage: page?.round() ?? widget.hero.length * _loopOrigin,
-      viewportFraction: metrics.viewportFraction,
-    );
-    _controllerFraction = metrics.viewportFraction;
-    WidgetsBinding.instance.addPostFrameCallback((_) => previous.dispose());
-    return _controller;
-  }
-
   @override
   Widget build(BuildContext context) {
     if (widget.status == HomeSectionStatus.failed) {
       return const SizedBox.shrink();
     }
+    // No bottom gap of its own: the heading below carries the section break, so
+    // the hero, the season grid and the explore feed all break at one line.
     return Padding(
-      padding: const EdgeInsets.only(bottom: MioSpacing.xl),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: MioSpacing.lg),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final metrics = HeroLouverMetrics.forWidth(constraints.maxWidth);
-            final controller = _controllerFor(metrics);
-            return Focus(
-              focusNode: _focusNode,
-              child: Center(
-                child: SizedBox(
-                  width: metrics.pageWidth,
-                  height: metrics.cardHeight,
-                  child: NotificationListener<ScrollNotification>(
-                    onNotification: _onScroll,
-                    child: PageView.builder(
-                      controller: controller,
-                      itemCount: widget.hero.length == 1 ? 1 : null,
-                      onPageChanged: (index) {
-                        setState(() => _current = index % widget.hero.length);
-                        _prefetch();
-                      },
-                      itemBuilder: (context, index) {
-                        final anime = widget.hero[index % widget.hero.length];
-                        return _HeroSlide(
-                          anime: anime,
-                          index: index,
-                          controller: controller,
-                          metrics: metrics,
-                          onTap: () {
-                            unawaited(
-                              AnimeDetailRouteData(
-                                id: anime.id.value,
-                              ).push<void>(context),
-                            );
-                          },
-                        );
-                      },
+      padding: const EdgeInsets.symmetric(horizontal: MioSpacing.lg),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final metrics = HeroLouverMetrics.forWidth(constraints.maxWidth);
+          // The drag handlers need the strip's own measurements, so the strip
+          // leaves them here rather than measuring itself again.
+          _metrics = metrics;
+          return Focus(
+            focusNode: _focusNode,
+            child: Center(
+              child: Semantics(
+                onScrollLeft: () => _settleOn(_roundedPage - 1),
+                onScrollRight: () => _settleOn(_roundedPage + 1),
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onHorizontalDragStart: _startDrag,
+                  onHorizontalDragUpdate: _dragBy,
+                  onHorizontalDragEnd: _endDrag,
+                  child: SizedBox(
+                    key: heroStripKey,
+                    width: metrics.pageWidth,
+                    height: metrics.cardHeight,
+                    child: Stack(
+                      children: <Widget>[
+                        for (final index in _laidOutSlides)
+                          _slide(context, metrics, index),
+                      ],
                     ),
                   ),
                 ),
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
-}
 
-class _HeroSlide extends StatelessWidget {
-  const _HeroSlide({
-    required this.anime,
-    required this.index,
-    required this.controller,
-    required this.metrics,
-    required this.onTap,
-  });
+  /// The slides the strip keeps on it: the centred one, and [_laidOutAround]
+  /// each way, so a slide that has been pushed aside is still laid out and can
+  /// be drawn for as long as any part of it is on the strip.
+  Iterable<int> get _laidOutSlides sync* {
+    final centre = _roundedPage;
+    for (var offset = -_laidOutAround; offset <= _laidOutAround; offset += 1) {
+      yield centre + offset;
+    }
+  }
 
-  final AnimeSummary anime;
-  final int index;
-  final PageController controller;
-  final HeroLouverMetrics metrics;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final title = anime.title.isEmpty ? '标题暂缺' : anime.title;
-    // Rebuilt on every scroll frame of the strip, so the poster art is handed
-    // over as the cached child: only the window, the position and the title
-    // follow the drag.
-    return AnimatedBuilder(
-      animation: controller,
-      child: _HeroPoster(anime: anime),
-      builder: (context, poster) {
-        final distance =
-            index - (controller.page ?? controller.initialPage.toDouble());
-        return Transform.translate(
-          offset: Offset(metrics.slotOffsetFor(distance), 0),
-          child: Center(
-            child: SizedBox(
-              width: metrics.cardWidth,
-              height: metrics.cardHeight,
-              child: ClipRRect(
-                clipper: HeroWindowClipper(
-                  windowWidth: metrics.windowWidthFor(distance),
-                  radius: MioRadii.lg,
-                ),
-                child: _HeroCard(
-                  poster: poster!,
-                  title: title,
-                  focus: metrics.focusFor(distance),
-                  onTap: onTap,
-                ),
-              ),
-            ),
+  Widget _slide(BuildContext context, HeroLouverMetrics metrics, int index) {
+    final anime = widget.hero[_indexOf(index)];
+    final distance = index - _page;
+    return Positioned(
+      // A window is the middle of its card, so putting the window's centre on
+      // the slide's slice puts the card where the strip wants it.
+      left: metrics.windowCenterFor(distance) - metrics.cardWidth / 2,
+      top: 0,
+      width: metrics.cardWidth,
+      height: metrics.cardHeight,
+      child: ExcludeSemantics(
+        // Only slides still showing a slat are on offer; one the strip has
+        // pushed clear of itself is decoration and not for assistive
+        // technology to reach.
+        excluding: metrics.focusFor(distance) == 0,
+        child: ClipRRect(
+          clipper: HeroWindowClipper(
+            windowWidth: metrics.windowWidthFor(distance),
+            radius: MioRadii.lg,
           ),
-        );
-      },
+          child: _HeroCard(
+            poster: _HeroPoster(anime: anime),
+            title: anime.title.isEmpty ? '标题暂缺' : anime.title,
+            focus: metrics.focusFor(distance),
+            onTap: () => openAnimeDetail(context, ref, anime),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -523,21 +519,64 @@ class _CatalogSections extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _PartitionBody<HomeCatalogContent>(
-      section: snapshot.catalog,
-      onRetry: onRetry,
-      builder: (context, content) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            const _SectionHeader(title: '本季推荐', subtitle: '按追番热度排序'),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: MioSpacing.lg),
-              child: _PosterGrid(items: content.trending),
-            ),
-          ],
-        );
-      },
+    return switch (snapshot.catalog.status) {
+      // The season grid says what it is before it has anything to show: the
+      // heading is already known, and the tiles are the shape the posters will
+      // take, so the page is a page from the first frame rather than a spinner
+      // and then a jump.
+      HomeSectionStatus.loading => const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          _SectionHeader(title: '本季推荐', subtitle: '按追番热度排序'),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: MioSpacing.lg),
+            child: _PosterGrid.loading(),
+          ),
+        ],
+      ),
+      HomeSectionStatus.failed => Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: MioSpacing.lg,
+          vertical: MioSpacing.xl,
+        ),
+        child: MioStateView.failure(
+          failure: snapshot.catalog.failure ?? const UnknownFailure(),
+          onRetry: onRetry,
+        ),
+      ),
+      HomeSectionStatus.ready => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const _SectionHeader(title: '本季推荐', subtitle: '按追番热度排序'),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: MioSpacing.lg),
+            child: switch ((snapshot.catalog.value as HomeCatalogContent)
+                .trending) {
+              // A season with nothing in it is not a season still being read:
+              // it says so rather than standing empty tiles up forever.
+              final trending when trending.isEmpty => const _SectionEmpty(
+                message: '本季暂无可推荐的作品',
+              ),
+              final trending => _PosterGrid(items: trending),
+            },
+          ),
+        ],
+      ),
+    };
+  }
+}
+
+/// One quiet line where a section would have had its content.
+class _SectionEmpty extends StatelessWidget {
+  const _SectionEmpty({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: MioSpacing.lg),
+      child: Text(message, style: Theme.of(context).textTheme.bodyMedium),
     );
   }
 }
@@ -545,79 +584,124 @@ class _CatalogSections extends StatelessWidget {
 /// Portrait poster grid: three posters per row on phones, denser on wider
 /// windows, the way season posters are published.
 ///
+/// A grid that is still being read draws [_skeletonRows] rows of poster-shaped
+/// blocks instead, which is how a section keeps the page's layout while its
+/// content is on the way.
+class _PosterGrid extends StatelessWidget {
+  const _PosterGrid({required this.items}) : loading = false;
+
+  /// The grid of a section whose posters have not arrived.
+  const _PosterGrid.loading() : items = const <AnimeSummary>[], loading = true;
+
+  final List<AnimeSummary> items;
+  final bool loading;
+
+  /// Rows of poster blocks a waiting grid stands for.
+  static const int _skeletonRows = 2;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final metrics = _PosterGridMetrics.of(context, constraints.maxWidth);
+        final placeholderCount = loading
+            ? metrics.delegate.crossAxisCount * _skeletonRows
+            : 0;
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
+          gridDelegate: metrics.delegate,
+          itemCount: items.length + placeholderCount,
+          itemBuilder: (context, index) => index < items.length
+              ? _PosterCard(anime: items[index], metrics: metrics)
+              : _PosterPlaceholder(metrics: metrics),
+        );
+      },
+    );
+  }
+}
+
+/// Geometry of one poster tile, shared by the season grid and the explore grid
+/// so both sections lay their posters out identically.
+///
 /// Every tile reserves the same poster height and the same text height, so a
 /// row reads as one band: the poster is never squeezed by a longer neighbour
 /// title, and the row is as tall as its tallest card.
-class _PosterGrid extends StatelessWidget {
-  const _PosterGrid({required this.items});
-
-  final List<AnimeSummary> items;
+final class _PosterGridMetrics {
+  const _PosterGridMetrics({
+    required this.posterHeight,
+    required this.titleBlock,
+    required this.metaBlock,
+    required this.delegate,
+  });
 
   /// Poster art is published in portrait, unlike the hero slats.
   static const double _posterAspectRatio = 2 / 3;
 
   /// Title and meta lines reserved on every tile, whatever the title length.
-  static const int _titleLines = 2;
-  static const int _metaLines = 1;
+  static const int titleLines = 2;
+  static const int metaLines = 1;
 
-  @override
-  Widget build(BuildContext context) {
+  /// Narrowest width the tiles are ever measured against: three of the
+  /// smallest compact tiles and the gaps between them.
+  static const double _minimumGridWidth =
+      3 * _minimumTileWidth + 2 * MioSpacing.md;
+  static const double _minimumTileWidth = 64;
+
+  /// Resolves the geometry for a grid [maxWidth] wide, which is the width the
+  /// tiles get — callers pass the width left inside the page padding.
+  factory _PosterGridMetrics.of(BuildContext context, double maxWidth) {
+    // A grid can be asked to lay out before the window it is in has a size —
+    // the first frame of a cold start, a window being dragged narrow. A tile
+    // cannot be divided out of nothing, and a negative tile would assert inside
+    // the text measurement below, so the geometry is resolved against a floor.
+    // Whatever is drawn in that state is off screen anyway.
+    final width = math.max(maxWidth, _minimumGridWidth);
     final textScaler = MediaQuery.textScalerOf(context);
-    final titleStyle = Theme.of(context).textTheme.titleMedium;
-    final metaStyle = Theme.of(context).textTheme.bodySmall;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = switch (MioBreakpoints.windowClassFor(
-          constraints.maxWidth,
-        )) {
-          MioWindowClass.compact => 3,
-          MioWindowClass.medium => 4,
-          MioWindowClass.expanded => 6,
-        };
-        final tileWidth =
-            (constraints.maxWidth - (columns - 1) * MioSpacing.md) / columns;
-        // Measured against the tile width, so the reserved blocks match the
-        // painted text at every text scale and never overflow the tile.
-        final titleBlock = _textBlockHeight(
-          textScaler: textScaler,
-          style: titleStyle,
-          lines: _titleLines,
-          maxWidth: tileWidth,
-        );
-        final metaBlock = _textBlockHeight(
-          textScaler: textScaler,
-          style: metaStyle,
-          lines: _metaLines,
-          maxWidth: tileWidth,
-        );
-        final posterHeight = tileWidth / _posterAspectRatio;
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.zero,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: columns,
-            mainAxisSpacing: MioSpacing.md,
-            crossAxisSpacing: MioSpacing.md,
-            mainAxisExtent:
-                posterHeight +
-                MioSpacing.xs +
-                titleBlock +
-                MioSpacing.xxs +
-                metaBlock,
-          ),
-          itemCount: items.length,
-          itemBuilder: (context, index) => _PosterCard(
-            anime: items[index],
-            posterHeight: posterHeight,
-            titleBlock: titleBlock,
-            metaBlock: metaBlock,
-          ),
-        );
-      },
+    final columns = switch (MioBreakpoints.windowClassFor(width)) {
+      MioWindowClass.compact => 3,
+      MioWindowClass.medium => 4,
+      MioWindowClass.expanded => 6,
+    };
+    final tileWidth = (width - (columns - 1) * MioSpacing.md) / columns;
+    // Measured against the tile width, so the reserved blocks match the
+    // painted text at every text scale and never overflow the tile.
+    final titleBlock = _textBlockHeight(
+      textScaler: textScaler,
+      style: Theme.of(context).textTheme.titleMedium,
+      lines: titleLines,
+      maxWidth: tileWidth,
+    );
+    final metaBlock = _textBlockHeight(
+      textScaler: textScaler,
+      style: Theme.of(context).textTheme.bodySmall,
+      lines: metaLines,
+      maxWidth: tileWidth,
+    );
+    final posterHeight = tileWidth / _posterAspectRatio;
+    return _PosterGridMetrics(
+      posterHeight: posterHeight,
+      titleBlock: titleBlock,
+      metaBlock: metaBlock,
+      delegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: columns,
+        mainAxisSpacing: MioSpacing.md,
+        crossAxisSpacing: MioSpacing.md,
+        mainAxisExtent:
+            posterHeight +
+            MioSpacing.xs +
+            titleBlock +
+            MioSpacing.xxs +
+            metaBlock,
+      ),
     );
   }
+
+  final double posterHeight;
+  final double titleBlock;
+  final double metaBlock;
+  final SliverGridDelegateWithFixedCrossAxisCount delegate;
 
   static double _textBlockHeight({
     required TextScaler textScaler,
@@ -635,21 +719,14 @@ class _PosterGrid extends StatelessWidget {
   }
 }
 
-class _PosterCard extends StatelessWidget {
-  const _PosterCard({
-    required this.anime,
-    required this.posterHeight,
-    required this.titleBlock,
-    required this.metaBlock,
-  });
+class _PosterCard extends ConsumerWidget {
+  const _PosterCard({required this.anime, required this.metrics});
 
   final AnimeSummary anime;
-  final double posterHeight;
-  final double titleBlock;
-  final double metaBlock;
+  final _PosterGridMetrics metrics;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final title = anime.title.isEmpty ? '标题暂缺' : anime.title;
     final meta = <String>[
       if (anime.score case final score?) '★ ${score.toStringAsFixed(1)}',
@@ -659,11 +736,7 @@ class _PosterCard extends StatelessWidget {
       button: true,
       label: '查看 $title 详情',
       child: InkWell(
-        onTap: () {
-          unawaited(
-            AnimeDetailRouteData(id: anime.id.value).push<void>(context),
-          );
-        },
+        onTap: () => openAnimeDetail(context, ref, anime),
         borderRadius: BorderRadius.circular(MioRadii.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -675,27 +748,29 @@ class _PosterCard extends StatelessWidget {
               child: SizedBox(
                 width: double.infinity,
                 child: MioImage(
-                  imageUrl: anime.imageUrl,
+                  // The tile, not the hero: the list rendition if the source
+                  // publishes one.
+                  imageUrl: anime.thumbnailUrl ?? anime.imageUrl,
                   semanticLabel: '$title 海报',
                 ),
               ),
             ),
             const SizedBox(height: MioSpacing.xs),
             SizedBox(
-              height: titleBlock,
+              height: metrics.titleBlock,
               child: Text(
                 title,
-                maxLines: _PosterGrid._titleLines,
+                maxLines: _PosterGridMetrics.titleLines,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
             const SizedBox(height: MioSpacing.xxs),
             SizedBox(
-              height: metaBlock,
+              height: metrics.metaBlock,
               child: Text(
                 meta,
-                maxLines: _PosterGrid._metaLines,
+                maxLines: _PosterGridMetrics.metaLines,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
@@ -707,42 +782,262 @@ class _PosterCard extends StatelessWidget {
   }
 }
 
-class _PartitionBody<T> extends StatelessWidget {
-  const _PartitionBody({
-    required this.section,
-    required this.onRetry,
-    required this.builder,
-  });
+/// A tile of the season grid before its poster is known: the same poster box
+/// and the same reserved lines, so the grid does not move when the real titles
+/// land in it.
+class _PosterPlaceholder extends StatelessWidget {
+  const _PosterPlaceholder({required this.metrics});
 
-  final HomeSection<T> section;
-  final VoidCallback onRetry;
-  final Widget Function(BuildContext context, T value) builder;
+  final _PosterGridMetrics metrics;
 
   @override
   Widget build(BuildContext context) {
-    return switch (section.status) {
-      HomeSectionStatus.loading => Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: MioSpacing.lg,
-          vertical: MioSpacing.xl,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Expanded(
+          child: SizedBox(
+            width: double.infinity,
+            child: MioPlaceholder(height: metrics.posterHeight),
+          ),
         ),
-        child: const Center(child: CircularProgressIndicator()),
-      ),
-      HomeSectionStatus.failed => Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: MioSpacing.lg,
-          vertical: MioSpacing.xl,
+        const SizedBox(height: MioSpacing.xs),
+        SizedBox(
+          height: metrics.titleBlock,
+          child: const MioPlaceholder(
+            width: double.infinity,
+            radius: MioRadii.sm,
+          ),
         ),
-        child: MioStateView.failure(
-          failure: section.failure ?? const UnknownFailure(),
-          onRetry: onRetry,
+        const SizedBox(height: MioSpacing.xxs),
+        SizedBox(
+          height: metrics.metaBlock,
+          child: const MioPlaceholder(width: 64, radius: MioRadii.sm),
         ),
-      ),
-      HomeSectionStatus.ready => builder(context, section.value as T),
-    };
+      ],
+    );
   }
 }
 
+/// The explore feed: the source-wide popularity ranking, pulled in one page at
+/// a time as the reader reaches the end of what is loaded.
+///
+/// The section names itself in every state. It sits far below the season grid,
+/// so a bare spinner or failure block down there would leave the reader
+/// guessing which part of the page it belongs to.
+///
+/// It is also where the feed is grown, because it is the only part of the page
+/// that knows both the ranking's state and how far the page has been scrolled:
+/// the page's own [ScrollPosition] is the nearest one above this sliver, so a
+/// measurement taken here is about the home page and not about the grids
+/// nested inside it.
+class _ExploreSection extends ConsumerStatefulWidget {
+  const _ExploreSection();
+
+  @override
+  ConsumerState<_ExploreSection> createState() => _ExploreSectionState();
+}
+
+class _ExploreSectionState extends ConsumerState<_ExploreSection> {
+  ScrollPosition? _position;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final position = Scrollable.of(context).position;
+    if (identical(position, _position)) return;
+    _position?.removeListener(_readOnIfAtEnd);
+    _position = position..addListener(_readOnIfAtEnd);
+  }
+
+  @override
+  void dispose() {
+    _position?.removeListener(_readOnIfAtEnd);
+    super.dispose();
+  }
+
+  /// Asks for the next page once the reader is within a viewport of the end of
+  /// what is loaded.
+  ///
+  /// A scroll moves the position and calls this; content that only *grew*
+  /// leaves the position still, which is why every build checks again after the
+  /// frame — that is how a feed shorter than the viewport fills it without
+  /// anyone scrolling. The check is a measurement either way. The feed used to
+  /// be grown from its own tail instead, which is built whether or not it is on
+  /// screen: the whole ranking, and every cover in it, arrived in one burst on
+  /// the first frame.
+  ///
+  /// A page that failed is left alone here: it waits for the retry button, so
+  /// scrolling past it cannot turn into a request storm.
+  void _readOnIfAtEnd() {
+    final position = _position;
+    if (position == null || !position.hasContentDimensions) return;
+    if (position.extentAfter > position.viewportDimension) return;
+    final state = ref.read(homeExploreControllerProvider);
+    if (!state.hasMore ||
+        state.isLoadingMore ||
+        state.loadMoreFailure != null) {
+      return;
+    }
+    ref.read(homeExploreControllerProvider.notifier).loadMore();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(homeExploreControllerProvider);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _readOnIfAtEnd();
+    });
+    return SliverMainAxisGroup(
+      slivers: <Widget>[
+        const SliverToBoxAdapter(
+          child: _SectionHeader(title: '探索', subtitle: '全站热度排行，下滑继续'),
+        ),
+        ..._body(ref, state),
+      ],
+    );
+  }
+
+  List<Widget> _body(WidgetRef ref, HomeExploreState state) {
+    if (state.isLoading) {
+      // The grid the ranking will fill, standing empty: the section takes its
+      // shape from the first frame, so nothing on the page moves when the first
+      // page of the ranking arrives.
+      return const <Widget>[
+        SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: MioSpacing.lg),
+          sliver: SliverToBoxAdapter(child: _PosterGrid.loading()),
+        ),
+        SliverToBoxAdapter(child: _ExploreFooter()),
+      ];
+    }
+    if (state.status == HomeExploreStatus.failed) {
+      return <Widget>[
+        SliverToBoxAdapter(
+          child: _ExploreNotice(
+            message: state.failure?.userMessage ?? '探索内容暂时无法加载',
+            onRetry: () =>
+                ref.read(homeExploreControllerProvider.notifier).refresh(),
+          ),
+        ),
+      ];
+    }
+    if (!state.hasContent) {
+      return const <Widget>[
+        SliverToBoxAdapter(child: _ExploreNotice(message: '暂时没有可探索的作品')),
+      ];
+    }
+    return <Widget>[
+      SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: MioSpacing.lg),
+        sliver: SliverLayoutBuilder(
+          builder: (context, constraints) {
+            final metrics = _PosterGridMetrics.of(
+              context,
+              constraints.crossAxisExtent,
+            );
+            // A page on its way is one more row of the grid, drawn as the
+            // posters it will be: the feed grows into place rather than ending
+            // in a spinner.
+            final pending = state.isLoadingMore
+                ? metrics.delegate.crossAxisCount
+                : 0;
+            return SliverGrid(
+              gridDelegate: metrics.delegate,
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => index < state.items.length
+                    ? _PosterCard(anime: state.items[index], metrics: metrics)
+                    : _PosterPlaceholder(metrics: metrics),
+                childCount: state.items.length + pending,
+              ),
+            );
+          },
+        ),
+      ),
+      const SliverToBoxAdapter(child: _ExploreFooter()),
+    ];
+  }
+}
+
+/// Quiet state of the explore section: a failure that left the feed with
+/// nothing to show, and the way to ask again. It narrates what happened to the
+/// request, not what the app is doing with its cache — a reader has no use for
+/// the latter and never sees it.
+class _ExploreNotice extends StatelessWidget {
+  const _ExploreNotice({required this.message, this.onRetry});
+
+  final String message;
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: MioSpacing.lg),
+      child: _InlineNotice(message: message, onRetry: onRetry),
+    );
+  }
+}
+
+/// Tail of the explore feed.
+///
+/// It reports where the feed stands and offers the retry a failed page waits
+/// for; asking for the next page belongs to `_ExploreSection`, which can
+/// measure the page it sits in rather than assume it has been reached. A page
+/// on its way is drawn by the grid as the row of posters it will be, so this
+/// has nothing to say about it beyond the line that names it.
+class _ExploreFooter extends ConsumerWidget {
+  const _ExploreFooter();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(homeExploreControllerProvider);
+    void load() => ref.read(homeExploreControllerProvider.notifier).loadMore();
+    if (state.loadMoreFailure != null) {
+      return Center(
+        child: TextButton.icon(
+          onPressed: load,
+          icon: const Icon(Icons.refresh),
+          label: const Text('加载更多失败，重试'),
+        ),
+      );
+    }
+    if (state.isLoadingMore) {
+      return Padding(
+        padding: const EdgeInsets.only(top: MioSpacing.lg),
+        child: Center(
+          child: Text('正在加载更多…', style: Theme.of(context).textTheme.bodyMedium),
+        ),
+      );
+    }
+    if (!state.hasMore) {
+      return Padding(
+        padding: const EdgeInsets.only(top: MioSpacing.lg),
+        child: Center(
+          child: Text(
+            '已显示全部 ${state.items.length} 部作品',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
+      );
+    }
+    // The next page is already on its way as the reader arrives here; this
+    // stays tappable for the case where the trigger did not fire.
+    return Center(
+      child: TextButton.icon(
+        onPressed: load,
+        icon: const Icon(Icons.expand_more),
+        label: const Text('加载更多'),
+      ),
+    );
+  }
+}
+
+/// Heading of one home section.
+///
+/// The space above a heading belongs to the heading rather than to whatever
+/// precedes it, so the hero, the season grid and the explore feed all break at
+/// the same line. Leaving that gap to the section above is how the explore feed
+/// ended up starting flush against the season grid.
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({required this.title, this.subtitle});
 
@@ -754,7 +1049,7 @@ class _SectionHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         MioSpacing.lg,
-        0,
+        MioSpacing.xl,
         MioSpacing.lg,
         MioSpacing.md,
       ),

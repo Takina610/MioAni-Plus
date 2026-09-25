@@ -4,6 +4,7 @@ import 'package:mio_ani/src/features/catalog/domain/anime_source_id.dart';
 import 'package:mio_ani/src/features/catalog/domain/anime_summary.dart';
 import 'package:mio_ani/src/features/home/application/home_providers.dart';
 import 'package:mio_ani/src/features/home/data/home_repository.dart';
+import 'package:mio_ani/src/features/home/domain/home_explore.dart';
 import 'package:mio_ani/src/features/home/domain/home_snapshot.dart';
 
 void main() {
@@ -73,5 +74,25 @@ final class FakeHomeRepository implements HomeRepository {
         catalog: HomeSection<HomeCatalogContent>.ready(value: content),
       ),
     ]);
+  }
+
+  @override
+  Future<HomeExplorePage> readExploreFeed({bool forceRefresh = false}) async {
+    return const HomeExplorePage(
+      items: <AnimeSummary>[],
+      page: 1,
+      hasMore: false,
+      source: AnimeSource.bangumi,
+    );
+  }
+
+  @override
+  Future<HomeExplorePage> loadExplorePage(int page) async {
+    return const HomeExplorePage(
+      items: <AnimeSummary>[],
+      page: 1,
+      hasMore: false,
+      source: AnimeSource.bangumi,
+    );
   }
 }

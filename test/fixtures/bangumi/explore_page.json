@@ -1,0 +1,81 @@
+{
+  "data": [
+    {
+      "date": "2011-04-06",
+      "platform": "TV",
+      "images": {
+        "small": "https://lain.bgm.tv/r/200/pic/cover/l/a9/79/10380_YwP4R.jpg",
+        "grid": "https://lain.bgm.tv/r/100/pic/cover/l/a9/79/10380_YwP4R.jpg",
+        "large": "https://lain.bgm.tv/pic/cover/l/a9/79/10380_YwP4R.jpg",
+        "medium": "https://lain.bgm.tv/r/800/pic/cover/l/a9/79/10380_YwP4R.jpg",
+        "common": "https://lain.bgm.tv/r/400/pic/cover/l/a9/79/10380_YwP4R.jpg"
+      },
+      "image": "https://lain.bgm.tv/pic/cover/l/a9/79/10380_YwP4R.jpg",
+      "summary": "故事发生在“涩谷崩坏”事件一年半之后的世界，主角冈部伦太郎是一位深度中二病的大学生。",
+      "name": "STEINS;GATE",
+      "name_cn": "命运石之门",
+      "tags": [{"name": "科幻", "count": 14077}],
+      "rating": {"rank": 8, "total": 40555, "score": 8.8},
+      "collection": {"collect": 62085, "doing": 4320},
+      "id": 10380,
+      "eps": 25,
+      "total_episodes": 25,
+      "meta_tags": ["科幻", "TV"],
+      "nsfw": false,
+      "type": 2
+    },
+    {
+      "date": "2026-01-09",
+      "platform": "TV",
+      "images": {
+        "small": "https://lain.bgm.tv/r/200/pic/cover/l/aa/bb/900002_small.jpg",
+        "grid": "https://lain.bgm.tv/r/100/pic/cover/l/aa/bb/900002_grid.jpg",
+        "common": "https://lain.bgm.tv/r/400/pic/cover/l/aa/bb/900002_common.jpg"
+      },
+      "summary": "只有缩略图的作品。",
+      "name": "サムネイルのみ",
+      "name_cn": "只有小图",
+      "tags": [],
+      "rating": {"score": 6.5},
+      "collection": {"doing": 120},
+      "id": 900002,
+      "eps": 12,
+      "nsfw": false,
+      "type": 2
+    },
+    {
+      "date": "2026-04-03",
+      "platform": "TV",
+      "images": {},
+      "summary": "连一张图都没有的作品。",
+      "name": "絵のない作品",
+      "name_cn": "没有封面的作品",
+      "tags": [],
+      "rating": {"score": 5.0},
+      "collection": {"doing": 40},
+      "id": 900003,
+      "eps": 12,
+      "nsfw": false,
+      "type": 2
+    },
+    {
+      "date": "2026-02-14",
+      "platform": "OVA",
+      "images": {
+        "large": "https://lain.bgm.tv/pic/cover/l/cc/dd/900004_adult.jpg"
+      },
+      "summary": "成人向作品。",
+      "name": "Adult Entry",
+      "name_cn": "成人向作品",
+      "tags": [],
+      "rating": {"score": 7.0},
+      "id": 900004,
+      "eps": 2,
+      "nsfw": true,
+      "type": 2
+    }
+  ],
+  "total": 1000,
+  "limit": 20,
+  "offset": 40
+}

@@ -3,21 +3,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mio_ani/src/features/home/presentation/hero_louver.dart';
 import 'package:mio_ani/src/shared/design_system/mio_tokens.dart';
 
-/// Where a slide's window lands inside the strip, mirroring the placement the
-/// hero slide gives its card: centred in its own page slot, then shifted by the
-/// metrics offset. The slot itself follows the page distance.
+/// Where a slide's window lands on the strip, which is what the strip lays out:
+/// centred on the slide's slice and as wide as its focus says.
 Rect _windowRect(HeroLouverMetrics metrics, double distance) {
-  final slotWidth = metrics.cardWidth + metrics.gap;
-  final slotLeft = metrics.pageWidth / 2 + distance * slotWidth - slotWidth / 2;
-  final cardLeft =
-      slotLeft +
-      (slotWidth - metrics.cardWidth) / 2 +
-      metrics.slotOffsetFor(distance);
-  final windowWidth = metrics.windowWidthFor(distance);
+  final width = metrics.windowWidthFor(distance);
   return Rect.fromLTWH(
-    cardLeft + (metrics.cardWidth - windowWidth) / 2,
+    metrics.windowCenterFor(distance) - width / 2,
     0,
-    windowWidth,
+    width,
     metrics.cardHeight,
   );
 }
@@ -33,7 +26,6 @@ void main() {
       expect(metrics.cardHeight, 213);
       expect(metrics.gap, 8);
       expect(metrics.pageWidth, 390 - 2 * MioSpacing.lg);
-      expect(metrics.viewportFraction, closeTo(254 / 342, 1e-9));
       // The reference card is landscape, not the portrait poster itself.
       expect(metrics.cardWidth, greaterThan(metrics.cardHeight));
     });
@@ -45,7 +37,6 @@ void main() {
       expect(metrics.cardWidth, 300);
       // The strip keeps its size, so the louver stays centred in the slack.
       expect(metrics.pageWidth, 428);
-      expect(metrics.viewportFraction, closeTo(308 / 428, 1e-9));
     });
 
     test('a narrow window gives way in the card, never in the slats', () {
@@ -74,11 +65,24 @@ void main() {
       expect(metrics.focusFor(2), 0);
     });
 
+    test('a slice stands half a card and slat plus the gap from the next', () {
+      final metrics = HeroLouverMetrics.forWidth(342);
+
+      expect(metrics.sliceSpacing, closeTo(151, 1e-9));
+      expect(
+        metrics.sliceSpacing,
+        closeTo(
+          (metrics.cardWidth + metrics.slatWidth) / 2 + metrics.gap,
+          1e-9,
+        ),
+      );
+    });
+
     test('a centred card keeps still and a settled slat lands on the strip '
         'edge', () {
       final metrics = HeroLouverMetrics.forWidth(342);
 
-      expect(metrics.slotOffsetFor(0), 0);
+      expect(metrics.windowCenterFor(0), metrics.pageWidth / 2);
       final centred = _windowRect(metrics, 0);
       expect(centred.width, metrics.cardWidth);
       expect(centred.center.dx, closeTo(metrics.pageWidth / 2, 1e-9));
@@ -94,6 +98,80 @@ void main() {
         } else {
           expect(window.right, closeTo(metrics.pageWidth, 1e-9));
         }
+      }
+    });
+
+    test(
+      'a drag carries every window along the slice grid, at any distance',
+      () {
+        final metrics = HeroLouverMetrics.forWidth(342);
+        final centre = metrics.pageWidth / 2;
+
+        for (final distance in <double>[
+          -2.5,
+          -1.75,
+          -1.25,
+          -1,
+          -0.5,
+          0,
+          0.5,
+          1,
+          1.25,
+          1.75,
+          2.5,
+        ]) {
+          expect(
+            metrics.windowCenterFor(distance),
+            closeTo(centre + distance * metrics.sliceSpacing, 1e-9),
+            reason: 'the window of a slide $distance slices out has drifted',
+          );
+        }
+      },
+    );
+
+    test('an outgoing slat eases off the edge instead of dropping out', () {
+      final metrics = HeroLouverMetrics.forWidth(342);
+
+      // Still on the strip a quarter of a slice into the drag, having moved a
+      // quarter of a slice. It used to be gone by then, carried away at the
+      // width of a whole card rather than at the strip's own step.
+      final quarter = _windowRect(metrics, -1.25);
+      expect(quarter.width, metrics.slatWidth);
+      expect(
+        quarter.right,
+        closeTo(metrics.slatWidth - 0.25 * metrics.sliceSpacing, 1e-9),
+      );
+      expect(quarter.right, greaterThan(0));
+      expect(quarter.right, lessThan(metrics.slatWidth));
+
+      // Gone once it has travelled its own width, and not before.
+      expect(_windowRect(metrics, -1.5).right, lessThan(0));
+      expect(_windowRect(metrics, -1).right, closeTo(metrics.slatWidth, 1e-9));
+    });
+
+    test('the incoming slide waits off the strip as long as the outgoing one '
+        'takes to leave', () {
+      final metrics = HeroLouverMetrics.forWidth(342);
+      final flush = metrics.pageWidth - metrics.slatWidth;
+
+      final arriving = _windowRect(metrics, 1.25);
+      expect(arriving.left, closeTo(flush + 0.25 * metrics.sliceSpacing, 1e-9));
+      expect(arriving.left, greaterThan(flush));
+      expect(arriving.left, lessThan(metrics.pageWidth));
+      expect(_windowRect(metrics, 1.5).left, greaterThan(metrics.pageWidth));
+    });
+
+    test('neighbouring windows keep their gap while the drag is in flight', () {
+      final metrics = HeroLouverMetrics.forWidth(342);
+
+      for (final position in <double>[0.1, 0.25, 0.5, 0.75, 0.9]) {
+        final outgoing = _windowRect(metrics, -position);
+        final incoming = _windowRect(metrics, 1 - position);
+        expect(
+          incoming.left - outgoing.right,
+          closeTo(metrics.gap, 1e-9),
+          reason: 'the gap closed while dragging $position of a slide',
+        );
       }
     });
   });

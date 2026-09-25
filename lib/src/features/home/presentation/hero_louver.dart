@@ -3,6 +3,10 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+/// The box the slides stand on, from its left edge to its right one. Named so
+/// the strip has an address: everything the louver does happens inside it.
+const Key heroStripKey = Key('home-hero-strip');
+
 /// Geometry of the home hero louver, kept from the reference home carousel:
 /// one landscape card in the middle of the strip, with the neighbouring cards
 /// showing through as a narrow slat on either side.
@@ -11,6 +15,15 @@ import 'package:flutter/widgets.dart';
 /// its size and the slat is a window onto the middle of it. [HeroWindowClipper]
 /// is that window, and the metrics here say how wide it is and where the card
 /// has to sit for the slat to land on the strip edge.
+///
+/// A drag moves the strip one slice at a time rather than one page at a time,
+/// so the card slides and resizes continuously: nothing on the strip drops out
+/// or pops back in.
+///
+/// The strip lays every slide out at its slice, rather than scrolling one long
+/// row and clipping it: a card the strip has scrolled aside is still on it, and
+/// has to keep being drawn while any part of it is, which a lazily built pager
+/// cannot promise for a slide narrower than a page.
 ///
 /// Callers pass the width the strip actually receives, so one silhouette holds
 /// from compact phones up to wide windows.
@@ -21,7 +34,6 @@ final class HeroLouverMetrics {
     required this.slatWidth,
     required this.gap,
     required this.pageWidth,
-    required this.viewportFraction,
   });
 
   /// Metrics for a strip [available] logical pixels wide.
@@ -48,7 +60,6 @@ final class HeroLouverMetrics {
       slatWidth: slatWidth,
       gap: _gap,
       pageWidth: pageWidth,
-      viewportFraction: (cardWidth + _gap) / pageWidth,
     );
   }
 
@@ -75,10 +86,21 @@ final class HeroLouverMetrics {
   final double slatWidth;
   final double gap;
 
-  /// Width of the strip the pages scroll in: the card plus both slats when the
+  /// Width of the strip the slides stand on: the card plus both slats when the
   /// window can hold them, otherwise the whole window.
   final double pageWidth;
-  final double viewportFraction;
+
+  /// Distance between two neighbouring slices of the strip: from the centred
+  /// card to the slat beside it. A drag carries the strip one of these per
+  /// slide, so the strip is measured in slices rather than in widths.
+  double get sliceSpacing => (pageWidth - slatWidth) / 2;
+
+  /// Where the window of a slide [distance] slices out from the centred one
+  /// stands, as a distance from the strip's left edge: dead centre for the
+  /// centred card, half a slat from the edge once it is a settled neighbour.
+  double windowCenterFor(double distance) {
+    return pageWidth / 2 + distance * sliceSpacing;
+  }
 
   /// How centred a slide is: `1` in the middle of the strip, `0` once it has
   /// scrolled fully aside.
@@ -89,19 +111,6 @@ final class HeroLouverMetrics {
   /// scrolled fully aside.
   double windowWidthFor(double distance) {
     return slatWidth + (cardWidth - slatWidth) * focusFor(distance);
-  }
-
-  /// How far the card moves inside its own page slot, which is what anchors the
-  /// window: a settled slat ends flush with the strip edge instead of hanging
-  /// off it, and the shift eases back to zero at the centre.
-  double slotOffsetFor(double distance) {
-    final travel = clampDouble(distance.abs(), 0, 1);
-    final direction = distance.isNegative ? -1.0 : 1.0;
-    final slotCenter =
-        pageWidth / 2 + clampDouble(distance, -1, 1) * (cardWidth + gap);
-    final windowCenter =
-        pageWidth / 2 + direction * travel * (pageWidth - slatWidth) / 2;
-    return windowCenter - slotCenter;
   }
 }
 

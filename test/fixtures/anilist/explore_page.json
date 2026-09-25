@@ -1,0 +1,31 @@
+{
+  "data": {
+    "Page": {
+      "pageInfo": {"currentPage": 2, "hasNextPage": true},
+      "media": [
+        {
+          "id": 201,
+          "title": {
+            "romaji": "Evergreen Show",
+            "english": "Evergreen Show",
+            "native": "エバーグリーン"
+          },
+          "coverImage": {
+            "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx201-example.jpg"
+          },
+          "episodes": 24,
+          "averageScore": 84,
+          "popularity": 900000
+        },
+        {
+          "id": 202,
+          "title": {"romaji": "No Art", "english": null, "native": null},
+          "coverImage": {"large": "http://insecure.example/cover.jpg"},
+          "episodes": null,
+          "averageScore": null,
+          "popularity": 800000
+        }
+      ]
+    }
+  }
+}
