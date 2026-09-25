@@ -8,6 +8,7 @@ import 'package:mio_ani/src/core/image/mio_image.dart';
 import 'package:mio_ani/src/features/people/application/people_providers.dart';
 import 'package:mio_ani/src/features/people/domain/people_models.dart';
 import 'package:mio_ani/src/features/people/domain/person_source_id.dart';
+import 'package:mio_ani/src/shared/design_system/mio_placeholder.dart';
 import 'package:mio_ani/src/shared/design_system/mio_state_view.dart';
 import 'package:mio_ani/src/shared/design_system/mio_tokens.dart';
 
@@ -234,7 +235,9 @@ class _ProfileHeader extends StatelessWidget {
         if (state.status == SectionStatus.loading)
           const Padding(
             padding: EdgeInsets.only(top: MioSpacing.md),
-            child: LinearProgressIndicator(),
+            // The section is filling in: the rows it will have stand empty in
+            // place rather than a bar running under the text.
+            child: MioPlaceholderLines(lines: 2, lineHeight: 18),
           ),
         if (state.status == SectionStatus.errorEmpty) ...<Widget>[
           const SizedBox(height: MioSpacing.md),
@@ -292,8 +295,8 @@ class _SectionCard<T> extends StatelessWidget {
     if (state.status == SectionStatus.loading) {
       content.add(
         const Padding(
-          padding: EdgeInsets.all(MioSpacing.md),
-          child: LinearProgressIndicator(),
+          padding: EdgeInsets.symmetric(vertical: MioSpacing.sm),
+          child: MioPlaceholderLines(lines: 2, lineHeight: 18),
         ),
       );
     }

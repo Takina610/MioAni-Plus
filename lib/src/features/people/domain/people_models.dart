@@ -93,6 +93,7 @@ final class AnimeCharacterCredit {
     this.role,
     this.voiceActorId,
     this.voiceActorName,
+    this.voiceActorImageUrl,
   });
 
   final PersonSourceId characterId;
@@ -101,6 +102,10 @@ final class AnimeCharacterCredit {
   final String? role;
   final PersonSourceId? voiceActorId;
   final String? voiceActorName;
+
+  /// The actor's own portrait: the card names the actor behind a character, and
+  /// a face is what makes a name recognisable at a glance.
+  final Uri? voiceActorImageUrl;
 }
 
 final class AnimeStaffCredit {

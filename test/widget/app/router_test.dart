@@ -7,6 +7,7 @@ import 'package:mio_ani/src/app/bootstrap/mio_ani_root.dart';
 import 'package:mio_ani/src/app/routing/app_router.dart';
 import 'package:mio_ani/src/app/routing/app_routes.dart';
 import 'package:mio_ani/src/app/routing/mio_back_shortcuts.dart';
+import 'package:mio_ani/src/features/anime_detail/presentation/anime_detail_page.dart';
 import 'package:mio_ani/src/features/catalog/application/catalog_providers.dart';
 import 'package:mio_ani/src/features/discover/application/discover_providers.dart';
 import 'package:mio_ani/src/features/home/application/home_providers.dart';
@@ -146,7 +147,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('动画详情'), findsOneWidget);
+    expect(find.byType(AnimeDetailPage), findsOneWidget);
     expect(find.text('测试动画'), findsOneWidget);
     expect(router.routeInformationProvider.value.uri.path, '/anime/bgm-1');
 

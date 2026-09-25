@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:mio_ani/src/core/image/image_byte_store_factory.dart';
+import 'package:mio_ani/src/core/image/image_memory_cache.dart';
 import 'package:mio_ani/src/core/image/image_pipeline.dart';
 import 'package:mio_ani/src/core/network/network_uri_policy.dart';
 import 'package:mio_ani/src/core/network/request_coordinator.dart';
@@ -113,12 +114,20 @@ final imageByteStoreProvider = Provider<ImageByteStore>((ref) {
   return createPlatformImageByteStore();
 });
 
+/// Covers this run has already read, shared by the pipeline and by every
+/// [MioImage] drawing one: a poster that has been on screen once is painted
+/// from here rather than read back from the device and decoded again.
+final imageMemoryCacheProvider = Provider<ImageMemoryCache>((ref) {
+  return ImageMemoryCache();
+});
+
 final imagePipelineProvider = Provider<ImagePipeline>((ref) {
   final imageCacheCapacity = loadPlatformImageCacheCapacityBytes();
   return DioImagePipeline(
     dio: ref.watch(dioProvider),
     coordinator: ref.watch(requestCoordinatorProvider),
     byteStore: ref.watch(imageByteStoreProvider),
+    memoryCache: ref.watch(imageMemoryCacheProvider),
     metadataStore: ref.watch(catalogDatabaseProvider),
     imageCacheCapacityLoader: () => imageCacheCapacity,
   );
