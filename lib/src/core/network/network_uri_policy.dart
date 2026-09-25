@@ -9,10 +9,19 @@ final class NetworkUriPolicy {
   static const String bangumiSiteHost = 'bgm.tv';
   static const String anilistApiHost = 'graphql.anilist.co';
   static const String anilistImageHost = 's4.anilist.co';
+
+  /// Tencent Cloud's translation service, which is where a page's text goes
+  /// when it is asked to be translated. It is not a content source: a
+  /// translation is about the words on the page rather than about the work.
+  static const String translationHost = 'tmt.tencentcloudapi.com';
   static const int defaultHttpsPort = 443;
 
   static final Uri bangumiBaseUri = Uri(scheme: 'https', host: bangumiApiHost);
   static final Uri anilistBaseUri = Uri(scheme: 'https', host: anilistApiHost);
+  static final Uri translationBaseUri = Uri(
+    scheme: 'https',
+    host: translationHost,
+  );
 
   static const Map<NetworkSource, Set<String>> _allowedHosts =
       <NetworkSource, Set<String>>{
@@ -24,6 +33,7 @@ final class NetworkUriPolicy {
         },
         NetworkSource.anilistApi: <String>{anilistApiHost},
         NetworkSource.anilistImages: <String>{anilistImageHost},
+        NetworkSource.translation: <String>{translationHost},
       };
 
   void validate(NetworkSource source, Uri uri) {

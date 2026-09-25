@@ -7,6 +7,8 @@ environment:
   sdk: ^3.12.2
 
 dependencies:
+  # HMAC-SHA256 for the translation service's request signing.
+  crypto: ^3.0.7
   dio: ^5.11.0
   drift: ^2.34.3
   drift_flutter: ^0.3.1
