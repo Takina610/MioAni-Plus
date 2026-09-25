@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -6,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mio_ani/src/core/failures/app_failure.dart';
 import 'package:mio_ani/src/core/image/image_byte_store_factory.dart';
 import 'package:mio_ani/src/core/image/image_byte_store_native.dart';
+import 'package:mio_ani/src/core/image/image_memory_cache.dart';
 import 'package:mio_ani/src/core/image/image_pipeline.dart';
 import 'package:mio_ani/src/core/image/mio_image.dart';
 import 'package:mio_ani/src/core/network/request_coordinator.dart';
@@ -295,6 +297,45 @@ void main() {
     },
   );
 
+  test('serves cached bytes when the cover is too slow to answer', () async {
+    final uri = Uri.parse('https://lain.bgm.tv/pic/cover/slow.jpg');
+    final staleBytes = Uint8List.fromList(<int>[7, 8]);
+    final byteStore = _PersistentByteStore(cachedBytes: staleBytes);
+    final metadataStore = _RecordingImageCacheMetadataStore(
+      initialEntries: <ImageCacheMetadata>[
+        ImageCacheMetadata(
+          uri: uri,
+          storageKey: 'slow-key',
+          backend: ImageCacheBackend.nativeFile,
+          byteSize: staleBytes.length,
+          etag: null,
+          lastModified: null,
+          fetchedAt: DateTime.utc(2026, 6, 1),
+          staleAt: DateTime.utc(2026, 7, 1),
+          expiresAt: DateTime.utc(2026, 7, 1),
+          lastAccessedAt: DateTime.utc(2026, 6, 1),
+        ),
+      ],
+    );
+    final pipeline = DioImagePipeline(
+      dio: Dio()..httpClientAdapter = _NeverAnswersAdapter(),
+      coordinator: RequestCoordinator(),
+      byteStore: byteStore,
+      metadataStore: metadataStore,
+      now: () => DateTime.utc(2026, 7, 31, 8),
+      // The real cover deadline is seconds long; the wait is the policy's, not
+      // the pipeline's, so the test measures with a short one.
+      requestPolicy: const RequestPolicy(
+        deadline: Duration(milliseconds: 300),
+        retryDelays: <Duration>[Duration(milliseconds: 50)],
+      ),
+    );
+
+    // The request runs out of its (short) image deadline; the cover on the
+    // device is what the reader gets rather than an empty tile.
+    expect(await pipeline.load(uri), staleBytes);
+  });
+
   test('records durable metadata after a successful image write', () async {
     final byteStore = _PersistentByteStore();
     final metadataStore = _RecordingImageCacheMetadataStore();
@@ -388,6 +429,55 @@ void main() {
     expect(firstAdapter.calls, 1);
     expect(secondAdapter.calls, 0);
   });
+
+  test('answers a cover this run has read from memory, unchanged', () async {
+    final uri = Uri.parse('https://lain.bgm.tv/pic/cover/held.jpg');
+    final adapter = _BytesAdapter(<int>[1, 2, 3]);
+    final byteStore = _CountingByteStore();
+    final pipeline = DioImagePipeline(
+      dio: Dio()..httpClientAdapter = adapter,
+      coordinator: RequestCoordinator(),
+      byteStore: byteStore,
+    );
+
+    final first = await pipeline.load(uri);
+    final second = await pipeline.load(uri);
+
+    // The same list, not a copy of it: that is what lets the poster scrolled
+    // away and scrolled back to paint from the decode Flutter already holds.
+    expect(identical(first, second), isTrue);
+    expect(adapter.calls, 1);
+    expect(byteStore.readCalls, 1);
+  });
+
+  test(
+    'a shared in-memory cache serves the next pipeline without a read',
+    () async {
+      final uri = Uri.parse('https://lain.bgm.tv/pic/cover/shared.jpg');
+      final memoryCache = ImageMemoryCache();
+      final first = DioImagePipeline(
+        dio: Dio()..httpClientAdapter = _BytesAdapter(<int>[4, 5, 6]),
+        coordinator: RequestCoordinator(),
+        byteStore: _CountingByteStore(),
+        memoryCache: memoryCache,
+      );
+
+      final read = await first.load(uri);
+
+      final secondAdapter = _BytesAdapter(<int>[9]);
+      final secondStore = _CountingByteStore();
+      final second = DioImagePipeline(
+        dio: Dio()..httpClientAdapter = secondAdapter,
+        coordinator: RequestCoordinator(),
+        byteStore: secondStore,
+        memoryCache: memoryCache,
+      );
+
+      expect(identical(await second.load(uri), read), isTrue);
+      expect(secondAdapter.calls, 0);
+      expect(secondStore.readCalls, 0);
+    },
+  );
 
   test('memory byte store copies bytes and can clear its namespace', () async {
     final store = MemoryImageByteStore();
@@ -526,6 +616,24 @@ final class _BytesAdapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
+/// Accepts the request and never answers it: what a host that has gone silent
+/// looks like to the pipeline.
+final class _NeverAnswersAdapter implements HttpClientAdapter {
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) {
+    final completer = Completer<void>();
+    cancelFuture?.whenComplete(completer.complete);
+    return completer.future.then((_) => ResponseBody.fromString('', 200));
+  }
+
+  @override
+  void close({bool force = false}) {}
+}
+
 final class _ConnectionErrorAdapter implements HttpClientAdapter {
   @override
   Future<ResponseBody> fetch(
@@ -566,6 +674,32 @@ final class _PersistentByteStore implements ImageByteStore {
     writeCalls += 1;
     return const ImageByteWriteResult(
       storageKey: 'durable-key',
+      backend: ImageCacheBackend.nativeFile,
+    );
+  }
+}
+
+/// Counts reads, so a test can say a cover came from memory rather than from
+/// the device.
+final class _CountingByteStore implements ImageByteStore {
+  int readCalls = 0;
+
+  @override
+  Future<void> clear() async {}
+
+  @override
+  Future<void> delete(Uri uri) async {}
+
+  @override
+  Future<Uint8List?> read(Uri uri) async {
+    readCalls += 1;
+    return null;
+  }
+
+  @override
+  Future<ImageByteWriteResult?> write(Uri uri, Uint8List bytes) async {
+    return const ImageByteWriteResult(
+      storageKey: 'counting-key',
       backend: ImageCacheBackend.nativeFile,
     );
   }

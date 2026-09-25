@@ -7,6 +7,16 @@ import 'package:path_provider/path_provider.dart';
 
 typedef ImageCacheDirectoryLoader = Future<Directory> Function();
 
+/// The covers this device has already downloaded, one file each.
+///
+/// The store's own job is small — turn a URL into a path, read or write the
+/// bytes — but the path is not free to work out. It starts at the platform's
+/// cache directory, which is a channel call to Android, and the check that
+/// keeps the namespace inside it resolves symbolic links, which walks the path.
+/// Both answers are the same for the whole life of the process, so they are
+/// worked out once and kept (see [_namespaceDirectory]): a poster grid asks for
+/// a dozen covers at the same moment, and paying for the same platform call
+/// twelve times is what made a cached grid as slow as an uncached one.
 final class NativeFileImageByteStore implements ImageByteStore {
   NativeFileImageByteStore({ImageCacheDirectoryLoader? cacheDirectoryLoader})
     : _cacheDirectoryLoader = cacheDirectoryLoader ?? getTemporaryDirectory;
@@ -17,11 +27,18 @@ final class NativeFileImageByteStore implements ImageByteStore {
 
   final ImageCacheDirectoryLoader _cacheDirectoryLoader;
 
+  /// The namespace directory, resolved once. A future rather than a directory
+  /// so that a dozen callers arriving together wait on one resolution instead
+  /// of starting a dozen of them.
+  Future<Directory>? _namespace;
+
   @override
   Future<Uint8List?> read(Uri uri) async {
     try {
-      final target = await _targetFile(uri, createNamespace: false);
-      if (!await target.exists()) return null;
+      final target = File(_pathIn(await _namespaceDirectory(), uri));
+      // No `exists()` first: reading a file that is not there throws, and the
+      // catch below is what a miss looks like either way. One syscall saved per
+      // cover is one syscall not queued behind the others on a cold grid.
       return Uint8List.fromList(await target.readAsBytes());
     } on Exception {
       return null;
@@ -32,7 +49,7 @@ final class NativeFileImageByteStore implements ImageByteStore {
   Future<ImageByteWriteResult?> write(Uri uri, Uint8List bytes) async {
     File? temporary;
     try {
-      final target = await _targetFile(uri, createNamespace: true);
+      final target = File(_pathIn(await _namespaceDirectory(), uri));
       temporary = File(
         '${target.path}.$pid.${DateTime.now().microsecondsSinceEpoch}.'
         '${_temporaryFileSequence++}.tmp',
@@ -65,7 +82,7 @@ final class NativeFileImageByteStore implements ImageByteStore {
   @override
   Future<void> delete(Uri uri) async {
     try {
-      final target = await _targetFile(uri, createNamespace: false);
+      final target = File(_pathIn(await _namespaceDirectory(), uri));
       if (await target.exists()) await target.delete();
     } on Exception {
       // Missing or unavailable cache storage is equivalent to a cache miss.
@@ -75,7 +92,11 @@ final class NativeFileImageByteStore implements ImageByteStore {
   @override
   Future<void> clear() async {
     try {
-      final namespace = await _namespaceDirectory(create: false);
+      final namespace = await _namespaceDirectory();
+      // The directory the memo holds is about to be gone: drop it so the next
+      // caller resolves again and gets one made for it, because this store is
+      // still where covers go.
+      _namespace = null;
       final type = await FileSystemEntity.type(
         namespace.path,
         followLinks: false,
@@ -97,22 +118,39 @@ final class NativeFileImageByteStore implements ImageByteStore {
     }
   }
 
-  Future<File> _targetFile(Uri uri, {required bool createNamespace}) async {
-    final namespace = await _namespaceDirectory(create: createNamespace);
-    return File(
-      '${namespace.path}${Platform.pathSeparator}'
-      '${createImageStorageKey(uri)}.bin',
-    );
+  static String _pathIn(Directory namespace, Uri uri) {
+    return '${namespace.path}${Platform.pathSeparator}'
+        '${createImageStorageKey(uri)}.bin';
   }
 
-  Future<Directory> _namespaceDirectory({required bool create}) async {
-    final suppliedRoot = await _cacheDirectoryLoader();
-    if (create) await suppliedRoot.create(recursive: true);
+  /// The directory covers live in, made if it is not there yet.
+  ///
+  /// The check that the namespace cannot escape the cache root happens once,
+  /// here, rather than on every file: it is a property of the cache root and the
+  /// name under it, and neither changes while the app runs.
+  Future<Directory> _namespaceDirectory() {
+    final held = _namespace;
+    if (held != null) return held;
+    final resolved = _resolveNamespace();
+    _namespace = resolved;
+    return resolved;
+  }
 
-    final root = await suppliedRoot.exists()
-        ? Directory(await suppliedRoot.resolveSymbolicLinks())
-        : suppliedRoot.absolute;
-    final rootPath = _trimTrailingSeparators(root.absolute.path);
+  Future<Directory> _resolveNamespace() async {
+    final suppliedRoot = await _cacheDirectoryLoader();
+    await suppliedRoot.create(recursive: true);
+    // Canonical, so the check below compares real paths rather than one that
+    // goes through a link: on Android the cache directory is reached through
+    // one. A root that will not resolve is used as it stands — the check still
+    // holds, it simply compares the path the platform handed over.
+    String rootPath;
+    try {
+      rootPath = _trimTrailingSeparators(
+        await suppliedRoot.resolveSymbolicLinks(),
+      );
+    } on Exception {
+      rootPath = _trimTrailingSeparators(suppliedRoot.absolute.path);
+    }
     final namespacePath =
         '$rootPath${Platform.pathSeparator}'
         '$_applicationDirectoryName${Platform.pathSeparator}'
@@ -124,7 +162,7 @@ final class NativeFileImageByteStore implements ImageByteStore {
     ).startsWith(_comparablePath(expectedPrefix))) {
       throw StateError('Image cache namespace escaped its cache root.');
     }
-    if (create) await namespace.create(recursive: true);
+    await namespace.create(recursive: true);
     return namespace;
   }
 

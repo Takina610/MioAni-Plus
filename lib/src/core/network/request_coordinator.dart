@@ -3,7 +3,18 @@ import 'dart:collection';
 
 import 'package:mio_ani/src/core/failures/app_failure.dart';
 
-enum NetworkSource { bangumiApi, bangumiImages, anilistApi, anilistImages }
+enum NetworkSource {
+  bangumiApi,
+  bangumiImages,
+  anilistApi,
+  anilistImages,
+  translation;
+
+  /// Images are a screenful of small independent files rather than one call
+  /// whose answer the page waits for, and a grid fills in as they land, so they
+  /// are allowed to run wider than the APIs.
+  bool get isImage => this == bangumiImages || this == anilistImages;
+}
 
 typedef RequestWait = Future<void> Function(Duration duration);
 typedef RequestNow = DateTime Function();
@@ -28,12 +39,18 @@ final class RequestCoordinator {
     RequestWait? wait,
     RequestNow? now,
     this.maxConcurrentPerSource = 4,
+    this.maxConcurrentImages = 12,
   }) : _wait = wait ?? Future<void>.delayed,
        _now = now ?? DateTime.now;
 
   final RequestWait _wait;
   final RequestNow _now;
   final int maxConcurrentPerSource;
+
+  /// Permits for image downloads, which fill a screen of posters rather than
+  /// answering a single question, and so are worth more connections than an
+  /// API call that the page is waiting on.
+  final int maxConcurrentImages;
   final Map<String, Future<Object?>> _inFlight = <String, Future<Object?>>{};
   final Map<String, _RequestGenerationState> _generationStates =
       <String, _RequestGenerationState>{};
@@ -134,7 +151,7 @@ final class RequestCoordinator {
 
       final pool = _pools.putIfAbsent(
         source,
-        () => _AsyncPermitPool(maxConcurrentPerSource),
+        () => _AsyncPermitPool(capacityFor(source)),
       );
       final acquire = pool.acquire();
       late final _ReleasePermit release;
@@ -186,6 +203,11 @@ final class RequestCoordinator {
       attempt += 1;
       await _wait(delay);
     }
+  }
+
+  /// Permits one source gets to work with at a time.
+  int capacityFor(NetworkSource source) {
+    return source.isImage ? maxConcurrentImages : maxConcurrentPerSource;
   }
 
   bool _isRetryable(AppFailure failure) {

@@ -201,6 +201,19 @@ void main() {
     expect(RequestCoordinator().maxConcurrentPerSource, 4);
   });
 
+  test('gives image downloads a wider pool than the APIs', () {
+    final coordinator = RequestCoordinator();
+
+    // A screen of posters fills in as its covers land and nothing on the page
+    // is waiting on any single one of them, so more of them may be in flight.
+    expect(coordinator.capacityFor(NetworkSource.bangumiApi), 4);
+    expect(coordinator.capacityFor(NetworkSource.anilistApi), 4);
+    expect(coordinator.capacityFor(NetworkSource.bangumiImages), 12);
+    expect(coordinator.capacityFor(NetworkSource.anilistImages), 12);
+    expect(NetworkSource.bangumiImages.isImage, isTrue);
+    expect(NetworkSource.bangumiApi.isImage, isFalse);
+  });
+
   test('retry backoff does not hold a source permit', () async {
     final retryWaitStarted = Completer<void>();
     final releaseRetryWait = Completer<void>();
